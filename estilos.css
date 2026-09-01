@@ -306,21 +306,39 @@ html, body {
 }
 .rolchip.sel { background:#1a2740; border-color:#2f6fd0; color:#cfe0f5; }
 
+/* ---------- iconos svg ---------- */
+.ic { display:inline-block; width:16px; height:16px; vertical-align:-3px; fill:none;
+  stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+.ic.grande { width:26px; height:26px; stroke-width:1.7; }
+
 /* ---------- recursos: barra de energía, estaciones y slots ---------- */
 .ebar { height:10px; border-radius:5px; overflow:hidden; background:#191d25; margin-bottom:10px;
   display:-webkit-flex; display:flex; }
 .ebar i { display:block; height:10px; }
 .estaciones { display:-webkit-flex; display:flex; }
-.stcard { width:118px; margin-right:8px; padding:8px 9px; border-radius:9px; text-align:center;
-  background:#12151b; border:1px solid #1c2027; }
-.stcard.viva { border-color:#2a3648; }
-.stcard.build { background:#171307; border-color:#3a2f14; width:128px; }
+
+/* ability-tile style stations: icon slot with a bottom-up fill showing
+   points committed, like a mana/cooldown gauge — legible before any text. */
+.stcard { position:relative; width:86px; height:96px; margin-right:10px; border-radius:12px;
+  text-align:center; overflow:hidden; background:#12151b; border:1px solid #1c2027; }
+.stcard.viva { border-color:#2a3648; box-shadow:0 0 0 1px rgba(255,255,255,0.03) inset; }
 .stcard.bloq { opacity:0.35; }
-.stcard .stn { font-size:12.5px; white-space:nowrap; }
-.stcard .strinde { font-size:10px; color:#767f8d; margin-top:4px; min-height:12px; }
-.stcard .ctrl { -webkit-justify-content:center; justify-content:center; }
-.stcard .ctrl .b { width:30px; height:30px; line-height:28px; font-size:17px; }
-.stcard .ctrl .n { width:30px; font-size:16px; }
+.stcard .stfill { position:absolute; left:0; right:0; bottom:0; height:0%; opacity:0.22;
+  -webkit-transition:height .25s ease; transition:height .25s ease; }
+.stcard .sticon { position:relative; margin:10px auto 2px auto; width:30px; height:30px;
+  border-radius:8px; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  -webkit-justify-content:center; justify-content:center; color:#5b6472; }
+.stcard.viva .sticon { color:#e8eaed; }
+.stcard .stn { position:relative; font-size:11px; white-space:nowrap; color:#8b93a1; }
+.stcard.viva .stn { color:#cdd4de; }
+.stcard .strinde { position:relative; font-size:9.5px; color:#5b6472; margin-top:1px; min-height:11px; white-space:nowrap; }
+.stcard .stlock { position:relative; font-size:9px; color:#5b6472; margin-top:6px; }
+.stcard .ctrl { position:relative; -webkit-justify-content:center; justify-content:center; margin-top:4px; }
+.stcard .ctrl .b { width:24px; height:24px; line-height:22px; font-size:14px; }
+.stcard .ctrl .n { width:22px; font-size:14px; }
+.stcard.build { background:#171307; border-color:#3a2f14; width:96px; }
+.stcard.build .sticon { color:#e8a33d; }
+.stcard.build .n { font-size:19px; }
 .slot { display:inline-block; width:13px; height:13px; border-radius:3px; margin:0 3px -1px 0;
   background:#191d25; border:1px solid #2a313d; }
 .slot.lleno { background:#2f6fd0; border-color:#3f82e6; }
@@ -400,3 +418,8 @@ html, body {
 .res-ship { display:-webkit-flex; display:flex; padding:9px 0; border-bottom:1px solid #171b22; font-size:14px; line-height:1.4; }
 .res-ship .ic { width:24px; -webkit-flex-shrink:0; flex-shrink:0; }
 .res-ship .tx { -webkit-flex:1; flex:1; }
+
+/* pantallas largas: scrollean dentro del lienzo de 768 */
+#p-inicio, #p-brief, #p-final, #p-cierre, #p-ofertas {
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
+}

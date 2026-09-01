@@ -573,15 +573,19 @@
      points; you station them. Whatever you don't station goes to BUILD and
      pushes your selected projects. Every point is visible and accounted. */
   var ESTACIONES = [
-    { k:'desc', n:'Discover', ic:'◎', col:'#5aa9f0', req:'desc', lib:'torres',
-      rinde:function (v) { return '+' + Math.round(v * 1.1 * J.calidadDesc * (1 + J.hab.producto / 200)) + ' evidence'; } },
-    { k:'plat', n:'Platform', ic:'⚙', col:'#35c46a', req:'plat', lib:'fowler',
+    { k:'desc', n:'Discover', svg:'discover', col:'#5aa9f0', req:'desc', lib:'torres',
+      rinde:function (v) { return '+' + Math.round(v * 1.1 * J.calidadDesc * (1 + J.hab.producto / 200)) + ' evid'; } },
+    { k:'plat', n:'Platform', svg:'platform', col:'#35c46a', req:'plat', lib:'fowler',
       rinde:function (v) { return '−' + Math.round(v * 0.55 * (1 + J.hab.tecnologia / 150)) + ' debt'; } },
-    { k:'fiab', n:'Reliability', ic:'⚖', col:'#4ecdc4', req:'fiab', lib:'sre',
+    { k:'fiab', n:'Reliability', svg:'reliability', col:'#4ecdc4', req:'fiab', lib:'sre',
       rinde:function (v) { return '+' + Math.round(v * 0.45) + ' uptime'; } },
-    { k:'crec', n:'Growth', ic:'↗', col:'#e86ba3', req:'crec', lib:'chasm',
-      rinde:function (v) { return '+reach · $' + Math.round(v * 0.9) + 'k spend'; } }
+    { k:'crec', n:'Growth', svg:'growth', col:'#e86ba3', req:'crec', lib:'chasm',
+      rinde:function (v) { return '+reach · $' + Math.round(v * 0.9) + 'k'; } }
   ];
+
+  function svgIc(id, cls) {
+    return '<svg class="ic' + (cls ? ' ' + cls : '') + '"><use xlink:href="#ic-' + id + '"></use></svg>';
+  }
 
   function enEstaciones() { return plan.desc + plan.plat + plan.fiab + plan.crec; }
   function enProyectos() {
@@ -614,21 +618,27 @@
         for (var k = 0; k < ESCALAFON.length; k++) {
           if (ESCALAFON[k].palancas.indexOf(st.req) >= 0) { falta = ESCALAFON[k].corto; break; }
         }
-        h += '<div class="stcard bloq"><div class="stn">' + st.ic + ' ' + st.n + '</div><div class="strinde">with ' + falta + '</div></div>';
+        h += '<div class="stcard bloq"><div class="sticon">' + svgIc(st.svg) + '</div>' +
+          '<div class="stn">' + st.n + '</div><div class="stlock">🔒 ' + falta + '</div></div>';
         continue;
       }
+      var pctFill = mio > 0 ? Math.round(vv / mio * 100) : 0;
       h += '<div class="stcard' + (vv > 0 ? ' viva' : '') + '">' +
-        '<div class="stn" style="color:' + (vv > 0 ? st.col : '#8b93a1') + '">' + st.ic + ' ' + st.n + '</div>' +
-        '<div class="ctrl" style="margin-top:5px">' +
+        '<div class="stfill" style="height:' + pctFill + '%;background:' + st.col + '"></div>' +
+        '<div class="sticon" style="' + (vv > 0 ? 'background:' + st.col + '26;color:' + st.col : '') + '">' + svgIc(st.svg) + '</div>' +
+        '<div class="stn">' + st.n + '</div>' +
+        '<div class="ctrl">' +
         '<div class="b' + (vv <= 0 ? ' off' : '') + '" data-menos="' + st.k + '">−</div>' +
         '<div class="n num">' + vv + '</div>' +
         '<div class="b' + (ocio <= 0 ? ' off' : '') + '" data-mas="' + st.k + '">+</div>' +
         '</div>' +
         '<div class="strinde">' + (vv > 0 ? st.rinde(vv) : '—') + '</div></div>';
     }
-    h += '<div class="stcard viva build"><div class="stn" style="color:#e8a33d">⚒ On projects</div>' +
-      '<div class="n num" style="font-size:21px;margin-top:4px">' + enProyectos() + '</div>' +
-      '<div class="strinde">' + (ocio > 0 ? '<span class="ambar">' + ocio + ' idle — place them!</span>' : 'all hands busy') + '</div></div>';
+    h += '<div class="stcard viva build">' +
+      '<div class="sticon" style="background:#e8a33d26;color:#e8a33d">' + svgIc('build') + '</div>' +
+      '<div class="stn">On projects</div>' +
+      '<div class="n num" style="font-size:19px;margin-top:1px">' + enProyectos() + '</div>' +
+      '<div class="strinde">' + (ocio > 0 ? '<span class="ambar">' + ocio + ' idle</span>' : 'all busy') + '</div></div>';
     h += '</div>';
     $('capa').innerHTML = h;
   }
