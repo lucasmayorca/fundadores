@@ -35,6 +35,93 @@
     for (i = 0; i < ps.length; i++) ps[i].className = 'pantalla' + (ps[i].id === id ? ' on' : '');
   }
   function ov(id, on) { $(id).className = 'ov' + (on ? ' on' : ''); }
+  var escalaActual = 1;
+
+  /* ================= GUIDED FIRST MONTH =================
+     Not a lecture — a spotlight. The screen dims except the active zone,
+     the coach tells you what to DO, and action steps advance themselves. */
+  var TOUR = [
+    { el:'hud', texto:'This is the company\'s pulse. <b>Retention</b> is the number that decides everything: of 100 users this month, how many are still here next month.', accion:null },
+    { el:'mandato', texto:'You were hired to do <b>one thing</b> — this bar is your job. <b>Political capital</b> is your oxygen: it drains when you work off-mandate. At zero, you\'re out.', accion:null },
+    { el:'capa', texto:'Your team produces <b>points</b> every month. Points you place on stations produce evidence, less debt, reliability or reach. <b>Whatever you don\'t station goes on projects below.</b>', accion:'estacion',
+      textoAccion:'Try it: tap <b>+</b> on a station.' },
+    { el:'backlog', texto:'The core of the job: <b>tap a project</b> to place your remaining points on it. Read the cards first — <b>prob</b> (how much to trust the estimate), <b>impact</b> (payoff if true), <b>size</b> (S ~3 days... XL ~a month).', accion:'proyecto',
+      textoAccion:'Tap a project to add it.' },
+    { el:'backlog', texto:'Green is built, <b>amber is this month\'s push</b>. When a project says SHIPS THIS MONTH, it delivers now — and grants the company a permanent capability.', accion:null },
+    { el:'panel', texto:'The company\'s vitals. <b>Evidence</b> feeds every estimate you see. <b>Debt</b> eats capacity monthly. <b>Morale</b> multiplies everything. More panels unlock as you climb.', accion:null },
+    { el:'barra', texto:'That\'s the whole loop: place points, pick bets, close the month. The game won\'t stop your mistakes — <b>it bills them</b>, then tells you which book had it written down.', accion:'cerrar',
+      textoAccion:'Close your first month.' }
+  ];
+  var tourPaso = -1;
+
+  function tourActivo() { return tourPaso >= 0 && tourPaso < TOUR.length; }
+
+  function tourEmpezar() {
+    var visto = false;
+    try { visto = !!localStorage.getItem('fundadores.tour'); } catch (e) {}
+    if (visto) return;
+    tourPaso = 0;
+    tourRender();
+  }
+
+  function tourFin(guardar2) {
+    tourPaso = -1;
+    $('spot').className = '';
+    $('coach').className = '';
+    if (guardar2 !== false) { try { localStorage.setItem('fundadores.tour', '1'); } catch (e) {} }
+  }
+
+  function tourRender() {
+    if (!tourActivo()) return;
+    var paso = TOUR[tourPaso];
+    var el = $(paso.el), st = $('stage');
+    if (!el || !st) return;
+    var er = el.getBoundingClientRect(), sr = st.getBoundingClientRect();
+    var esc2 = escalaActual || 1;
+    var x = (er.left - sr.left) / esc2, y = (er.top - sr.top) / esc2;
+    var w = er.width / esc2, h2 = er.height / esc2;
+
+    var spot = $('spot');
+    spot.className = 'on';
+    spot.style.left = (x - 6) + 'px';
+    spot.style.top = (y - 6) + 'px';
+    spot.style.width = (w + 12) + 'px';
+    spot.style.height = (h2 + 12) + 'px';
+
+    var abajo = y + h2 + 150 < 768;
+    var coach = $('coach');
+    coach.className = 'on';
+    coach.style.left = Math.max(16, Math.min(1024 - 436, x + w / 2 - 210)) + 'px';
+    if (abajo) { coach.style.top = (y + h2 + 14) + 'px'; coach.style.bottom = 'auto'; }
+    else { coach.style.top = 'auto'; coach.style.bottom = (768 - y + 14) + 'px'; }
+    coach.innerHTML = '<div class="cpaso">' + (tourPaso + 1) + ' / ' + TOUR.length + '</div>' +
+      '<div class="ctx">' + paso.texto + '</div>' +
+      (paso.accion ? '<div class="chace">' + paso.textoAccion + '</div>' :
+        '<div style="margin-top:10px"><span class="btn chico pri" data-act="tour-sigo">Got it</span></div>') +
+      '<div class="csalir" data-act="tour-salir">skip the tour</div>';
+  }
+
+  /* action steps advance when the player actually does the thing */
+  function tourEvento(tipo) {
+    if (!tourActivo()) return;
+    var paso = TOUR[tourPaso];
+    if (paso.accion !== tipo) return;
+    tourPaso++;
+    if (tourPaso >= TOUR.length) tourFin();
+    else tourRender();
+  }
+
+  /* an Analyst has no stations yet: step 3 becomes informational */
+  function tourAjustarRol() {
+    if (!J) return;
+    var alguna = false, i;
+    for (i = 0; i < ESTACIONES.length; i++) if (J.palancas.indexOf(ESTACIONES[i].req) >= 0) alguna = true;
+    if (!alguna) {
+      TOUR[2].accion = null;
+      TOUR[2].texto = 'Stations produce evidence, less debt, reliability or reach — <b>they unlock as you get promoted</b>. For now, your whole month goes on projects.';
+    }
+  }
+
   /* touch tooltips: tap a dotted label, get a one-line explainer */
   var TIPS = {
     ret:'Of every 100 users you have this month, how many are still around next month. The single most honest number in the game.',
@@ -977,6 +1064,7 @@
     var w = window.innerWidth || 1024, h2 = window.innerHeight || 768;
     var s = Math.min(w / 1024, h2 / 768);
     if (s > 0.98 && s < 1.02) s = 1;
+    escalaActual = s;
     var t = 'translate(-50%,-50%) scale(' + s + ')';
     st.style.webkitTransform = t;
     st.style.transform = t;
@@ -1004,6 +1092,7 @@
     var w = window.innerWidth || 1024, h2 = window.innerHeight || 768;
     var s = Math.min(w / 1024, h2 / 768);
     if (s > 0.98 && s < 1.02) s = 1;
+    escalaActual = s;
     var t = 'translate(-50%,-50%) scale(' + s + ')';
     st.style.webkitTransform = t;
     st.style.transform = t;
@@ -1030,7 +1119,7 @@
 
     v = attr(t, 'data-mas');
     if (v && J) {
-      if (sinUsar() > 0) { plan[v]++; renderAsignacion(); renderBacklog(); renderBarra(); }
+      if (sinUsar() > 0) { plan[v]++; renderAsignacion(); renderBacklog(); renderBarra(); tourEvento('estacion'); }
       return;
     }
     v = attr(t, 'data-menos');
@@ -1062,6 +1151,7 @@
       if (slotsUsados() < J.slots && plan.orden.indexOf(v) < 0 && sinUsar() > 0) {
         plan.orden.push(v);
         plan.asig[v] = Math.min(sinUsar(), Math.ceil(Motor.costoDe(J, v)));
+        tourEvento('proyecto');
       }
       renderAsignacion(); renderBacklog(); renderBarra();
       return;
@@ -1094,9 +1184,11 @@
       if (J) {
         var yaVisto = J.briefVisto;
         J.briefVisto = true; guardar();
-        if (yaVisto) renderJuego(); else nuevoMes();
+        if (yaVisto) renderJuego(); else { nuevoMes(); tourAjustarRol(); tourEmpezar(); }
       }
     }
+    else if (v === 'tour-sigo') { tourPaso++; if (tourPaso >= TOUR.length) tourFin(); else tourRender(); }
+    else if (v === 'tour-salir') { tourFin(); }
     else if (v === 'ver-objetivo') { if (J) mostrarBrief(); }
     else if (v === 'continuar') {
       if (cargar()) {
@@ -1124,7 +1216,7 @@
     else if (v === 'biblio') { mostrarBiblio(); }
     else if (v === 'cerrar-biblio') { ov('ov-biblio', false); }
     else if (v === 'cerrar-libro') { ov('ov-libro', false); }
-    else if (v === 'ejecutar') { ejecutar(); }
+    else if (v === 'ejecutar') { if (tourActivo()) tourFin(); ejecutar(); }
     else if (v === 'ronda') { if (J) { J.levantando = true; evActual = eventoAplicable(J, C); if (evActual) mostrarEvento(evActual); } }
     else if (v === 'cerrar-result') {
       var esDec = $('t-result').getAttribute('data-decision') === '1';
@@ -1141,6 +1233,7 @@
     var w = window.innerWidth || 1024, h2 = window.innerHeight || 768;
     var s = Math.min(w / 1024, h2 / 768);
     if (s > 0.98 && s < 1.02) s = 1;
+    escalaActual = s;
     var t = 'translate(-50%,-50%) scale(' + s + ')';
     st.style.webkitTransform = t;
     st.style.transform = t;
