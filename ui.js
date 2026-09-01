@@ -300,7 +300,7 @@
     h += '<div style="margin-top:9px"><span class="rot" style="margin-right:6px">Pick a side</span>' +
       '<span class="rolchip' + (fac === 'growth' ? ' sel' : '') + '" data-fac="growth">Growth Legion</span>' +
       '<span class="rolchip' + (fac === 'craft' ? ' sel' : '') + '" data-fac="craft">Craft Guild</span>' +
-      '<span class="pq mut" style="margin-left:6px">every finished career scores for your faction</span></div>';
+      '<span class="pq mut" style="margin-left:6px">finished careers score for your side</span></div>';
     h += '</div>';
 
     h += '<div style="margin-top:14px">' +
@@ -308,7 +308,7 @@
       '<span class="btn" data-act="semanal" style="margin-left:6px">Weekly challenge</span>' +
       (hay ? '<span class="btn" data-act="continuar" style="margin-left:6px">Continue</span>' : '') +
       '<span class="btn sec" data-act="biblio" style="margin-left:6px">Library</span></div>';
-    h += '<div class="pq mut" style="margin-top:7px">Weekly: everyone plays the same world this week (' +
+    h += '<div class="pq mut" style="margin:7px 0 12px 0">Weekly: everyone plays the same world this week (' +
          esc(Ranking.semana()) + ') — same eras, same storms. One public table, seven days.</div>';
     h += '</div>';
 
