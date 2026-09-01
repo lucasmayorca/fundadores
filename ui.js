@@ -401,8 +401,8 @@
     h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:5px">Pick a side</div>' +
       '<span class="rolchip' + (fac === 'growth' ? ' sel' : '') + '" data-fac="growth">Growth Legion</span>' +
       '<span class="rolchip' + (fac === 'craft' ? ' sel' : '') + '" data-fac="craft">Craft Guild</span>' +
-      '<div class="pq mut" style="margin-top:6px">Every finished career — yours included — adds its net worth ' +
-      'to your faction\'s total on the public ranking.</div></div>';
+      '<div class="pq mut" style="margin-top:6px">Every finished career — yours included — adds its delivered ' +
+      'mandates to your faction\'s total on the public ranking.</div></div>';
 
     h += '<div class="pq mut" style="margin-top:10px;max-width:540px">Weekly challenge: everyone plays the same ' +
       'world this week (' + esc(Ranking.semana()) + ') — same eras, same storms, same rival timing. One public ' +
