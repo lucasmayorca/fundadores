@@ -1,5 +1,5 @@
-/* La carrera: ofertas, mandatos, promociones, habilidades y equity con vesting.
-   Cada empresa es un puesto de 12 a 18 meses. ES5 estricto (Safari 9). */
+/* The career: offers, mandates, promotions, skills and equity with vesting.
+   Each company is a 12-to-18-month role. Strict ES5 (Safari 9). */
 
 var Carrera = (function () {
   'use strict';
@@ -10,7 +10,7 @@ var Carrera = (function () {
   function rnd(a, b) { return a + Math.random() * (b - a); }
   function elegir(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-  /* Qué mandato le calza a cada rubro y a cada etapa. */
+  /* Which mandate fits each trade and each stage. */
   var MANDATO_SECTOR = {
     datapol:['descubrir','ingresos','abismo'],
     biogen:['abismo','estabilidad','descubrir'],
@@ -27,11 +27,16 @@ var Carrera = (function () {
     serieC:['estabilidad','deuda','retencion']
   };
 
-  function nueva(nombre) {
+  function nueva(nombre, nivel0) {
+    var n0 = Math.max(0, Math.min(7, nivel0 || 0));
+    /* starting mid-ladder seeds seniority: reputation and skills scale with
+       the level you bring in, so the world treats you like you have a past */
+    var habBase = 8 + n0 * 6;
     return {
-      nombre:nombre || 'vos',
-      mes:0, nivel:0, reputacion:35,
-      hab:{ producto:8, tecnologia:8, negocio:8, liderazgo:8 },
+      nombre:nombre || 'you',
+      mes:0, nivel:n0, nivelInicial:n0, reputacion:35 + n0 * 4,
+      hab:{ producto:habBase, tecnologia:Math.round(habBase * 0.6),
+            negocio:Math.round(habBase * 0.7), liderazgo:Math.round(habBase * 0.8) },
       puestos:[], equities:[], ahorros:0,
       trabajadas:{}, codex:{},
       ofertas:null, ofertaActual:null,
@@ -39,10 +44,10 @@ var Carrera = (function () {
     };
   }
 
-  /* ---------------- ofertas ----------------
-     La regla que enseña: en etapa temprana te dan más título y más equity
-     porque el riesgo lo ponés vos. En etapa tardía te dan plata y estabilidad,
-     y subís más lento. */
+  /* ---------------- offers ----------------
+     The rule this teaches: early stage gives you more title and more equity
+     because you're the one carrying the risk. Late stage gives you money and
+     stability, and you climb slower. */
   function ofertas(c, mundo) {
     var libres = [], i;
     for (i = 0; i < EMPRESAS.length; i++) if (!c.trabajadas[EMPRESAS[i].id]) libres.push(EMPRESAS[i]);
@@ -57,7 +62,7 @@ var Carrera = (function () {
       out.push(armarOferta(c, emp, mundo));
     }
 
-    /* Fundar: aparece cuando ya tenés recorrido y nombre. */
+    /* Founding: shows up once you have mileage and a name. */
     if (c.nivel >= 5 && c.reputacion >= 62 && !c.yaFundo) {
       out[2] = ofertaFundar(c);
     }
@@ -71,20 +76,20 @@ var Carrera = (function () {
     var calor = mundo ? Mundo.calorSector(mundo, emp.sector) : 0;
     var capitalEra = mundo ? Mundo.modCapital(mundo) : 1;
 
-    /* nivel ofrecido */
+    /* level offered */
     var rolN = c.nivel;
     if (temprana && Math.random() < (c.reputacion > 50 ? 0.62 : 0.4) + (calor > 0 ? 0.15 : 0)) rolN = c.nivel + 1;
     else if (!temprana && Math.random() < 0.35) rolN = Math.max(0, c.nivel - 1);
     rolN = clamp(rolN, 0, 6);
     var niv = nivelPorN(rolN);
 
-    /* plata: la etapa tardía paga más por el mismo título */
+    /* money: late stage pays more for the same title */
     var factorEtapa = { semilla:0.72, serieA:0.9, serieB:1.12 }[emp.etapa];
     var sueldo = Math.round(niv.sueldo * factorEtapa * (calor > 0 ? 1.18 : calor < 0 ? 0.92 : 1) / 1000) * 1000;
 
     var eq = rnd(et.equity[0], et.equity[1]) * (1 + rolN * 0.14) * (2 - capitalEra) ;
     var pool = (MANDATO_SECTOR[emp.sector] || []).concat(MANDATO_ETAPA[emp.etapa] || []);
-    /* el mandato tiene que ser alcanzable con las palancas del rol */
+    /* the mandate has to be reachable with the role's levers */
     var REQUIERE = { descubrir:'desc', deuda:'plat', estabilidad:'fiab', crecer:'crec', ingresos:'crec' };
     var filtrado = [], fi;
     for (fi = 0; fi < pool.length; fi++) {
@@ -102,12 +107,12 @@ var Carrera = (function () {
       etapa:emp.etapa, etapaNombre:et.nombre,
       rolN:rolN, rol:niv.rol, mando:niv.mando, notaRol:niv.nota,
       mandatoId:mandatoId, mandatoTxt:mandatoPorId(mandatoId).txt,
-      /* el primer puesto es corto: el primer ascenso tiene que llegar rápido */
+      /* the first role is short: the first promotion has to come fast */
       meses:c.puestos.length === 0 ? Math.round(rnd(8, 10)) : Math.round(rnd(10, 14)),
       sueldo:sueldo, equity:Math.round(eq * 1000) / 1000,
       riesgo:riesgo, calor:calor,
       perfil:emp.perfil || 'parejo', techo:et.techo,
-      riesgoTxt:riesgo > 1.35 ? 'Muy alto' : riesgo > 1.05 ? 'Alto' : riesgo > 0.85 ? 'Medio' : 'Bajo',
+      riesgoTxt:riesgo > 1.35 ? 'Very high' : riesgo > 1.05 ? 'High' : riesgo > 0.85 ? 'Medium' : 'Low',
       fundar:false
     };
   }
@@ -115,13 +120,13 @@ var Carrera = (function () {
   function ofertaFundar(c) {
     var sec = elegir(SECTORES);
     return {
-      empresaId:'propia_' + sec.id, nombre:'Tu propia empresa', pitch:'Lo que venís aprendiendo, pero tuyo.',
+      empresaId:'propia_' + sec.id, nombre:'Your own company', pitch:'Everything you\'ve been learning, but yours.',
       sector:sec.id, sectorNombre:sec.nombre, sectorCorto:sec.corto, eje:sec.eje,
-      etapa:'semilla', etapaNombre:'Fundás',
-      rolN:7, rol:'Fundador/a', mando:1.0, notaRol:nivelPorN(7).nota,
+      etapa:'semilla', etapaNombre:'You found it',
+      rolN:7, rol:'Founder', mando:1.0, notaRol:nivelPorN(7).nota,
       mandatoId:'ingresos', mandatoTxt:mandatoPorId('ingresos').txt,
       meses:Math.round(rnd(20, 26)),
-      sueldo:70000, equity:100, riesgo:1.6, riesgoTxt:'Todo tuyo',
+      sueldo:70000, equity:100, riesgo:1.6, riesgoTxt:'All yours',
       perfil:'incierto', techo:22,
       cajaPropia:Math.round(300000 + Math.min(1200000, c.ahorros * 0.5)),
       fundar:true
@@ -135,7 +140,7 @@ var Carrera = (function () {
     return Motor.nuevoPuesto(of, c, mundo);
   }
 
-  /* ---------------- cierre de un puesto ---------------- */
+  /* ---------------- closing out a role ---------------- */
 
   function cerrar(c, e, mundo) {
     var of = c.ofertaActual;
@@ -151,32 +156,32 @@ var Carrera = (function () {
       promocion:false, despido:false, dRep:0, notas:[]
     };
 
-    /* reputación y movimiento */
+    /* reputation and movement */
     if (e.final === 'imputado') {
       r.despido = true; r.imputado = true; r.dRep = -22;
       c.nivel = Math.max(0, c.nivel - 2);
-      r.notas.push(['Imputación con tu nombre. En este rubro se perdona el fracaso; el expediente, no.', 'hard']);
+      r.notas.push(['An indictment with your name on it. This business forgives failure; a rap sheet, never.', 'hard']);
     } else if (e.final === 'venta') {
       r.dRep = 15; r.promocion = true;
-      r.notas.push(['Vendiste la empresa. En tu CV eso vale más que cualquier título.', 'deals']);
+      r.notas.push(['You sold the company. On your CV that\'s worth more than any title.', 'deals']);
     } else if (e.final === 'despido') {
       r.despido = true; r.dRep = -14;
-      r.notas.push(['Te quedaste sin capital político. En una organización eso se paga con el puesto, tengas razón o no.', 'hard']);
+      r.notas.push(['You ran out of political capital. In an organization that costs you the job, whether you were right or not.', 'hard']);
     } else if (e.final === 'quiebra') {
       r.dRep = cumplido ? -2 : -6;
-      r.notas.push(['La empresa se quedó sin caja mientras estabas ahí. Cuenta menos que un despido, pero cuenta.', 'lean']);
+      r.notas.push(['The company ran out of cash while you were there. It counts less than a firing, but it counts.', 'lean']);
     } else if (cumplido && e.politico >= 45) {
       r.promocion = true; r.dRep = 12;
-      r.notas.push(['Cumpliste el mandato y llegaste con crédito interno. Eso es una promoción.', 'grove']);
+      r.notas.push(['You delivered the mandate and finished with internal credit. That\'s a promotion.', 'grove']);
     } else if (prog >= 0.7) {
       r.dRep = 4;
-      r.notas.push(['Quedaste cerca. Te renuevan, no te ascienden.', 'grove']);
+      r.notas.push(['You came close. They renew you, they don\'t promote you.', 'grove']);
     } else {
       r.dRep = -8;
-      r.notas.push(['No moviste la métrica por la que te contrataron.', 'trap']);
+      r.notas.push(['You didn\'t move the metric they hired you to move.', 'trap']);
     }
 
-    /* equity: acantilado a los 12 meses, vesting a 4 años */
+    /* equity: cliff at 12 months, 4-year vesting */
     var vestida = 0;
     if (e.esFundador) vestida = e.capTable.fund * 100 * Math.min(1, e.mesPuesto / 48);
     else if (e.mesPuesto >= 12) vestida = of.equity * Math.min(1, e.mesPuesto / 48) * (e.dilucion || 1);
@@ -190,16 +195,16 @@ var Carrera = (function () {
     r.equityVestida = vestida;
     r.valorPapel = valorPapel;
     if (of.equity > 0 && e.mesPuesto < 12) {
-      r.notas.push(['Te fuiste antes de los 12 meses: el acantilado te dejó con cero de tu equity.', 'deals']);
+      r.notas.push(['You left before 12 months: the cliff left you with zero of your equity.', 'deals']);
     }
 
-    /* sueldo acumulado */
+    /* accumulated salary */
     var neto = of.sueldo * (e.mesPuesto / 12) * 0.45;
     c.ahorros += neto + (e.ventaSecundaria || 0);
     c.lupaMax = Math.max(c.lupaMax || 0, e.lupaMax || 0);
     r.ahorrado = neto;
 
-    /* habilidades: se aprende de lo que hacés, no de dónde estás */
+    /* skills: you learn from what you do, not from where you are */
     var tot = e.acum.desc + e.acum.cons + e.acum.plat + e.acum.fiab + e.acum.crec;
     if (tot < 1) tot = 1;
     var esf = e.mesPuesto / 14;
@@ -227,11 +232,11 @@ var Carrera = (function () {
     if (e.esFundador && e.final === 'venta') {
       r.cascada = Motor.cascada(e);
       c.ahorros += r.cascada.aFund;
-      /* ya cobraste: ese equity no queda en papel */
+      /* you already cashed out: that equity doesn't stay on paper */
       if (c.equities.length && c.equities[c.equities.length - 1].empresa === e.empresa) c.equities.pop();
-      r.notas.push(['Tu salida pasó por la cascada de liquidación antes de llegarte a vos.', 'deals']);
+      r.notas.push(['Your exit went through the liquidation waterfall before any of it reached you.', 'deals']);
     } else if (e.esFundador && e.final === 'plazo') {
-      r.notas.push(['Nadie compró la empresa: tu parte queda en papel. La riqueza de fundador es ilíquida hasta que alguien paga.', 'deals']);
+      r.notas.push(['Nobody bought the company: your stake stays on paper. Founder wealth is illiquid until someone pays.', 'deals']);
     }
     if (mundo) {
       var avanzo = Mundo.avanzarRival(mundo, e.mesPuesto, r.despido || e.final === 'quiebra');
@@ -245,7 +250,7 @@ var Carrera = (function () {
   }
 
   function subir(hab, k, cuanto) {
-    /* rendimientos decrecientes: subir de 80 a 90 cuesta mucho más */
+    /* diminishing returns: going from 80 to 90 costs a lot more */
     var margen = (100 - hab[k]) / 100;
     hab[k] = clamp(hab[k] + cuanto * (0.35 + margen * 0.75), 0, 100);
   }
@@ -259,13 +264,13 @@ var Carrera = (function () {
     return s; /* 0..4 */
   }
 
-  /* ---------------- fin de carrera ---------------- */
+  /* ---------------- end of career ---------------- */
 
   function boletin(c) {
     var i, realizado = 0, detalle = [];
     for (i = 0; i < c.equities.length; i++) {
       var q = c.equities[i];
-      /* la lotería del equity: la mayoría no vale nada, algunas valen mucho */
+      /* the equity lottery: most of it is worth nothing, some is worth a lot */
       var base = [0, 0.05, 0.25, 0.9, 2.4][q.salud];
       var factor = base * rnd(0.3, 1.7);
       var val = Math.round(q.papel * factor);

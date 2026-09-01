@@ -1,6 +1,6 @@
-/* Motor de simulación de un puesto. Un turno = un mes.
-   Las leyes de los libros están puestas como física del mundo, no como texto.
-   ES5 estricto (Safari 9). Sin dependencias, no toca el DOM. */
+/* Simulation engine for a single role. One turn = one month.
+   The laws from the books are baked in as physics of the world, not as text.
+   Strict ES5 (Safari 9). No dependencies, never touches the DOM. */
 
 var Motor = (function () {
   'use strict';
@@ -19,26 +19,26 @@ var Motor = (function () {
     return null;
   }
 
-  /* ---------------- arranque de un puesto ---------------- */
+  /* ---------------- starting a role ---------------- */
 
   function nuevoPuesto(oferta, carrera, mundo) {
     var sec = sectorPorId(oferta.sector), et = ETAPAS[oferta.etapa], niv = nivelPorN(oferta.rolN), i;
     var emp = empresaPorId(oferta.empresaId);
-    var nombreEmp = emp ? emp.nombre : (oferta.fundar ? 'tu empresa' : oferta.nombre);
+    var nombreEmp = emp ? emp.nombre : (oferta.fundar ? 'your company' : oferta.nombre);
 
     var e = {
-      /* identidad del puesto */
+      /* identity of the role */
       empresaId:oferta.empresaId, empresa:nombreEmp, sectorId:sec.id, sector:sec.nombre,
       etapa:oferta.etapa, rolN:oferta.rolN, rol:niv.rol, mando:niv.mando, palancas:niv.palancas,
       esFundador:oferta.rolN >= 7,
       mandatoId:oferta.mandatoId, meses:oferta.meses, mesPuesto:0,
 
-      /* física del sector */
+      /* physics of the sector */
       precio:sec.precio, escalaSec:sec.escala, viral:sec.viral, cac:sec.cac,
       capex:sec.capex, gateReqs:sec.gateReqs, gateNombre:sec.gate,
       tipoIncidente:sec.incidente, retMod:sec.retMod,
 
-      /* estado de la empresa */
+      /* state of the company */
       caja:oferta.cajaPropia || et.caja, mrr:0, valoracion:et.valoracion,
       ing:et.ing, prod:et.prod, gtm:et.gtm, rampa:[],
       deuda:et.deuda, arquitectura:et.arq, usabilidad:et.usab, marca:22 + et.arq * 0.2,
@@ -52,7 +52,7 @@ var Motor = (function () {
       capTable:{ fund:oferta.rolN >= 7 ? 1.0 : 0, inv:0, pool:0 },
       preferencias:[], rondas:[],
 
-      /* habilidades del jugador, ya aplicadas como modificadores */
+      /* the player's skills, already applied as modifiers */
       hab:{ producto:carrera.hab.producto, tecnologia:carrera.hab.tecnologia,
             negocio:carrera.hab.negocio, liderazgo:carrera.hab.liderazgo },
 
@@ -77,7 +77,7 @@ var Motor = (function () {
 
     for (i = 0; i < NECESIDADES.length; i++) e.cobertura[NECESIDADES[i].id] = 0;
 
-    /* la empresa ya viene con producto hecho: la etapa define cuánto */
+    /* the company already ships with product built: the stage defines how much */
     var arranque = et.arq * 0.55 + 10;
     e.cobertura.core = arranque;
     e.cobertura.flujo = arranque * 0.7;
@@ -97,10 +97,10 @@ var Motor = (function () {
     e.usuarios.visio = e.tam.visio * Math.min(0.6, sem * 4);
     e.usuarios.pragm = e.tam.pragm * Math.min(0.25, sem * 0.5);
 
-    /* El perfil de la empresa define su juego de priorización:
-       'grandes'  = pocas apuestas dominan, el resto vale poco;
-       'chicas'   = todo más barato y parejo, nada mueve solo la aguja;
-       'incierto' = las estimaciones vienen con más ruido. */
+    /* The company's profile defines its prioritization game:
+       'grandes'  = a few bets dominate, the rest is worth little;
+       'chicas'   = everything cheaper and evenly sized, nothing moves the needle alone;
+       'incierto' = the estimates come with extra noise. */
     for (i = 0; i < APUESTAS.length; i++) {
       var a = APUESTAS[i];
       var f = a.senuelo ? rnd(0.03, 0.20) : rnd(0.15, 1.25);
@@ -116,11 +116,11 @@ var Motor = (function () {
       }
       e.impactos[a.id] = Math.max(2, Math.round(a.imp * f));
       e.ruidos[a.id] = rnd(-1, 1) * (e.perfil === 'incierto' ? 1.6 : 1);
-      /* ninguna apuesta puede ser más grande que el techo: siempre tiene que entrar */
+      /* no bet can be bigger than the ceiling: it always has to fit */
       e.costos[a.id] = Math.min(costo, e.techoPts);
     }
-    /* la empresa llegó viva hasta acá: su arquitectura aguanta lo que ya tiene,
-       con poco margen. El margen lo construís vos. */
+    /* the company made it here alive: its architecture holds what it already has,
+       with little headroom. The headroom is yours to build. */
     var uIni = usuarios(e);
     if (uIni > 0) {
       var arqMin = 15 * Math.log(uIni / (400 * 0.72)) / Math.log(2);
@@ -138,8 +138,8 @@ var Motor = (function () {
     return e;
   }
 
-  /* El backlog mezcla lo genérico con lo propio del sector: en un neobanco la
-     licencia ES el producto; en silicio, el respin. */
+  /* The backlog mixes the generic with the sector-specific: at a neobank the
+     license IS the product; in silicon, the respin. */
   function rellenarBacklog(e) {
     var sec = sectorPorId(e.sectorId), pool = [], i, id;
     for (i = 0; i < sec.apuestas.length; i++) {
@@ -153,7 +153,7 @@ var Motor = (function () {
       if (esDeOtroSector(id, sec)) continue;
       if (!e.hechas[id] && !e.enVuelo[id] && e.backlog.indexOf(id) < 0) pool.push(id);
     }
-    /* las del sector entran primero para que el backlog se sienta del rubro */
+    /* the sector's own bets go in first so the backlog feels like the trade */
     var i2 = 0;
     while (e.backlog.length < 8 && pool.length) {
       var k = (i2++ < propias && propias > 0) ? 0 : Math.floor(Math.random() * pool.length);
@@ -171,7 +171,7 @@ var Motor = (function () {
     return false;
   }
 
-  /* ---------------- lecturas ---------------- */
+  /* ---------------- readings ---------------- */
 
   function usuarios(e) {
     var t = 0;
@@ -233,11 +233,12 @@ var Motor = (function () {
     return acc / tot;
   }
 
-  /* La compuerta del mercado grande. En cada sector pide otra cosa y se llama
-     distinto, pero siempre funciona igual: sin eso, el alcance no convierte. */
+  /* The gate to the big market. Each sector asks for something different and
+     calls it something different, but it always works the same: without it,
+     reach doesn't convert. */
   function requisitosGate(e) {
     var r = [], i, nec;
-    r.push({ txt:'Referencias de gente como ellos',
+    r.push({ txt:'References from people like them',
              ok:(e.usuarios.visio || 0) >= e.tam.visio * 0.05 && fit(e, 'visio') >= 0.55 });
     for (i = 0; i < e.gateReqs.length; i++) {
       nec = null;
@@ -245,7 +246,7 @@ var Motor = (function () {
       r.push({ txt:nec.nombre + ' (' + e.gateReqs[i][1] + ')',
                ok:(e.cobertura[e.gateReqs[i][0]] || 0) >= e.gateReqs[i][1] });
     }
-    r.push({ txt:'Servicio confiable (75)', ok:e.fiabPercibida >= 75 });
+    r.push({ txt:'Reliable service (75)', ok:e.fiabPercibida >= 75 });
     return r;
   }
   function compuerta(e, segId) {
@@ -262,7 +263,7 @@ var Motor = (function () {
     return (e.usuarios.pragm || 0) >= e.tam.pragm * 0.10;
   }
 
-  /* ---------------- capacidad ---------------- */
+  /* ---------------- capacity ---------------- */
 
   function capacidad(e) {
     var base = e.ing * 20 + e.prod * 14;
@@ -279,27 +280,27 @@ var Motor = (function () {
     p -= (e.penalCap || 0);
     return Math.max(4, Math.round(p));
   }
-  /* Lo que respondés vos. El resto de la organización sigue moviéndose sin
-     pedirte permiso: eso es tener poco mando. */
+  /* What answers to you. The rest of the organization keeps moving without
+     asking your permission: that's what having little command means. */
   function capacidadPropia(e) { return Math.max(2, Math.round(capacidad(e) * e.mando)); }
 
   function desgloseCapacidad(e) {
     var base = e.ing * 20 + e.prod * 14, d = [];
-    d.push({ k:'Capacidad del área', v:base });
-    d.push({ k:'Bajo tu mando (' + Math.round(e.mando * 100) + '%)', v:capacidadPropia(e) });
-    if (e.deuda > 0) d.push({ k:'Deuda técnica', v:-Math.round(base * (e.deuda/100) * 0.55), libro:'fowler' });
-    if (e.rampa.length) d.push({ k:'Mentoría de nuevos', v:-e.rampa.length * 6, libro:'brooks' });
-    if (e.ing + e.prod > (e.teamTopo ? 12 : 8) + Math.round(e.hab.liderazgo/12)) d.push({ k:'Carga cognitiva', v:'-', libro:'topologies' });
-    if (e.moral < 60) d.push({ k:'Moral baja', v:'-', libro:'grove' });
-    if (e.foco < 45) d.push({ k:'Falta de foco', v:'-', libro:'grove' });
-    if (e.cd) d.push({ k:'Despliegue continuo', v:'+12%', libro:'accelerate' });
-    if (e.penalCap) d.push({ k:'Resaca de incidente', v:-e.penalCap, libro:'sre' });
-    if (e.capacidadReservada > 0) d.push({ k:'Compromiso a medida', v:-8, libro:'trap' });
+    d.push({ k:'Org capacity', v:base });
+    d.push({ k:'Under your command (' + Math.round(e.mando * 100) + '%)', v:capacidadPropia(e) });
+    if (e.deuda > 0) d.push({ k:'Technical debt', v:-Math.round(base * (e.deuda/100) * 0.55), libro:'fowler' });
+    if (e.rampa.length) d.push({ k:'Mentoring new hires', v:-e.rampa.length * 6, libro:'brooks' });
+    if (e.ing + e.prod > (e.teamTopo ? 12 : 8) + Math.round(e.hab.liderazgo/12)) d.push({ k:'Cognitive load', v:'-', libro:'topologies' });
+    if (e.moral < 60) d.push({ k:'Low morale', v:'-', libro:'grove' });
+    if (e.foco < 45) d.push({ k:'Lack of focus', v:'-', libro:'grove' });
+    if (e.cd) d.push({ k:'Continuous deployment', v:'+12%', libro:'accelerate' });
+    if (e.penalCap) d.push({ k:'Incident hangover', v:-e.penalCap, libro:'sre' });
+    if (e.capacidadReservada > 0) d.push({ k:'Custom-work commitment', v:-8, libro:'trap' });
     return d;
   }
 
-  /* Con evidencia baja esto es ruido con cara de número. Y si además
-     entrevistaste mal, es ruido optimista. La habilidad de producto ayuda. */
+  /* With low evidence this is noise wearing a number's face. And if you also
+     interviewed badly, it's optimistic noise. Product skill helps. */
   function costoDe(e, id) {
     if (e.costos && e.costos[id]) return e.costos[id];
     var a = apuesta(id);
@@ -312,8 +313,8 @@ var Motor = (function () {
     return t;
   }
 
-  /* Estimación desagregada para priorizar: probabilidad de que el número
-     sea cierto (1-5), magnitud si acierta (1-5) y esfuerzo (S/M/L/XL). */
+  /* Disaggregated estimate for prioritizing: probability that the number
+     is real (1-5), magnitude if it lands (1-5) and effort (S/M/L/XL). */
   function estimacionDetalle(e, id) {
     var est = estimacion(e, id);
     var incert = (100 - e.evidencia) / 100;
@@ -332,12 +333,12 @@ var Motor = (function () {
     return Math.max(1, Math.round(real + (e.ruidos[id] || 0) * 40 * incert + sesgo));
   }
   function confianza(e) {
-    if (e.evidencia >= 70) return 'alta';
-    if (e.evidencia >= 40) return 'media';
-    return 'baja';
+    if (e.evidencia >= 70) return 'high';
+    if (e.evidencia >= 40) return 'medium';
+    return 'low';
   }
 
-  /* ---------------- mandato y capital político ---------------- */
+  /* ---------------- mandate and political capital ---------------- */
 
   function progresoMandato(e) {
     var m = mandatoPorId(e.mandatoId);
@@ -363,7 +364,7 @@ var Motor = (function () {
     return total > 0 ? alin / total : 0.5;
   }
 
-  /* ---------------- acciones sueltas ---------------- */
+  /* ---------------- one-off actions ---------------- */
 
   function contratar(e, rol) { e.rampa.push({ rol:rol, listoEn:2 }); }
 
@@ -406,25 +407,25 @@ var Motor = (function () {
     e.usuarios.visio = Math.round((e.usuarios.visio || 0) * 0.5);
   }
 
-  /* ---------------- el mes ---------------- */
+  /* ---------------- the month ---------------- */
 
   function simular(e, plan, mundo) {
     var log = [], i, id;
     if (mundo) { e.calor = Mundo.calorSector(mundo, e.sectorId); e.eraId = mundo.eraId; }
 
-    /* 1. incorporaciones: dos meses hasta producir */
+    /* 1. new hires: two months until they produce */
     var quedan = [];
     for (i = 0; i < e.rampa.length; i++) {
       e.rampa[i].listoEn--;
       if (e.rampa[i].listoEn <= 0) {
         if (e.rampa[i].rol === 'ing') e.ing++; else if (e.rampa[i].rol === 'prod') e.prod++; else e.gtm++;
-        log.push({ tipo:'bueno', texto:'Una incorporación terminó de arrancar y ya produce.', libro:'brooks' });
+        log.push({ tipo:'bueno', texto:'A new hire finished ramping up and is producing.', libro:'brooks' });
       } else quedan.push(e.rampa[i]);
     }
     e.rampa = quedan;
     e.penalCap = 0;
 
-    /* 2. lo tuyo + lo que hace el resto de la organización sin vos */
+    /* 2. what's yours + what the rest of the organization does without you */
     var capTotal = capacidad(e), mio = capacidadPropia(e);
     var p = { desc:plan.desc||0, cons:plan.cons||0, plat:plan.plat||0, fiab:plan.fiab||0, crec:plan.crec||0 };
     var mioUsado = p.desc + p.cons + p.plat + p.fiab + p.crec;
@@ -446,33 +447,33 @@ var Motor = (function () {
     if (e.reescritura > 0) {
       p.plat += p.cons; p.cons = 0; e.reescritura--;
       e.deuda -= 14;
-      log.push({ tipo:'neutro', texto:'Mes de reescritura: cero features. Quedan ' + e.reescritura + '.', libro:'fowler' });
+      log.push({ tipo:'neutro', texto:'Rewrite month: zero features. ' + e.reescritura + ' to go.', libro:'fowler' });
     }
     if (e.congelado) {
       var tope = Math.round(capTotal * 0.25);
       if (p.cons > tope) { p.fiab += p.cons - tope; p.cons = tope; }
-      log.push({ tipo:'neutro', texto:'Congelamiento por presupuesto de error: casi no se construye.', libro:'sre' });
+      log.push({ tipo:'neutro', texto:'Error-budget freeze: almost nothing gets built.', libro:'sre' });
     }
     if (e.deudaPendiente) { e.deuda += e.deudaPendiente; e.deudaPendiente = 0; }
 
-    /* 3. descubrimiento */
+    /* 3. discovery */
     if (p.desc > 0) {
       var gan = p.desc * 1.1 * e.calidadDesc * (1 + e.hab.producto / 200);
       e.evidencia = clamp(e.evidencia + gan, 0, 100);
       for (id in e.ruidos) if (e.ruidos.hasOwnProperty(id)) e.ruidos[id] *= 0.88;
       e.usabilidad += p.desc * 0.14;
-      if (e.calidadDesc < 0.6) log.push({ tipo:'malo', texto:'Entrevistaste pidiendo opiniones. Salieron elogios, no datos.', libro:'momtest' });
-      else log.push({ tipo:'bueno', texto:'Descubrimiento: evidencia +' + Math.round(gan) + '.', libro:'torres' });
+      if (e.calidadDesc < 0.6) log.push({ tipo:'malo', texto:'You interviewed asking for opinions. You got compliments, not data.', libro:'momtest' });
+      else log.push({ tipo:'bueno', texto:'Discovery: evidence +' + Math.round(gan) + '.', libro:'torres' });
     }
 
-    /* 4. construir */
+    /* 4. build */
     var enVuelo = 0;
     for (id in e.enVuelo) if (e.enVuelo.hasOwnProperty(id)) enVuelo++;
     var sel = plan.apuestas || [];
     var n = enVuelo + sel.length;
     var wip = n > 2 ? Math.max(0.5, 1 - 0.15 * (n - 2)) : 1;
-    if (n > 2) log.push({ tipo:'malo', texto:n + ' apuestas en paralelo: el cambio de contexto se comió ' +
-      Math.round((1 - wip) * 100) + '% del esfuerzo.', libro:'grove' });
+    if (n > 2) log.push({ tipo:'malo', texto:n + ' bets in parallel: context switching ate ' +
+      Math.round((1 - wip) * 100) + '% of the effort.', libro:'grove' });
     var comprometido = 0;
     for (id in e.enVuelo) if (e.enVuelo.hasOwnProperty(id)) comprometido += Math.max(0, costoDe(e, id) - e.enVuelo[id]);
     for (i = 0; i < sel.length; i++) {
@@ -498,9 +499,9 @@ var Motor = (function () {
         var real = e.impactos[id];
         e.cobertura[a.nec] = (e.cobertura[a.nec] || 0) + real;
         var idx = e.backlog.indexOf(id); if (idx >= 0) e.backlog.splice(idx, 1);
-        var frase = 'Entregaste "' + a.n + '": impacto real ' + real + ' (esperabas ' + esperado + ').';
+        var frase = 'You shipped "' + a.n + '": real impact ' + real + ' (you expected ' + esperado + ').';
         if (real < esperado * 0.55) {
-          log.push({ tipo:'malo', texto:frase + ' Construiste sin saber.', libro:e.evidencia < 45 ? 'lean' : 'trap' });
+          log.push({ tipo:'malo', texto:frase + ' You built without knowing.', libro:e.evidencia < 45 ? 'lean' : 'trap' });
         } else {
           log.push({ tipo:real >= esperado * 0.8 ? 'bueno' : 'malo', texto:frase, libro:'inspired' });
         }
@@ -509,7 +510,7 @@ var Motor = (function () {
     e.deuda += p.cons * 0.15 * (1 - e.hab.tecnologia / 180);
     if (e.fabrica) e.deuda += 2;
 
-    /* 5. plataforma */
+    /* 5. platform */
     if (p.plat > 0) {
       e.deuda -= p.plat * 0.55 * (1 + e.hab.tecnologia / 150);
       e.arquitectura += p.plat * 0.28;
@@ -517,21 +518,21 @@ var Motor = (function () {
     e.deuda += 2.5;
     e.deuda = clamp(e.deuda, 0, 100);
 
-    /* 6. fiabilidad */
+    /* 6. reliability */
     var escudo = Math.min(0.30, p.fiab * 0.018);
     if (p.fiab > 0) {
       e.fiabPercibida = clamp(e.fiabPercibida + p.fiab * 0.45, 0, 100);
       e.presupuestoError = clamp(e.presupuestoError + p.fiab * 0.6, -50, 100);
     }
 
-    /* 7. incidentes: cada sector se rompe a su manera */
+    /* 7. incidents: every sector breaks in its own way */
     var c = carga(e);
     var pInc = 0.05 + Math.max(0, c - 0.8) * 0.5 + e.deuda / 400 + (e.riesgoExtra || 0) - escudo - (e.cd ? 0.05 : 0);
     if (Math.random() < clamp(pInc, 0, 0.9)) resolverIncidente(e, log, c);
     e.riesgoExtra = (e.riesgoExtra || 0) * 0.5;
 
-    /* 7b. la Lupa del regulador: mientras más turbio jugás, más te miran.
-       Decae lenta; con la Lupa alta llegan inspecciones, multas, y peor. */
+    /* 7b. the regulator's Heat: the dirtier you play, the harder they look.
+       Decays slowly; with the Heat high come inspections, fines, and worse. */
     if (e.lupa > e.lupaBase) e.lupa = Math.max(e.lupaBase, e.lupa - 1);
     if (e.lupa > e.lupaMax) e.lupaMax = e.lupa;
     if (e.lupa >= 40) {
@@ -541,12 +542,12 @@ var Motor = (function () {
         e.caja -= multa;
         e.moral -= 4;
         e.lupa = Math.max(e.lupaBase, e.lupa - 12);
-        log.push({ tipo:'malo', texto:'Inspección sorpresa. Encontraron lo suficiente: multa de ' +
-          Math.round(multa / 1000) + 'k y una carpeta que queda abierta.', libro:'hard' });
+        log.push({ tipo:'malo', texto:'Surprise inspection. They found enough: a ' +
+          Math.round(multa / 1000) + 'k fine and a file that stays open.', libro:'hard' });
       }
     }
 
-    /* 8. crecimiento y bajas */
+    /* 8. growth and churn */
     var mercado = 0;
     for (i = 0; i < SEGMENTOS.length; i++) mercado += e.tam[SEGMENTOS[i].id];
     var saturacion = 1 + usuarios(e) / (mercado * 0.14);
@@ -581,17 +582,17 @@ var Motor = (function () {
       e.usuarios[sid] += trafico * conv;
     }
     if (bloqueado > 120 && !e.gateRevelado) {
-      log.push({ tipo:'malo', texto:'Mucho alcance al mercado grande no convirtió en nada. No es el precio: es ' +
+      log.push({ tipo:'malo', texto:'A lot of reach into the big market converted into nothing. It\'s not the price: it\'s ' +
         e.gateNombre.toLowerCase() + '.', libro:'chasm' });
       e.gateRevelado = true;
     }
 
-    /* 9. plata */
+    /* 9. money */
     e.mrr = calcularMrr(e);
     var gastoCrec = p.crec * 900;
     e.caja += e.mrr - burnMensual(e) - gastoCrec;
 
-    /* 10. capital político: te miden por el mandato, no por tener razón */
+    /* 10. political capital: they measure you by the mandate, not by being right */
     var alin = alineacion(e, e.gastoPropio);
     var prog = progresoMandato(e);
     var esperado2 = (e.mesPuesto + 1) / e.meses;
@@ -600,18 +601,18 @@ var Motor = (function () {
     if (mioUsado < mio * 0.6) dPol -= 3;
     e.politico = clamp(e.politico + dPol, -20, 100);
 
-    /* 10b. si no sos fundador, la empresa se financia sola — y te diluye */
+    /* 10b. if you're not a founder, the company funds itself — and dilutes you */
     if (!e.esFundador && runwayMeses(e) < 5 && Math.random() < 0.35) {
       var extra = burnMensual(e) * 15;
       e.caja += extra;
       e.valoracion = Math.max(e.valoracion * 0.8, e.mrr * 12 * 7);
       e.dilucion = (e.dilucion || 1) * 0.78;
-      log.push({ tipo:'neutro', texto:'La empresa cerró una ronda para seguir viva. Tu equity acaba de diluirse 22%.', libro:'deals' });
+      log.push({ tipo:'neutro', texto:'The company closed a round to stay alive. Your equity just got diluted 22%.', libro:'deals' });
     } else if (!e.esFundador && runwayMeses(e) < 2) {
-      log.push({ tipo:'malo', texto:'La caja se acaba y no aparece nadie dispuesto a poner más.', libro:'lean' });
+      log.push({ tipo:'malo', texto:'The cash is running out and nobody shows up willing to put in more.', libro:'lean' });
     }
 
-    /* 11. cierre de mes */
+    /* 11. end of month */
     if (e.capacidadReservada > 0) e.capacidadReservada--;
     e.moral = clamp(e.moral + (e.mrr > burnMensual(e) ? 2 : 0) + (e.empoderado ? 1 : 0) +
                     e.hab.liderazgo / 60 - 1.5, 0, 100);
@@ -629,11 +630,11 @@ var Motor = (function () {
     e.mesPuesto++;
     if (e.mesPuesto % 3 === 0) {
       e.presupuestoError = 100; e.congelado = false;
-      log.push({ tipo:'neutro', texto:'Trimestre nuevo: el presupuesto de error vuelve a 100.', libro:'sre' });
+      log.push({ tipo:'neutro', texto:'New quarter: the error budget resets to 100.', libro:'sre' });
     }
     rellenarBacklog(e);
 
-    /* 12. ¿se termina el puesto? */
+    /* 12. is the role over? */
     e.valoracion = Math.max(e.valoracion * 0.995, e.mrr * 12 * 6);
     if (e.imputado) { e.vivo = false; e.final = 'imputado'; }
     else if (e.ventaAcordada) { e.vivo = false; e.final = 'venta'; }
@@ -656,36 +657,36 @@ var Motor = (function () {
       var perdida = Math.max(30000, usuarios(e) * 12);
       e.caja -= perdida;
       e.fiabPercibida = clamp(e.fiabPercibida - 12, 0, 100);
-      log.push({ tipo:'malo', texto:'Ola de fraude: se fueron ' + Math.round(perdida/1000) + 'k directo del margen.', libro:'sre' });
+      log.push({ tipo:'malo', texto:'Fraud wave: ' + Math.round(perdida/1000) + 'k gone, straight out of the margin.', libro:'sre' });
     } else if (t === 'escandalo') {
       e.marca = clamp(e.marca - 25, 0, 100);
       e.fiabPercibida = clamp(e.fiabPercibida - 15, 0, 100);
       e.cobertura.segur = Math.max(0, e.cobertura.segur - 10);
       for (i = 0; i < SEGMENTOS.length; i++) e.usuarios[SEGMENTOS[i].id] *= 0.88;
-      log.push({ tipo:'malo', texto:'Un medio publicó cómo se usaron tus datos en campaña. En este rubro eso no se olvida.', libro:'sre' });
+      log.push({ tipo:'malo', texto:'A news outlet published how your data got used in a campaign. In this business that doesn\'t get forgotten.', libro:'sre' });
     } else if (t === 'granwin') {
       var agujero = Math.max(60000, e.mrr * 1.6);
       e.caja -= agujero;
       e.marca = clamp(e.marca - 8, 0, 100);
       e.lupa = clamp(e.lupa + 8, 0, 100);
-      log.push({ tipo:'malo', texto:'Un apostador encontró el agujero en el bono y vació ' +
-        Math.round(agujero / 1000) + 'k antes de que nadie mirara. Salió a contarlo.', libro:'sre' });
+      log.push({ tipo:'malo', texto:'A gambler found the hole in the bonus and drained ' +
+        Math.round(agujero / 1000) + 'k before anyone looked. Then he went public about it.', libro:'sre' });
     } else if (t === 'clinico') {
       e.fiabPercibida = clamp(e.fiabPercibida - 25, 0, 100);
       e.marca = clamp(e.marca - 12, 0, 100);
       e.cobertura.segur = Math.max(0, e.cobertura.segur - 15);
       e.capacidadReservada = 2;
-      log.push({ tipo:'malo', texto:'Evento adverso con un paciente: revisión regulatoria y freno de todo lo demás.', libro:'sre' });
+      log.push({ tipo:'malo', texto:'Adverse event with a patient: regulatory review and everything else on hold.', libro:'sre' });
     } else {
       e.fiabPercibida = clamp(e.fiabPercibida - 20, 0, 100);
       for (i = 0; i < SEGMENTOS.length; i++) e.usuarios[SEGMENTOS[i].id] *= 0.95;
       log.push({ tipo:'malo',
-        texto:c > 0.9 ? 'Caída: la carga pasó lo que aguanta tu arquitectura.' : 'Caída en producción. La deuda te encontró.',
+        texto:c > 0.9 ? 'Outage: load blew past what your architecture can take.' : 'Production outage. The debt found you.',
         libro:c > 0.9 ? 'ddia' : 'fowler' });
     }
   }
 
-  /* ---------------- salida (solo fundador) ---------------- */
+  /* ---------------- exit (founder only) ---------------- */
 
   function cascada(e) {
     var mult = 3 + Math.min(3, retencionMedia(e) * 3) + (e.competidor.atencion < 0.4 ? 0.5 : 0);

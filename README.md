@@ -1,195 +1,196 @@
-# Fundadores — una carrera en producto
+# Founders — a career in product
 
-**Jugalo acá: https://fundadores-production.up.railway.app/**
+**Play it here: https://fundadores-production.up.railway.app/**
 
-Juego de carrera para navegador, pensado originalmente para un iPad 3
-(iOS 9.3.5), por eso corre en cualquier cosa. En casa lo sirve el servidor
-del panel (`localhost:8000/juego/`); en internet, Railway con el
-`server.js` de este repo (`npm start` para correrlo local).
+Career game for the browser, originally built for an iPad 3
+(iOS 9.3.5), which is why it runs on anything. At home it's served by the
+dashboard server (`localhost:8000/juego/`); on the internet, Railway with
+this repo's `server.js` (`npm start` to run it locally).
 
-Arrancás de Analista de Producto y saltás de startup en startup — como la
-carrera del Soccer Superstar — hasta CPO o tu propia fundación. Cada puesto
-dura 8-14 meses, te contratan con un **mandato**, y al final te evalúan:
-ascenso, renovación, despido... o imputación.
+You start as a Product Analyst and hop from startup to startup — like the
+career in Soccer Superstar — up to CPO or founding your own thing. Each job
+lasts 8-14 months, you get hired with a **mandate**, and at the end you're
+judged: promotion, renewal, firing... or indictment.
 
-## Publicar cambios — SIEMPRE a todos lados
+## Publishing changes — ALWAYS everywhere
 
-El juego vive en una sola carpeta pero se publica en **tres lugares**, y un
-cambio no está terminado hasta que llegó a los tres:
+The game lives in a single folder but ships to **three places**, and a
+change isn't done until it's reached all three:
 
-| Lugar | Quién lo ve | Cómo se actualiza |
+| Place | Who sees it | How it updates |
 |---|---|---|
-| Servidor del panel (Mac/iPad) | vos, en casa | solo — sirve esta carpeta directo |
-| GitHub (`lucasmayorca/fundadores`) | el código público | `git push` |
-| Railway (link público) | cualquiera en internet | `railway up` |
+| Dashboard server (Mac/iPad) | you, at home | on its own — serves this folder directly |
+| GitHub (`lucasmayorca/fundadores`) | the public code | `git push` |
+| Railway (public link) | anyone on the internet | `railway up` |
 
-El checklist para CADA cambio, sin excepción:
+The checklist for EVERY change, no exceptions:
 
-1. Subí el `?v=N` en `index.html` (bustea el caché del iPad y de Railway).
-2. Commit, push y deploy:
+1. Bump the `?v=N` in `index.html` (busts the iPad and Railway caches).
+2. Commit, push and deploy:
 
 ```bash
 git add -A && git commit -m "qué cambió" && git push && railway up --detach
 ```
 
-Si te salteás el `git push`, GitHub queda mentiroso; si te salteás
-`railway up`, el link público sirve el juego viejo. Railway **no** se
-despliega solo con el push (deploy por CLI, no está conectado al repo) —
-si algún día se conecta desde el dashboard de Railway, el `railway up`
-sobra, pero hasta entonces van los dos.
+Skip the `git push` and GitHub becomes a liar; skip `railway up` and the
+public link serves the old game. Railway does **not** deploy itself on
+push (deploys go through the CLI, it's not connected to the repo) — if it
+ever gets connected from the Railway dashboard, the `railway up` becomes
+redundant, but until then you do both.
 
-## Restricciones técnicas (las mismas del panel)
+## Technical constraints (same as the dashboard)
 
-iOS 9.3.5 / Safari 9: ES5 plano (sin `let`/`const`, arrows, template
-literals, `class` ni `fetch`), flexbox con prefijos `-webkit-`, 1024×768
-fijo, sin build step ni dependencias. Todo el estado en `localStorage`.
-Los script tags llevan `?v=N` para bustear caché: **subí el número al
-modificar cualquier archivo**.
+iOS 9.3.5 / Safari 9: plain ES5 (no `let`/`const`, arrows, template
+literals, `class` or `fetch`), flexbox with `-webkit-` prefixes, fixed
+1024×768, no build step, no dependencies. All state in `localStorage`.
+Script tags carry `?v=N` for cache busting: **bump the number whenever
+you touch any file**.
 
-## El bucle del mes: 3 toques
+## The monthly loop: 3 taps
 
-1. **Postura del mes** (un botón): Construir / Descubrir / Sanear / Crecer.
-   Se desbloquean al ascender y reparten los puntos solas.
-2. **Elegir apuestas** hasta llenar el **techo de compromiso**. Cada apuesta
-   muestra: **prob** (puntos ●●●○○: confiabilidad de la estimación),
-   **impacto** (bloques ▂▄▆: cuánto mueve si acierta), **esfuerzo**
-   (S/M/L/XL) y el marcador **▲/▽** de alineación con la etapa. Priorizar
-   por probabilidad × impacto ÷ esfuerzo bajo un techo ES el juego: con
-   bot, hacerlo bien cumple ~90% de los primeros mandatos; ignorarlo, ~45%.
-3. **Cerrar el mes** y leer qué pasó (impacto real vs. esperado).
+1. **Stance for the month** (one button): Build / Discover / Clean up / Grow.
+   They unlock as you climb and split the points on their own.
+2. **Pick bets** until you fill the **commitment cap**. Each bet shows:
+   **prob** (dots ●●●○○: how reliable the estimate is), **impact**
+   (blocks ▂▄▆: how much it moves if it lands), **effort** (S/M/L/XL) and
+   the **▲/▽** marker for stage alignment. Prioritizing by probability ×
+   impact ÷ effort under a cap IS the game: with bots, doing it well
+   delivers ~90% of the first mandates; ignoring it, ~45%.
+3. **Close the month** and read what happened (real vs. expected impact).
 
-## El briefing y las etapas (teoría de PMF)
+## The briefing and the stages (PMF theory)
 
-Al aceptar una oferta aparece el **briefing del día uno**: la fase de la
-empresa con su objetivo, mosaico de contexto (usuarios/equipo/sector/
-mandato), qué necesidades priman (▲) y cuáles pesan poco (▽), el elenco con
-nombre, y un bloque **"De dónde sale esta etapa"** con la teoría (Blank,
-Rachleff, Startup Genome, Moore) aplicada a los números de ESA empresa.
-El chip de fase queda persistente en la barra del mandato y tocarlo reabre
-el briefing.
+Accepting an offer brings up the **day-one briefing**: the company's phase
+with its goal, a context mosaic (users/team/sector/mandate), which needs
+pay off (▲) and which barely count (▽), the named cast, and a **"Where
+this stage comes from"** block with the theory (Blank, Rachleff, Startup
+Genome, Moore) applied to THAT company's numbers. The phase chip stays
+pinned in the mandate bar and tapping it reopens the briefing.
 
-Las fases son mecánicas, no decorativas — el impacto real de las apuestas
-alineadas rinde ×1,3 y el de las desalineadas ×0,5:
+The phases are mechanical, not decorative — the real impact of aligned
+bets pays ×1.3 and misaligned ones ×0.5:
 
-| Fase | Etapa | Prima | Pesa poco |
+| Phase | Stage | Pays off | Barely counts |
 |---|---|---|---|
-| PRE-PMF | Semilla | Núcleo, Flujo | Escala, Seguridad |
-| VALIDANDO PMF | Serie A | Flujo, Datos | Escala |
-| ESCALANDO | Serie B | Integra, Soporte, Segur, Escala | — |
+| PRE-PMF | Seed | Core, Flow | Scale, Security |
+| VALIDATING PMF | Series A | Flow, Data | Scale |
+| SCALING | Series B | Integrations, Support, Security, Scale | — |
 
-Escalar antes de tiempo — la causa de muerte número uno según Startup
-Genome — ahora es un error que el juego cobra.
+Scaling too early — the number one cause of death according to Startup
+Genome — is now a mistake the game charges you for.
 
-## Teoría aplicada al caso (en tres lugares)
+## Theory applied to the case (in three places)
 
-1. **Ficha de libro**: además de la idea y cómo lo modela el juego, un
-   bloque **"En tu partida, hoy"** calculado en vivo con tus números
-   ("Tu deuda está en 60: el equipo pierde ~33% de capacidad pagando ese
-   interés"). 25 libros tienen aplicador (`APLICAR` en libros.js).
-2. **Decisión de dilema**: al elegir, el resultado muestra **"La teoría"**
-   — el concepto completo del libro + la línea aplicada a tu empresa.
-3. **Briefing de etapa**: la teoría de la fase + el veredicto sobre esa
-   empresa concreta.
+1. **Book card**: besides the idea and how the game models it, an
+   **"In your run, today"** block computed live from your numbers
+   ("Your debt sits at 60: the team loses ~33% of capacity paying that
+   interest"). 25 books have an applier (`APLICAR` in libros.js).
+2. **Dilemma decision**: on choosing, the result shows **"The theory"**
+   — the book's full concept + the line applied to your company.
+3. **Stage briefing**: the phase's theory + the verdict on that
+   specific company.
 
-## El sistema de carrera
+## The career system
 
-- **Escalafón de 8 niveles**: cada rol define tu **mando** (% del área que
-  respondés — el resto se mueve solo) y qué **posturas** tenés. También qué
-  VES: ingresos desde PM, caja/runway desde GPM, sala de máquinas desde
-  Sr PM. Ganar visión es parte del premio.
-- **Mandato + capital político**: gastar fuera del mandato — aunque tengas
-  razón — quema capital político; a cero te despiden. Los mandatos de
-  crecimiento escalan con el plazo del contrato y solo se ofrecen a roles
-  con las palancas para cumplirlos.
-- **Primer puesto corto** (8-10 meses): el primer ascenso llega rápido.
-- **Equity real**: acantilado de 12 meses, vesting a 4 años, dilución
-  cuando la empresa levanta sin vos, lotería final según la salud de la
-  empresa al irte. El fundador sin evento de compra queda en papel.
-- **Habilidades** (producto/tecnología/negocio/liderazgo): suben según en
-  qué gastás los meses, con rendimientos decrecientes.
+- **8-level ladder**: each role defines your **control** (% of the area
+  you answer for — the rest moves on its own) and which **stances** you
+  get. Also what you SEE: revenue from PM, cash/runway from GPM, engine
+  room from Sr PM. Gaining visibility is part of the prize.
+- **Mandate + political capital**: spending outside the mandate — even
+  when you're right — burns political capital; at zero you're fired.
+  Growth mandates scale with the contract length and are only offered to
+  roles with the levers to deliver them.
+- **Short first job** (8-10 months): the first promotion comes fast.
+- **Real equity**: 12-month cliff, 4-year vesting, dilution when the
+  company raises without you, a final lottery based on the company's
+  health when you leave. A founder with no purchase event stays on paper.
+- **Skills** (product/tech/business/leadership): they grow based on what
+  you spend your months on, with diminishing returns.
 
-## Los 7 sectores (2 empresas cada uno, todas startups)
+## The 7 sectors (2 companies each, all startups)
 
-| Sector | La compuerta al mercado grande | Se rompe con |
+| Sector | The gate to the big market | Breaks with |
 |---|---|---|
-| Datos y opinión pública | Auditoría de transparencia | Escándalo de datos en campaña |
-| Biogenética aplicada | Validación regulatoria y bioseguridad | Evento adverso |
-| Banco digital | Licencia y control de fraude | Ola de fraude |
-| Energía renovable | Prueba verificable del ahorro | Caída de infraestructura |
-| Devtools | Compra del área, no del individuo | Caída de infraestructura |
-| Apuestas y juego online | Licencia y controles de adicción | La ballena y el agujero del bono |
-| Salud premium (gold) | Confianza médica impecable | Evento adverso con paciente VIP |
+| Data and public opinion | Transparency audit | Campaign data scandal |
+| Applied biogenetics | Regulatory validation and biosafety | Adverse event |
+| Digital bank | License and fraud control | Fraud wave |
+| Renewable energy | Verifiable proof of savings | Infrastructure outage |
+| Devtools | Selling to the department, not the individual | Infrastructure outage |
+| Betting and online gaming | License and addiction controls | The whale and the bonus loophole |
+| Premium health (gold) | Impeccable medical trust | Adverse event with a VIP patient |
 
-Cada empresa además declara en la oferta su **perfil de priorización**:
-techo de compromiso (22/30/40 pts por etapa) y tipo de cartera — "pocas y
-grandes" (28% de apuestas valen ×2, el resto casi nada), "muchas y chicas",
-"difíciles de estimar" o "cartera pareja".
+Each company also declares its **prioritization profile** in the offer:
+commitment cap (22/30/40 pts per stage) and portfolio type — "few and
+big" (28% of bets pay ×2, the rest almost nothing), "many and small",
+"hard to estimate" or "balanced portfolio".
 
-## El mundo vivo
+## The living world
 
-- **6 eras** (Age of Empires): boom de la longevidad, invierno del capital,
-  año electoral, transición energética, fiebre del juego, año de los
-  reguladores. Calientan/enfrían sectores, mueven el capital y las ofertas.
-- **Rival con nombre** (NFS): progresa en paralelo, avanza cuando tropezás,
-  se compara al final.
-- **Elenco por empresa** (GTA): CEO, CTO, VP Ventas y Staff Engineer con
-  nombre traen los dilemas. Ticker de noticias por era.
+- **6 eras** (Age of Empires): longevity boom, capital winter, election
+  year, energy transition, gambling fever, year of the regulators. They
+  heat/cool sectors, move capital and offers.
+- **Named rival** (NFS): progresses in parallel, gains ground when you
+  stumble, gets compared at the end.
+- **Cast per company** (GTA): a named CEO, CTO, VP Sales and Staff
+  Engineer bring the dilemmas. News ticker per era.
 
-## La zona gris (GTA, Billions, Breaking Bad)
+## The gray zone (GTA, Billions, Breaking Bad)
 
-**La Lupa del regulador** es el nivel de "buscado": los atajos turbios la
-suben (cocinar métricas, el data room robado, usuarios comprados, el club
-de compradores estilo Dallas Buyers Club, el negocio paralelo del CTO
-estilo Breaking Bad, diluir al socio estilo Social Network). A 40:
-inspecciones y multas. A 55: la fiscal ofrece un trato. A 85: allanamiento
-— y si encuentran algo, **imputación** (−22 reputación, −2 niveles).
-La tentación siempre es la primera opción y siempre paga hoy: en bots,
-jugar sucio termina en ~$6,8M y limpio en ~$16,6M.
+**The regulator's Heat** is your "wanted" level: shady shortcuts raise it
+(cooking metrics, the stolen data room, bought users, the Dallas Buyers
+Club-style buyers club, the CTO's Breaking Bad-style side business,
+diluting your partner Social Network-style). At 40: inspections and
+fines. At 55: the prosecutor offers a deal. At 85: a raid — and if they
+find something, **indictment** (−22 reputation, −2 levels). The
+temptation is always the first option and always pays today: in bots,
+playing dirty ends at ~$6.8M and clean at ~$16.6M.
 
-## La biblioteca: 100 fichas
+## The library: 100 cards
 
-8 pilares: startup (19), producto (24), tecnología (13), YC/ensayos (12),
-growth (10), capital (5), gente (9), historias (8). Las 20 canónicas están
-cableadas a mecánicas; las 80 restantes tienen **disparador contextual**
-(runway < 7 → *Default Alive or Default Dead?*; Lupa ≥ 60 → *Bad Blood*;
-despido → *Chaos Monkeys*). Máximo 2 por mes. Una carrera abre ~71;
-completarla exige estilos distintos entre carreras.
+8 pillars: startup (19), product (24), tech (13), YC/essays (12),
+growth (10), capital (5), people (9), stories (8). The 20 canonical ones
+are wired to mechanics; the other 80 have a **contextual trigger**
+(runway < 7 → *Default Alive or Default Dead?*; Heat ≥ 60 → *Bad Blood*;
+firing → *Chaos Monkeys*). Max 2 per month. One career opens ~71;
+completing it requires different playstyles across careers.
 
-## Meta-juego
+## Meta-game
 
-16 logros (Heisenberg, Manos limpias, La banca gana, Zafaste...), sala de
-récords persistente entre carreras, historia de carreras pasadas.
+16 achievements (Heisenberg, Clean hands, The house always wins, Close
+call...), a hall of records that persists across careers, history of past
+careers.
 
-## Archivos
+## Files
 
 ```
-index.html     shell + metas de web app (script tags con ?v=N)
-estilos.css    tema oscuro, flexbox prefijado, animaciones -webkit-
-libros.js      100 fichas + disparadores contextuales + APLICAR (caso vivo)
-sectores.js    sectores, empresas+perfil, escalafón, etapas+fases, mandatos
-mundo.js       eras, noticias, rival, elenco
-contenido.js   necesidades, segmentos, 52 apuestas, 35 dilemas
-motor.js       simulación de un puesto (mes a mes): fit, difusión, Lupa,
-               techo, perfiles, incidentes por sector, cap table
-carrera.js     ofertas, cierres, promoción, equity, habilidades
-logros.js      logros y récords (localStorage, entre carreras)
-ui.js          render + un manejador de clicks delegado
-icono.png      generado por scripts/make_icono_juego.py
+index.html     shell + web app metas (script tags with ?v=N)
+estilos.css    dark theme, prefixed flexbox, -webkit- animations
+libros.js      100 cards + contextual triggers + APLICAR (live case)
+sectores.js    sectors, companies+profile, ladder, stages+phases, mandates
+mundo.js       eras, news, rival, cast
+contenido.js   needs, segments, 52 bets, 35 dilemmas
+motor.js       simulation of one job (month by month): fit, diffusion, Heat,
+               cap, profiles, per-sector incidents, cap table
+carrera.js     offers, job closes, promotion, equity, skills
+logros.js      achievements and records (localStorage, across careers)
+ui.js          render + one delegated click handler
+icono.png      generated by scripts/make_icono_juego.py
 ```
 
-Motor, Carrera y Mundo no tocan el DOM: se cargan en node para simular
-carreras enteras y balancear (ver scratchpad sim2/sim3/dist del desarrollo).
+Motor, Carrera and Mundo never touch the DOM: they load in node to
+simulate whole careers and balance the game (see the sim2/sim3/dist
+scratchpad from development).
 
-## Balance verificado con bots
+## Balance verified with bots
 
-- Primer mandato jugando "por el libro" (descubrir → construir, priorizando
-  prob×impacto÷esfuerzo alineado a la etapa): **~90%** de éxito.
-- Carrera completa: patrimonio mediano ~$6M; alineado al mandato > rebelde
-  > vago (~$0,7M con muchos despidos); limpio ≈ 2,4× turbio.
-- El jackpot (~$80-120M) existe: fundar, que te compren, sobrevivir a la
-  cascada de liquidación.
+- First mandate playing "by the book" (discover → build, prioritizing
+  prob×impact÷effort aligned to the stage): **~90%** success.
+- Full career: median net worth ~$6M; aligned to the mandate > rebel
+  > lazy (~$0.7M with lots of firings); clean ≈ 2.4× dirty.
+- The jackpot (~$80-120M) exists: found, get acquired, survive the
+  liquidation waterfall.
 
-## En el iPad
+## On the iPad
 
-Igual que el panel: Safari → `http://MacBook-Air-de-Lucas.local:8000/juego/`
-→ Compartir → Añadir a pantalla de inicio. Guiado de acceso recomendado.
+Same as the dashboard: Safari → `http://MacBook-Air-de-Lucas.local:8000/juego/`
+→ Share → Add to Home Screen. Guided Access recommended.
