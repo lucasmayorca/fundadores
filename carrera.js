@@ -38,7 +38,7 @@ var Carrera = (function () {
       hab:{ producto:habBase, tecnologia:Math.round(habBase * 0.6),
             negocio:Math.round(habBase * 0.7), liderazgo:Math.round(habBase * 0.8) },
       puestos:[], equities:[], ahorros:0,
-      trabajadas:{}, codex:{},
+      trabajadas:{}, codex:{}, dilemasVistos:{},
       ofertas:null, ofertaActual:null,
       retirado:false, final:null
     };

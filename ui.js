@@ -352,7 +352,7 @@
     plan = { desc:0, plat:0, fiab:0, crec:0, apuestas:[] };
     notasEvento = [];
     renderJuego();
-    evActual = eventoAplicable(J);
+    evActual = eventoAplicable(J, C);
     if (evActual) mostrarEvento(evActual);
   }
 
@@ -597,14 +597,15 @@
   /* ================= dilemmas ================= */
 
   function mostrarEvento(ev) {
+    var tx = eventoTexto(ev, J);
     var quien = ev.quien && J.elenco[ev.quien] ? J.elenco[ev.quien] : null;
     var h = '<div class="rot">Month ' + (J.mesPuesto + 1) + ' at ' + esc(J.empresa) + '</div>' +
-            '<h2>' + esc(ev.titulo) + '</h2>';
+            '<h2>' + esc(tx.titulo) + '</h2>';
     if (quien) {
       h += '<div class="quien"><div class="avatar">' + esc(quien.nombre.charAt(0)) + '</div>' +
            '<div><div class="qn">' + esc(quien.nombre) + '</div><div class="qc">' + esc(quien.cargo) + '</div></div></div>';
     }
-    h += '<div class="pq mut" style="margin-bottom:4px">' + esc(ev.texto) + '</div><div class="cuerpo2 scroll">';
+    h += '<div class="pq mut" style="margin-bottom:4px">' + esc(tx.texto) + '</div><div class="cuerpo2 scroll">';
     var i;
     for (i = 0; i < ev.opciones.length; i++) {
       h += '<div class="opt" data-op="' + i + '"><div class="ot">' + esc(ev.opciones[i].txt) + '</div></div>';
@@ -617,6 +618,7 @@
   function elegirOpcion(i) {
     var ev = evActual, op = ev.opciones[i], log = [];
     J.eventosVistos[ev.id] = true;
+    C.dilemasVistos[ev.id] = (C.dilemasVistos[ev.id] || 0) + 1;
     op.ef(J, log);
     if (op.nota) log.push({ tipo:'nota', texto:op.nota, libro:op.libro || ev.libro });
     marcarCodex(log);
@@ -1034,7 +1036,7 @@
     else if (v === 'cerrar-biblio') { ov('ov-biblio', false); }
     else if (v === 'cerrar-libro') { ov('ov-libro', false); }
     else if (v === 'ejecutar') { ejecutar(); }
-    else if (v === 'ronda') { if (J) { J.levantando = true; evActual = eventoAplicable(J); if (evActual) mostrarEvento(evActual); } }
+    else if (v === 'ronda') { if (J) { J.levantando = true; evActual = eventoAplicable(J, C); if (evActual) mostrarEvento(evActual); } }
     else if (v === 'cerrar-result') {
       var esDec = $('t-result').getAttribute('data-decision') === '1';
       ov('ov-result', false);

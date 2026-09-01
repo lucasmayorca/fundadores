@@ -153,6 +153,10 @@ var EVENTOS = [
   cuando:function(e){ return e.mesPuesto === 1 && e.evidencia < 55; },
   titulo:'How we\'re going to talk to users',
   texto:'"I booked ten customer meetings for this week. What do we ask them?"',
+  variantes:[
+    { titulo:'The user council', texto:'"Twelve of our biggest accounts agreed to a quarterly council. First session is Friday. What\'s on the agenda?"' },
+    { titulo:'The road trip', texto:'"I\'m visiting eight customers on-site next week. One question decides what I bring back: what do I ask?"' }
+  ],
   opciones:[
     { txt:'Show them the demo and ask if they\'d buy it',
       nota:'Nobody says no to your face. You\'ll walk out with ten "love it"s and zero information.',
@@ -175,6 +179,10 @@ var EVENTOS = [
   cuando:function(e){ return Motor.runwayMeses(e) > 9 && e.mesPuesto > 2 && e.rampa.length === 0; },
   titulo:'There\'s budget and you\'re behind',
   texto:'"The roadmap is late and the board approved money for headcount. How many do we bring in?"',
+  variantes:[
+    { titulo:'The board wants headcount', texto:'"We just raised. The board keeps asking why the team is still this small. There\'s budget for four engineers, starting Monday."' },
+    { titulo:'The acqui-hire offer', texto:'"A dying startup nearby is shopping its whole eng team. Four people, one interview, they start next week."' }
+  ],
   opciones:[
     { txt:'Four engineers, now',
       nota:'New hires produce nothing for two months and consume the ones who were producing. Four at once is a lost quarter.',
@@ -197,6 +205,10 @@ var EVENTOS = [
   cuando:function(e){ return e.mesPuesto > 3 && e.mrr > Motor.burnMensual(e) * 0.2; },
   titulo:'The customer who saves the quarter',
   texto:'"They\'ll sign for 18 months. They only ask for one custom module that\'s useless to anyone else. Do we close?"',
+  variantes:[
+    { titulo:'The whale RFP', texto:'"A multinational dropped an RFP on us. Eighteen months guaranteed — if we build their custom approval-workflow module. Nobody else will ever use it."' },
+    { titulo:'The logo we always wanted', texto:'"THE brand just called. They\'ll sign today if we commit to a bespoke integration their team designed. It\'s them, so everyone here wants to say yes."' }
+  ],
   opciones:[
     { txt:'Take it. It\'s money today',
       nota:'It\'s real revenue and also a mortgage: that module gets maintained forever and moves your product nowhere.',
@@ -219,6 +231,10 @@ var EVENTOS = [
   cuando:function(e){ return e.deuda > 55; },
   titulo:'"We have to rewrite the whole thing"',
   texto:'"It can\'t be sustained any longer. Give me three months with no features and I\'ll leave it spotless."',
+  variantes:[
+    { titulo:'"It\'s spaghetti all the way down"', texto:'Your best engineer slides a 12-page doc across the table: a full rewrite plan, new stack, three months. "We keep patching a corpse."' },
+    { titulo:'The new CTO\'s first move', texto:'The recently hired staff engineer says the codebase is unsalvageable and wants to greenfield the core. Half the team quietly agrees.' }
+  ],
   opciones:[
     { txt:'Full rewrite (3 months, no features)',
       nota:'The rewrite almost always costs double the estimate and arrives with the same problems plus new ones.',
@@ -241,6 +257,10 @@ var EVENTOS = [
   cuando:function(e){ return e.mesPuesto > 4 && Motor.retencionMedia(e) < 0.88; },
   titulo:'The board slide',
   texto:'"I present tomorrow. Cumulative signups are climbing nicely. Last month\'s retention... better not to show it, right?"',
+  variantes:[
+    { titulo:'The investor update', texto:'The monthly investor email is due. Cumulative signups look spectacular. Last month\'s cohort retention... does not.' },
+    { titulo:'The all-hands slide', texto:'Tomorrow\'s all-hands. The team is tired and needs a win. Total users makes a beautiful up-and-to-the-right chart. The cohorts tell another story.' }
+  ],
   opciones:[
     { txt:'Show the cumulative numbers. The board wants good news',
       nota:'A cumulative total never goes down: that\'s why it soothes and that\'s why it says nothing. You buy peace and lose six weeks.',
@@ -365,6 +385,10 @@ var EVENTOS = [
   cuando:function(e){ return e.mesPuesto > 2 && !e.cd; },
   titulo:'Deploys are an event',
   texto:'"We push to production every three weeks, on a Thursday night, with two people praying."',
+  variantes:[
+    { titulo:'The release train', texto:'"We ship every third Thursday, 9 PM, war room, pizza. It\'s tradition. Last one took six hours and two rollbacks."' },
+    { titulo:'The freeze request', texto:'"Ops wants a two-week code freeze before the big client demo. Freezes make releases bigger, and bigger releases are why we freeze."' }
+  ],
   opciones:[
     { txt:'Invest in continuous deployment',
       nota:'Small, frequent batches fail less and recover faster. Speed and stability rise together.',
@@ -382,6 +406,10 @@ var EVENTOS = [
   cuando:function(e){ return Motor.carga(e) > 0.85 && e.mesPuesto > 2; },
   titulo:'The database started to sweat',
   texto:'"Queries that took 80 ms now take 2 seconds. Nobody has complained loudly yet. Yet."',
+  variantes:[
+    { titulo:'The Monday graph', texto:'"Look at this latency chart. Every Monday at 9 AM we flirt with a timeout. We\'re one good press mention away from falling over."' },
+    { titulo:'The success problem', texto:'"That viral post tripled our traffic. Nothing died — yet. The database is running at a temperature I don\'t like."' }
+  ],
   opciones:[
     { txt:'Fix it now, even if it stalls the roadmap',
       nota:'Architecture doesn\'t degrade gracefully: it holds, then collapses all at once. This is the cheap warning; the next one is expensive.',
@@ -416,6 +444,10 @@ var EVENTOS = [
   cuando:function(e){ return e.usabilidad < 45 && e.mesPuesto > 2; },
   titulo:'They look at the signup and leave',
   texto:'"Of every ten who arrive, one finishes signup. Sales swears the product is great."',
+  variantes:[
+    { titulo:'The demo that needed a pilot', texto:'Sales closed three deals this month — every one required a live walkthrough. Nobody gets through onboarding alone.' },
+    { titulo:'The support ticket pattern', texto:'A third of support tickets are the same question: "how do I even start?" The product answers it on screen. Apparently not.' }
+  ],
   opciones:[
     { txt:'Watch five people use it, in silence',
       nota:'Nobody reads an interface: they scan it and guess. Five people getting stuck find more than six opinion meetings.',
@@ -433,6 +465,10 @@ var EVENTOS = [
   cuando:function(e){ return e.mesPuesto > 0 && e.mesPuesto % 6 === 0; },
   titulo:'The semester begins',
   texto:'"We have to decide what the org chases these six months. Every team sent in its wish list."',
+  variantes:[
+    { titulo:'Planning season', texto:'Quarter kicks off Monday. Every team lead sent their own list of priorities. Together they add up to twenty-three.' },
+    { titulo:'The offsite whiteboard', texto:'Two days of offsite produced a whiteboard with nine "strategic pillars". Someone has to turn this into a quarter.' }
+  ],
   opciones:[
     { txt:'One objective, three measurable results',
       nota:'Fewer objectives, measured by outcome, not activity. Clarity is the cheapest lever there is.',
@@ -450,6 +486,10 @@ var EVENTOS = [
   cuando:function(e){ return e.mesPuesto > 2 && e.evidencia < 35; },
   titulo:'When was the last interview?',
   texto:'"The team is shipping fine. But nobody remembers the last time they talked to a user."',
+  variantes:[
+    { titulo:'When did we last talk to a user?', texto:'Someone asks it in standup. Silence. The last recorded interview is from two quarters ago; the roadmap has been running on opinion since.' },
+    { titulo:'The proxy problem', texto:'All user knowledge now arrives via sales anecdotes and support escalations — filtered, angry, and third-hand.' }
+  ],
   opciones:[
     { txt:'A weekly interview, sacred, done by the team that builds',
       nota:'Discovery isn\'t a phase: it\'s a habit. And it works when the builders do it themselves.',
@@ -845,16 +885,39 @@ var EVENTOS = [
   ]}
 ];
 
-function eventoAplicable(e) {
+/* Dilemmas that can honestly repeat across jobs: they're situational,
+   not one-time lessons. Everything else gets heavily deprioritized once
+   you've lived it in a previous company. */
+var EVERGREEN = { okr:1, roadmap:1, discovery:1, errorbudget:1, escala:1,
+                  fiscal:1, allanamiento:1, ronda:1, caza:1, despidos:1 };
+
+function eventoAplicable(e, c) {
   var cand = [], i;
+  var vistosCarrera = (c && c.dilemasVistos) || {};
   for (i = 0; i < EVENTOS.length; i++) {
     var ev = EVENTOS[i];
     if (e.eventosVistos[ev.id]) continue;
+    var repes = vistosCarrera[ev.id] || 0;
+    /* one-time lessons never repeat; skinned ones may return once with a
+       different scene; situational (evergreen) ones can always come back */
+    var tope = EVERGREEN[ev.id] ? 99 : (ev.variantes ? 2 : 1);
+    if (repes >= tope) continue;
     var ok = false;
     try { ok = ev.cuando(e); } catch (err) { ok = false; }
-    if (ok) cand.push(ev);
+    if (ok) cand.push({ ev:ev, prio:ev.prio - repes * 45 });
   }
   if (!cand.length) return null;
   cand.sort(function(a,b){ return b.prio - a.prio; });
-  return cand[0];
+  return cand[0].ev;
+}
+
+/* Company-flavored skins: same dilemma, different scene, so job 2 never
+   reads like job 1. Picked deterministically from the company id. */
+function eventoTexto(ev, e) {
+  if (!ev.variantes || !ev.variantes.length) return { titulo:ev.titulo, texto:ev.texto };
+  var h = 0, s = (e.empresaId || '') + ev.id, i;
+  for (i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 997;
+  var idx = h % (ev.variantes.length + 1);
+  if (idx === 0) return { titulo:ev.titulo, texto:ev.texto };
+  return ev.variantes[idx - 1];
 }
