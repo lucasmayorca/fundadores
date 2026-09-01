@@ -96,8 +96,11 @@ var Mundo = (function () {
   /* ---------------- RIVAL (NFS) ----------------
      Starts at your level and advances on their own. When you stumble, the
      world reminds you. At the end of the run, you get compared. */
+  /* The rival is always the same character: Lucas M. Offline he's an NPC;
+     when the public ranking answers, a real career possesses him (ghost)
+     — but the name on the door never changes. */
   function nuevoRival() {
-    return { nombre:nombrePersona(), nivel:0, reputacion:38, hitos:[], fundo:false };
+    return { nombre:'Lucas M', nivel:0, reputacion:38, hitos:[], fundo:false };
   }
   /* A ghost rival (a real player's career from the public ranking) carries a
      `tope`: they climb the same way but stop at the level they actually

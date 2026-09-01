@@ -1200,7 +1200,8 @@
     Ranking.rival(C.nivel, function (g) {
       if (!g || !g.ok || !g.nombre || !C || C.rkId !== id || !M) return;
       M.rival = {
-        nombre:String(g.nombre).slice(0, 40), nivel:C.nivel,
+        /* the rival is always Lucas M; the real career possesses him */
+        nombre:'Lucas M', nivel:C.nivel,
         reputacion:Math.round(g.reputacion || 38),
         hitos:[], fundo:false, fantasma:true,
         tope:Math.max(g.nivel || 0, C.nivel),
@@ -1289,7 +1290,7 @@
       }
       h += '<div class="rkcols scroll" style="-webkit-flex:1;flex:1;min-height:0">';
       h += '<div style="width:330px;padding-right:26px">';
-      h += '<div class="rot" style="margin-bottom:6px">All-time net worth</div>';
+      h += '<div class="rot" style="margin-bottom:6px">World ranking · net worth · all ' + d.jugadores + ' players</div>';
       h += filasRk(d.tablas.patrimonio, function (e) { return money(e.patrimonio); });
       h += '</div>';
       h += '<div style="width:310px;padding-right:26px">';

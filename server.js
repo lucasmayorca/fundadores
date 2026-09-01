@@ -189,11 +189,12 @@ function armarTablas(miToken) {
     ok: true, semana: semana,
     carreras: DB.carreras.length, jugadores: patTop.length,
     tablas: {
-      patrimonio: filas(patTop, 10, miToken),
+      /* the world ranking lists EVERY player; the caps are just a fuse */
+      patrimonio: filas(patTop, 1000, miToken),
       nivel: filas(nivTop, 5, miToken),
       racha: filas(rachaTop, 5, miToken),
       logros: filas(logTop, 5, miToken),
-      semanal: filas(semTop, 8, miToken)
+      semanal: filas(semTop, 300, miToken)
     },
     semanaPasada: pasadaTop.length ? { semana: semanaAnterior(), nombre: pasadaTop[0].nombre, patrimonio: pasadaTop[0].patrimonio } : null,
     facciones: fac,
@@ -321,7 +322,7 @@ function paginaRanking() {
   }
 
   h += '<div class="cols">';
-  h += tablaHtml('All-time net worth', d.tablas.patrimonio, function (e) { return dinero(e.patrimonio); });
+  h += tablaHtml('World ranking · net worth · all ' + d.jugadores + ' players', d.tablas.patrimonio, function (e) { return dinero(e.patrimonio); });
   h += tablaHtml('This week · ' + escHtml(d.semana), d.tablas.semanal, function (e) { return dinero(e.patrimonio); });
   h += '</div><div class="cols">';
   h += tablaHtml('Highest role', d.tablas.nivel, function (e) { return escHtml(ROLES[e.nivel] || ''); });

@@ -195,16 +195,19 @@ the client mints an anonymous token in `localStorage` (`fundadores.token`)
 and every submission carries it, so a player's careers group together and
 nobody can impersonate a name's owner. Stolen from Argentum and GTA Online:
 
-- **Four all-time tables** (Argentum's tops): net worth, highest role,
-  mandate streak, achievements. Best career per player, top N each.
+- **Four all-time tables** (Argentum's tops): net worth — the **world
+  ranking**, every player listed — plus highest role, mandate streak and
+  achievements (top 5 each). Best career per player.
 - **Weekly challenge** (GTA Online): `Mundo.nuevo(seed)` seeds an LCG with
   the ISO week (`2026-W36`), so **everyone faces the same era sequence**
   that week. Weekly runs are tagged and ranked on their own 7-day table;
   last week's winner stays on the page.
-- **Ghost rival** (racing ghosts): on career start the client asks
-  `/api/rival` for a real player's best career; it replaces the NPC rival
-  (name, reputation) and climbs with the usual dice but **stops at the level
-  that player actually reached**. The final screen shows their real career.
+- **Ghost rival** (racing ghosts): the rival is **always named Lucas M**.
+  On career start the client asks `/api/rival` for a real player's best
+  career, which possesses him (reputation, ceiling): he climbs with the
+  usual dice but **stops at the level that player actually reached**. The
+  final screen shows the real career behind him. Offline he stays an NPC —
+  same name.
 - **Factions** (Armada vs Legión): pick Growth Legion or Craft Guild on the
   landing (`fundadores.faccion`); every finished career adds its delivered
   mandates to the faction war bar.
