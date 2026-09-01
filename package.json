@@ -1,0 +1,12 @@
+{
+  "name": "fundadores",
+  "version": "1.0.0",
+  "description": "Fundadores — una carrera en producto. Juego para navegador, ES5 puro, sin dependencias.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
