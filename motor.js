@@ -472,6 +472,12 @@ var Motor = (function () {
     for (id in e.enVuelo) if (e.enVuelo.hasOwnProperty(id)) enVuelo++;
     var sel = plan.apuestas || [];
     var n = enVuelo + sel.length;
+    if (plan.asig) {
+      n = 0;
+      var kk;
+      for (kk in plan.asig) if (plan.asig.hasOwnProperty(kk) && plan.asig[kk] > 0) n++;
+      if (!n) n = enVuelo + sel.length;
+    }
     var wip = n > 2 ? Math.max(0.5, 1 - 0.15 * (n - 2)) : 1;
     if (n > 2) log.push({ tipo:'malo', texto:n + ' bets in parallel: context switching ate ' +
       Math.round((1 - wip) * 100) + '% of the effort.', libro:'grove' });
@@ -487,10 +493,24 @@ var Motor = (function () {
 
     var lista = [];
     for (id in e.enVuelo) if (e.enVuelo.hasOwnProperty(id)) lista.push(id);
-    var porApuesta = lista.length ? (p.cons * wip) / lista.length : 0;
+    /* directed allocation: the player put points ON specific projects.
+       The wider org's build effort helps whatever you prioritized, spread
+       evenly across the projects that got any of your points. */
+    var asig = plan.asig || null;
+    var activos = [];
+    if (asig) {
+      for (i = 0; i < lista.length; i++) if ((asig[lista[i]] || 0) > 0) activos.push(lista[i]);
+      if (!activos.length) activos = lista.slice();
+    } else activos = lista.slice();
+    var propio = 0;
+    if (asig) for (id in asig) if (asig.hasOwnProperty(id)) propio += asig[id];
+    var deOrg = Math.max(0, p.cons - (asig ? propio : 0));
+    var porApuesta = activos.length ? (deOrg * wip) / activos.length : 0;
     for (i = 0; i < lista.length; i++) {
       id = lista[i];
-      e.enVuelo[id] += porApuesta;
+      var empuje = (asig && activos.indexOf(id) >= 0 ? porApuesta : (asig ? 0 : porApuesta));
+      if (asig) empuje += (asig[id] || 0) * wip;
+      e.enVuelo[id] += empuje;
       var a = apuesta(id);
       if (e.enVuelo[id] >= costoDe(e, id)) {
         var esperado = estimacion(e, id);

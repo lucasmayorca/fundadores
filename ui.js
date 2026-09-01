@@ -349,7 +349,18 @@
   /* ================= GAME ================= */
 
   function nuevoMes() {
-    plan = { desc:0, plat:0, fiab:0, crec:0, apuestas:[] };
+    plan = { desc:0, plat:0, fiab:0, crec:0, asig:{}, orden:[] };
+    /* projects already in flight come pre-loaded with points, in order */
+    var idsVuelo = [], iv;
+    for (iv in J.enVuelo) if (J.enVuelo.hasOwnProperty(iv)) idsVuelo.push(iv);
+    var libres = Motor.capacidadPropia(J);
+    for (iv = 0; iv < idsVuelo.length; iv++) {
+      var falta0 = Math.ceil(Motor.costoDe(J, idsVuelo[iv]) - J.enVuelo[idsVuelo[iv]]);
+      var pongo = Math.max(0, Math.min(libres, falta0));
+      plan.asig[idsVuelo[iv]] = pongo;
+      plan.orden.push(idsVuelo[iv]);
+      libres -= pongo;
+    }
     notasEvento = [];
     renderJuego();
     evActual = eventoAplicable(J, C);
@@ -421,22 +432,28 @@
       rinde:function (v) { return '+reach · $' + Math.round(v * 0.9) + 'k spend'; } }
   ];
 
-  function asignado() { return plan.desc + plan.plat + plan.fiab + plan.crec; }
-  function paraBuild() { return Math.max(0, Motor.capacidadPropia(J) - asignado()); }
+  function enEstaciones() { return plan.desc + plan.plat + plan.fiab + plan.crec; }
+  function enProyectos() {
+    var t = 0, id;
+    for (id in plan.asig) if (plan.asig.hasOwnProperty(id)) t += plan.asig[id];
+    return t;
+  }
+  function sinUsar() { return Math.max(0, Motor.capacidadPropia(J) - enEstaciones() - enProyectos()); }
 
   function renderAsignacion() {
-    var mio = Motor.capacidadPropia(J), build = paraBuild();
-    var h = '<div class="rot" style="margin-bottom:6px">1 · Station your team · ' +
-            '<b class="num">' + mio + ' pts</b> this month</div>';
+    var mio = Motor.capacidadPropia(J), ocio = sinUsar();
+    var h = '<div class="rot" style="margin-bottom:6px">1 · Place your team\'s ' +
+            '<b class="num">' + mio + ' points</b> · stations first, the rest goes on projects below</div>';
 
-    /* the energy bar: every point accounted, colored by station */
     h += '<div class="ebar">';
     var i;
     for (i = 0; i < ESTACIONES.length; i++) {
       var v = plan[ESTACIONES[i].k];
       if (v > 0) h += '<i style="width:' + (v / mio * 100) + '%;background:' + ESTACIONES[i].col + '"></i>';
     }
-    h += '<i style="width:' + (build / mio * 100) + '%;background:#e8a33d"></i></div>';
+    if (enProyectos() > 0) h += '<i style="width:' + (enProyectos() / mio * 100) + '%;background:#e8a33d"></i>';
+    if (ocio > 0) h += '<i style="width:' + (ocio / mio * 100) + '%;background:#20242e"></i>';
+    h += '</div>';
 
     h += '<div class="estaciones">';
     for (i = 0; i < ESTACIONES.length; i++) {
@@ -450,18 +467,17 @@
         continue;
       }
       h += '<div class="stcard' + (vv > 0 ? ' viva' : '') + '">' +
-        '<div class="stn" style="color:' + (vv > 0 ? st.col : '#8b93a1') + '">' + st.ic + ' ' + st.n + chip(st.lib) + '</div>' +
+        '<div class="stn" style="color:' + (vv > 0 ? st.col : '#8b93a1') + '">' + st.ic + ' ' + st.n + '</div>' +
         '<div class="ctrl" style="margin-top:5px">' +
         '<div class="b' + (vv <= 0 ? ' off' : '') + '" data-menos="' + st.k + '">−</div>' +
         '<div class="n num">' + vv + '</div>' +
-        '<div class="b' + (build <= 0 ? ' off' : '') + '" data-mas="' + st.k + '">+</div>' +
+        '<div class="b' + (ocio <= 0 ? ' off' : '') + '" data-mas="' + st.k + '">+</div>' +
         '</div>' +
         '<div class="strinde">' + (vv > 0 ? st.rinde(vv) : '—') + '</div></div>';
     }
-    /* build: donde va todo lo que no estacionaste */
-    h += '<div class="stcard viva build"><div class="stn" style="color:#e8a33d">⚒ Build</div>' +
-      '<div class="n num" style="font-size:21px;margin-top:4px">' + build + '</div>' +
-      '<div class="strinde">pushes your projects below</div></div>';
+    h += '<div class="stcard viva build"><div class="stn" style="color:#e8a33d">⚒ On projects</div>' +
+      '<div class="n num" style="font-size:21px;margin-top:4px">' + enProyectos() + '</div>' +
+      '<div class="strinde">' + (ocio > 0 ? '<span class="ambar">' + ocio + ' idle — place them!</span>' : 'all hands busy') + '</div></div>';
     h += '</div>';
     $('capa').innerHTML = h;
   }
@@ -478,42 +494,63 @@
   }
 
   function slotsUsados() {
-    var n = plan.apuestas.length, id;
+    var n = 0, id;
     for (id in J.enVuelo) if (J.enVuelo.hasOwnProperty(id)) n++;
+    for (var i = 0; i < plan.orden.length; i++) if (J.enVuelo[plan.orden[i]] === undefined) n++;
     return n;
   }
 
   function renderBacklog() {
     var usados = slotsUsados(), i2, cajas = '';
     for (i2 = 0; i2 < J.slots; i2++) cajas += '<span class="slot' + (i2 < usados ? ' lleno' : '') + '"></span>';
-    var h = '<div class="rot" style="margin:8px 0 7px 0">2 · Pick your projects · slots ' + cajas +
+    var h = '<div class="rot" style="margin:8px 0 7px 0">2 · Put points on your projects · slots ' + cajas +
       ' <span class="pill libro" data-lib="momtest">confidence ' + Motor.confianza(J) + '</span></div>';
+
     var id, i, a, d;
-    for (id in J.enVuelo) if (J.enVuelo.hasOwnProperty(id)) {
-      a = Motor.apuesta(id);
+
+    /* your board: projects taking points this month */
+    for (i = 0; i < plan.orden.length; i++) {
+      id = plan.orden[i]; a = Motor.apuesta(id);
       var cst = Motor.costoDe(J, id);
-      var prog = Math.min(100, Math.round((J.enVuelo[id] / cst) * 100));
-      h += '<div class="ap vuelo"><div class="t"><div class="n2">' + esc(a.n) + '</div>' +
-        '<div class="track" style="margin-top:4px;width:200px"><i class="a" style="width:' + prog + '%"></i></div></div>' +
-        '<div class="c"><div class="imp ambar num">' + prog + '%</div></div></div>';
+      var hecho = J.enVuelo[id] || 0;
+      var pts = plan.asig[id] || 0;
+      var falta = Math.max(0, Math.ceil(cst - hecho));
+      var sale = hecho + pts >= cst;
+      var pDone = Math.min(100, Math.round(hecho / cst * 100));
+      var pPrev = Math.min(100 - pDone, Math.round(pts / cst * 100));
+      h += '<div class="ap tuyo' + (sale ? ' sale' : '') + '">' +
+        '<div class="t"><div class="n2">' + esc(a.n) +
+        (sale ? '<span class="shiptag">SHIPS THIS MONTH</span>' :
+          (pts === 0 ? '<span class="pill">paused</span>' : '')) + '</div>' +
+        '<div class="prog"><i class="pdone" style="width:' + pDone + '%"></i><i class="pprev" style="width:' + pPrev + '%"></i></div>' +
+        '<div class="d2">' + falta + ' of ' + cst + ' pts left</div></div>' +
+        '<div class="ctrl">' +
+        '<div class="b' + (pts <= 0 ? ' off' : '') + '" data-pmenos="' + id + '">−</div>' +
+        '<div class="n num">' + pts + '</div>' +
+        '<div class="b' + (sinUsar() <= 0 || sale ? ' off' : '') + '" data-pmas="' + id + '">+</div>' +
+        '</div>' +
+        (J.enVuelo[id] === undefined ? '<div class="quitar" data-quitar="' + id + '">✕</div>' : '<div class="quitar mut" style="visibility:hidden">✕</div>') +
+        '</div>';
     }
+    if (plan.orden.length) h += '<div class="rot" style="margin:10px 0 6px 0">Backlog · tap to add</div>';
+
     for (i = 0; i < J.backlog.length; i++) {
       id = J.backlog[i]; a = Motor.apuesta(id);
+      if (plan.orden.indexOf(id) >= 0) continue;
       var nec = null, k;
       for (k = 0; k < NECESIDADES.length; k++) if (NECESIDADES[k].id === a.nec) nec = NECESIDADES[k];
-      var sel = plan.apuestas.indexOf(id) >= 0;
       d = Motor.estimacionDetalle(J, id);
-      var cabe = sel || slotsUsados() < J.slots;
+      var cabe = slotsUsados() < J.slots && sinUsar() > 0;
       var obj = J.prima.indexOf(a.nec) >= 0 ? '<span class="tagobj mini">▲</span>' :
                 J.castiga.indexOf(a.nec) >= 0 ? '<span class="tagobj down mini">▽</span>' : '';
       var DA = { core:'→ product value', flujo:'→ +usability', datos:'→ +evidence',
                  integra:'→ gate', soporte:'→ gate', segur:'→ gate', escala:'→ +capacity' };
-      var da = '<span class="da">' + DA[a.nec] + '</span>';
-      h += '<div class="ap' + (sel ? ' sel' : '') + (cabe ? '' : ' nocabe') + '" data-ap="' + id + '">' +
+      h += '<div class="ap' + (cabe ? '' : ' nocabe') + '" data-ap="' + id + '">' +
         '<div class="t"><div class="n2">' + esc(a.n) + '<span class="pill">' + esc(nec.corto) + '</span>' + obj + '</div>' +
         '<div class="viz">' +
           '<span class="vlbl">' + tip('prob','prob') + '</span>' + dots(d.prob) +
-          '<span class="vlbl">' + tip('impact','impact') + '</span>' + blocks(d.mag) + da +
+          '<span class="vlbl">' + tip('impact','impact') + '</span>' + blocks(d.mag) +
+          '<span class="da">' + DA[a.nec] + '</span>' +
         '</div></div>' +
         '<div class="c"><span class="esf e' + d.esf + '">' + d.esf + '</span>' +
         '<div class="cst num">' + d.costo + ' pts</div></div></div>';
@@ -581,8 +618,14 @@
   }
 
   function renderBarra() {
-    var h = '<div class="pts"><span class="ambar">⚒ ' + paraBuild() + ' pts</span> on ' +
-      slotsUsados() + ' project' + (slotsUsados() === 1 ? '' : 's') + ' this month</div>';
+    var ocio = sinUsar(), saliendo = 0, id;
+    for (id in plan.asig) if (plan.asig.hasOwnProperty(id)) {
+      if ((J.enVuelo[id] || 0) + plan.asig[id] >= Motor.costoDe(J, id)) saliendo++;
+    }
+    var h = '<div class="pts"><span class="ambar">⚒ ' + enProyectos() + ' pts</span> on ' +
+      plan.orden.length + ' project' + (plan.orden.length === 1 ? '' : 's') +
+      (saliendo ? ' · <span class="verde">' + saliendo + ' shipping</span>' : '') +
+      (ocio > 0 ? ' · <span class="rojo">' + ocio + ' idle</span>' : '') + '</div>';
     if (J.esFundador && !J.levantando) h += '<span class="btn chico" data-act="ronda" style="margin-right:10px">Go raise</span>';
     h += '<span class="btn pri" data-act="ejecutar">3 · Close the month</span>';
     $('barra').innerHTML = h;
@@ -633,13 +676,15 @@
   /* ================= close the month ================= */
 
   function ejecutar() {
+    var nuevas = [], ni;
+    for (ni = 0; ni < plan.orden.length; ni++) if (J.enVuelo[plan.orden[ni]] === undefined) nuevas.push(plan.orden[ni]);
     var reparto = { desc:plan.desc, plat:plan.plat, fiab:plan.fiab, crec:plan.crec,
-                    cons:paraBuild(), apuestas:plan.apuestas };
+                    cons:enProyectos() + sinUsar() * 0, asig:plan.asig, apuestas:nuevas };
     var log = Motor.simular(J, reparto, M);
-    var nuevas = fichasNuevas(J, C), fi;
-    for (fi = 0; fi < nuevas.length; fi++) {
+    var fichas2 = fichasNuevas(J, C), fi;
+    for (fi = 0; fi < fichas2.length; fi++) {
       log.push({ tipo:'nota', texto:'A card opened in the library: the moment you\'re living has a name.',
-                 libro:nuevas[fi].id });
+                 libro:fichas2[fi].id });
     }
     var cambioEra = Mundo.tick(M);
     if (cambioEra) {
@@ -960,21 +1005,40 @@
 
     v = attr(t, 'data-mas');
     if (v && J) {
-      if (paraBuild() > 0) { plan[v]++; renderAsignacion(); renderBarra(); }
+      if (sinUsar() > 0) { plan[v]++; renderAsignacion(); renderBacklog(); renderBarra(); }
       return;
     }
     v = attr(t, 'data-menos');
     if (v && J) {
-      if (plan[v] > 0) { plan[v]--; renderAsignacion(); renderBarra(); }
+      if (plan[v] > 0) { plan[v]--; renderAsignacion(); renderBacklog(); renderBarra(); }
+      return;
+    }
+    v = attr(t, 'data-pmas');
+    if (v && J) {
+      var falta1 = Math.ceil(Motor.costoDe(J, v) - (J.enVuelo[v] || 0)) - (plan.asig[v] || 0);
+      if (sinUsar() > 0 && falta1 > 0) { plan.asig[v] = (plan.asig[v] || 0) + 1; renderAsignacion(); renderBacklog(); renderBarra(); }
+      return;
+    }
+    v = attr(t, 'data-pmenos');
+    if (v && J) {
+      if ((plan.asig[v] || 0) > 0) { plan.asig[v]--; renderAsignacion(); renderBacklog(); renderBarra(); }
+      return;
+    }
+    v = attr(t, 'data-quitar');
+    if (v && J) {
+      var qi = plan.orden.indexOf(v);
+      if (qi >= 0) { plan.orden.splice(qi, 1); delete plan.asig[v]; }
+      renderAsignacion(); renderBacklog(); renderBarra();
       return;
     }
 
     v = attr(t, 'data-ap');
     if (v && J) {
-      var i = plan.apuestas.indexOf(v);
-      if (i >= 0) plan.apuestas.splice(i, 1);
-      else if (slotsUsados() < J.slots && J.enVuelo[v] === undefined) plan.apuestas.push(v);
-      renderBacklog(); renderBarra();
+      if (slotsUsados() < J.slots && plan.orden.indexOf(v) < 0 && sinUsar() > 0) {
+        plan.orden.push(v);
+        plan.asig[v] = Math.min(sinUsar(), Math.ceil(Motor.costoDe(J, v)));
+      }
+      renderAsignacion(); renderBacklog(); renderBarra();
       return;
     }
 

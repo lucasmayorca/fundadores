@@ -323,3 +323,20 @@ html, body {
   background:#191d25; border:1px solid #2a313d; }
 .slot.lleno { background:#2f6fd0; border-color:#3f82e6; }
 .da { font-size:10px; color:#8fd39a; margin-left:10px; white-space:nowrap; }
+
+/* ---------- tus proyectos: progreso y entrega ---------- */
+.ap.tuyo { border-color:#2a3648; background:#131824; cursor:default; }
+.ap.tuyo.sale { border-color:#2f6b3f; background:#12200f; }
+.ap.tuyo .ctrl { margin:0 4px 0 10px; }
+.ap.tuyo .ctrl .b { width:32px; height:32px; line-height:30px; font-size:17px; }
+.ap.tuyo .ctrl .n { width:32px; font-size:16px; }
+.prog { height:7px; border-radius:4px; background:#191d25; overflow:hidden; margin-top:5px; width:280px;
+  display:-webkit-flex; display:flex; }
+.prog i { display:block; height:7px; }
+.prog .pdone { background:#35c46a; }
+.prog .pprev { background:#e8a33d; }
+.shiptag { display:inline-block; margin-left:10px; padding:2px 8px; border-radius:9px;
+  font-size:9.5px; font-weight:700; letter-spacing:1px; background:#153a1f; color:#4ade7c;
+  border:1px solid #1f5a2e; }
+.quitar { width:30px; height:30px; line-height:28px; text-align:center; margin-left:6px;
+  color:#5b6472; font-size:13px; cursor:pointer; border:1px solid #232a35; border-radius:6px; }
