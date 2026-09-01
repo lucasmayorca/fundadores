@@ -899,7 +899,22 @@
     if (p.nombre) inicioSel.nombre = p.nombre;
     if (p.nivel !== null) { inicioSel.nivel = p.nivel; inicioSel.rol = p.rol; }
     if (/linkedin\.com\/in\//i.test(t.value)) consultarLinkedin(t.value);
-    renderInicio();
+    /* scale the 1024x768 stage to the viewport, centered. iPad 3 lands at 1. */
+  function escalar() {
+    var st = document.getElementById('stage');
+    if (!st) return;
+    var w = window.innerWidth || 1024, h2 = window.innerHeight || 768;
+    var s = Math.min(w / 1024, h2 / 768);
+    if (s > 0.98 && s < 1.02) s = 1;
+    var t = 'translate(-50%,-50%) scale(' + s + ')';
+    st.style.webkitTransform = t;
+    st.style.transform = t;
+    st.className = s === 1 ? '' : 'suelto';
+  }
+  window.onresize = escalar;
+  escalar();
+
+  renderInicio();
   }, false);
 
   document.addEventListener('click', function (ev) {
@@ -911,7 +926,22 @@
       inicioSel.rol = nivelPorN(inicioSel.nivel).rol;
       var inp = $('perfil-in');
       if (inp) inicioSel.texto = inp.value;
-      renderInicio();
+      /* scale the 1024x768 stage to the viewport, centered. iPad 3 lands at 1. */
+  function escalar() {
+    var st = document.getElementById('stage');
+    if (!st) return;
+    var w = window.innerWidth || 1024, h2 = window.innerHeight || 768;
+    var s = Math.min(w / 1024, h2 / 768);
+    if (s > 0.98 && s < 1.02) s = 1;
+    var t = 'translate(-50%,-50%) scale(' + s + ')';
+    st.style.webkitTransform = t;
+    st.style.transform = t;
+    st.className = s === 1 ? '' : 'suelto';
+  }
+  window.onresize = escalar;
+  escalar();
+
+  renderInicio();
       return;
     }
 
@@ -1005,6 +1035,21 @@
     }
     else if (v === 'reiniciar') { C = null; M = null; J = null; R = Logros.cargar(); renderInicio(); ir('p-inicio'); }
   }, false);
+
+  /* scale the 1024x768 stage to the viewport, centered. iPad 3 lands at 1. */
+  function escalar() {
+    var st = document.getElementById('stage');
+    if (!st) return;
+    var w = window.innerWidth || 1024, h2 = window.innerHeight || 768;
+    var s = Math.min(w / 1024, h2 / 768);
+    if (s > 0.98 && s < 1.02) s = 1;
+    var t = 'translate(-50%,-50%) scale(' + s + ')';
+    st.style.webkitTransform = t;
+    st.style.transform = t;
+    st.className = s === 1 ? '' : 'suelto';
+  }
+  window.onresize = escalar;
+  escalar();
 
   renderInicio();
 })();
