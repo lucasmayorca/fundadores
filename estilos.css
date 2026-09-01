@@ -358,6 +358,16 @@ html, body {
   border-radius:8px; font-size:13.5px; color:#cfe0f5; }
 #coach .csalir { margin-top:9px; font-size:11px; color:#5b6472; cursor:pointer; text-decoration:underline; }
 
+/* ---------- Hall of Fame (ranking público) ---------- */
+#p-ranking { padding:36px 48px; }
+.rkcols { display:-webkit-flex; display:flex; margin-top:14px; }
+.rkfila { border-bottom:1px solid #161b23; overflow:hidden; padding:5px 0; }
+.rkfila .rkval { float:right; }
+.rkfila.rkvos { background:#101a2a; border-left:2px solid #2f6fd0; padding-left:6px; }
+.facbar { height:14px; border-radius:7px; overflow:hidden; background:#20242e;
+  display:-webkit-flex; display:flex; margin:4px 0; }
+.facbar i { display:block; height:100%; }
+
 /* ---------- landing: el juego por capas ---------- */
 .capa { padding:5px 11px 6px 11px; margin-bottom:4px; border-left:3px solid #2a313d;
   border-radius:0 8px 8px 0; background:#10141b; }

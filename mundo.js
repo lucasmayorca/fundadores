@@ -9,6 +9,18 @@ var Mundo = (function () {
   function el(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
 
+  /* Weekly challenge: with a seed, era draws come from an LCG stored as a
+     plain number in the world state (it survives JSON saves), so everyone
+     playing the same week faces the same sequence of eras. Everything else
+     in the game stays properly random. Without a seed: Math.random as ever. */
+  function azarEra(m) {
+    if (m.rng === undefined || m.rng === null) return Math.random();
+    m.rng = (m.rng * 1664525 + 1013904223) % 4294967296;
+    return m.rng / 4294967296;
+  }
+  function elEra(m, arr) { return arr[Math.floor(azarEra(m) * arr.length)]; }
+  function rndEra(m, a, b) { return a + azarEra(m) * (b - a); }
+
   /* ---------------- ERAS ----------------
      Each era heats up some sectors and cools others, and shifts the mood of
      capital. Reading which era you're in IS a game skill. */
@@ -87,11 +99,15 @@ var Mundo = (function () {
   function nuevoRival() {
     return { nombre:nombrePersona(), nivel:0, reputacion:38, hitos:[], fundo:false };
   }
+  /* A ghost rival (a real player's career from the public ranking) carries a
+     `tope`: they climb the same way but stop at the level they actually
+     reached in real life. NPC rivals have no tope and behave as always. */
   function avanzarRival(mundo, mesesJugados, jugadorTropezo) {
     var r = mundo.rival;
+    var tope = (r.tope === undefined || r.tope === null) ? 7 : r.tope;
     var p = 0.30 + (jugadorTropezo ? 0.25 : 0) + mesesJugados / 90;
-    if (Math.random() < p) {
-      r.nivel = Math.min(7, r.nivel + 1);
+    if (r.nivel < tope && Math.random() < p) {
+      r.nivel = Math.min(tope, r.nivel + 1);
       if (r.nivel >= 7 && !r.fundo) { r.fundo = true; r.hitos.push('founded their own company and made the cover of a magazine'); }
       else {
         var sabores = [
@@ -109,14 +125,18 @@ var Mundo = (function () {
   }
 
   /* ---------------- world state ---------------- */
-  function nuevo() {
-    var era = el(ERAS);
-    return {
-      mes:0, eraId:era.id, eraRestante:Math.round(rnd(era.dura[0], era.dura[1])),
+  function nuevo(semilla) {
+    var m = {
+      mes:0,
+      rng:(semilla === undefined || semilla === null) ? null : (semilla % 4294967296),
       rival:nuevoRival(),
       noticias:[],
       registro:[]  /* era history for the epilogue */
     };
+    var era = elEra(m, ERAS);
+    m.eraId = era.id;
+    m.eraRestante = Math.round(rndEra(m, era.dura[0], era.dura[1]));
+    return m;
   }
   function era(m) {
     for (var i = 0; i < ERAS.length; i++) if (ERAS[i].id === m.eraId) return ERAS[i];
@@ -130,10 +150,10 @@ var Mundo = (function () {
     if (m.eraRestante <= 0) {
       var actual = m.eraId, candidatas = [], i;
       for (i = 0; i < ERAS.length; i++) if (ERAS[i].id !== actual) candidatas.push(ERAS[i]);
-      var nueva = el(candidatas);
+      var nueva = elEra(m, candidatas);
       m.registro.push({ era:actual, hasta:m.mes });
       m.eraId = nueva.id;
-      m.eraRestante = Math.round(rnd(nueva.dura[0], nueva.dura[1]));
+      m.eraRestante = Math.round(rndEra(m, nueva.dura[0], nueva.dura[1]));
       cambio = nueva;
     }
     if (Math.random() < 0.5) {

@@ -10,6 +10,7 @@
   var R = Logros.cargar();
   var plan = null, evActual = null, notasEvento = [], ofertaSel = -1;
   var hudPrev = {};
+  var rankingVolver = 'p-inicio';
 
   function $(id) { return document.getElementById(id); }
   function esc(s) {
@@ -294,12 +295,21 @@
       (inicioSel.nombre ? 'Starting as <b>' + esc(inicioSel.nombre) + '</b> · ' : '') +
       'You start the career as <b>' + esc(nivelPorN(inicioSel.nivel).rol) + '</b>' +
       (inicioSel.nivel > 0 ? ' — your real rung. Or tap APM to run the whole ladder.' : ' — the full climb, from the bottom.') +
-      '</div></div>';
+      '</div>';
+    var fac = Ranking.faccion();
+    h += '<div style="margin-top:9px"><span class="rot" style="margin-right:6px">Pick a side</span>' +
+      '<span class="rolchip' + (fac === 'growth' ? ' sel' : '') + '" data-fac="growth">Growth Legion</span>' +
+      '<span class="rolchip' + (fac === 'craft' ? ' sel' : '') + '" data-fac="craft">Craft Guild</span>' +
+      '<span class="pq mut" style="margin-left:6px">every finished career scores for your faction</span></div>';
+    h += '</div>';
 
     h += '<div style="margin-top:14px">' +
       '<span class="btn pri xl" data-act="nueva">New career</span> ' +
+      '<span class="btn" data-act="semanal" style="margin-left:6px">Weekly challenge</span>' +
       (hay ? '<span class="btn" data-act="continuar" style="margin-left:6px">Continue</span>' : '') +
       '<span class="btn sec" data-act="biblio" style="margin-left:6px">Library</span></div>';
+    h += '<div class="pq mut" style="margin-top:7px">Weekly: everyone plays the same world this week (' +
+         esc(Ranking.semana()) + ') — same eras, same storms. One public table, seven days.</div>';
     h += '</div>';
 
     /* right: the trophy shelf — records on top, achievements scroll below */
@@ -319,6 +329,8 @@
       h += '<div class="pq mut">Nobody\'s played yet. Records live here.</div>';
     }
     h += '</div>';
+
+    h += '<span class="btn sec" data-act="ranking" style="margin-bottom:10px">Hall of Fame · public ranking</span>';
 
     var items = '', k, n = 0;
     for (k = 0; k < Logros.DEFS.length; k++) {
@@ -340,7 +352,8 @@
   function renderOfertas(cierreExtra) {
     var era = Mundo.era(M), ofs = C.ofertas, i;
     var h = '<div class="rot">Month ' + M.mes + ' of your career · ' + esc(nivelPorN(C.nivel).rol) +
-            ' · reputation ' + Math.round(C.reputacion) + '</div>' +
+            ' · reputation ' + Math.round(C.reputacion) +
+            (C.semana ? ' · <span class="lila">weekly challenge ' + esc(C.semana) + '</span>' : '') + '</div>' +
             '<div class="h1" style="margin-top:2px">On the table</div>';
 
     h += '<div class="era-banner"><span class="nombre-era">' + esc(era.nombre) + '</span>' +
@@ -935,11 +948,15 @@
     h += '<div class="nota"><div class="nk">Net worth</div><div class="nv" style="font-size:30px;margin-top:6px">' +
          money(b.patrimonio) + '</div><div class="pq mut">salaries ' + money(b.ahorros) + ' + equity ' + money(b.equityRealizado) + '</div></div>';
     h += '<div class="nota"><div class="nk">Reputation</div><div class="nv">' + b.reputacion + '</div></div>';
-    h += '<div class="nota" style="width:300px"><div class="nk">Your rival: ' + esc(rv.nombre) + '</div>' +
+    h += '<div class="nota" style="width:300px"><div class="nk">Your rival: ' + esc(rv.nombre) +
+         (rv.fantasma ? ' <span class="pill frio">real player</span>' : '') + '</div>' +
          '<div class="nv" style="font-size:22px;margin-top:8px" class="num">' +
          (ganaste ? '<span class="verde">You came out on top</span>' : '<span class="rojo">They beat you</span>') + '</div>' +
          '<div class="pq mut">' + esc(rv.nombre) + ' ended as ' + esc(nivelPorN(rv.nivel).rol) +
-         (rv.fundo ? ' and founded their own company' : '') + '</div></div>';
+         (rv.fundo ? ' and founded their own company' : '') + '</div>' +
+         (rv.fantasma ? '<div class="pq lila" style="margin-top:4px">A real career from the Hall of Fame: they reached ' +
+           esc(nivelPorN(rv.nivelReal !== undefined ? rv.nivelReal : rv.nivel).rol) + ' with ' + money(rv.patReal || 0) + '.</div>' : '') +
+         '</div>';
     h += '</div>';
 
     h += '<div style="display:-webkit-flex;display:flex">';
@@ -975,11 +992,14 @@
     h += '<div class="pq mut" style="margin-top:8px">You opened ' + Object.keys(C.codex).length + ' of ' + LIBROS.length + ' cards.</div>';
     h += '</div></div>';
 
-    h += '<div style="margin-top:16px"><span class="btn pri" data-act="reiniciar">Another career</span> ' +
+    h += '<div id="rk-final" class="pq mut" style="margin-top:14px">Sending your career to the public Hall of Fame…</div>';
+    h += '<div style="margin-top:12px"><span class="btn pri" data-act="reiniciar">Another career</span> ' +
+         '<span class="btn" data-act="ranking">Hall of Fame</span> ' +
          '<span class="btn" data-act="biblio">Library</span></div>';
     $('p-final').innerHTML = h;
     try { localStorage.removeItem(CLAVE); } catch (e2) {}
     ir('p-final');
+    enviarRanking(b);
   }
 
   function mostrarIntro() {
@@ -1044,6 +1064,178 @@
       })() + '</div>' +
       '<div style="margin-top:14px"><span class="btn" data-act="cerrar-libro">Back</span></div>';
     ov('ov-libro', true);
+  }
+
+  /* ================= public ranking ================= */
+
+  /* Starting a career, normal or weekly. Weekly seeds the world with the ISO
+     week, so everyone on the internet faces the same era sequence; the run
+     is tagged with the week and lands on that week's public table. */
+  function empezarCarrera(semanal) {
+    var inp2 = $('perfil-in');
+    if (inp2 && inp2.value) {
+      inicioSel.texto = inp2.value;
+      var p2 = parsearPerfil(inp2.value);
+      if (p2.nombre) inicioSel.nombre = p2.nombre;
+      if (p2.nivel !== null) { inicioSel.nivel = p2.nivel; inicioSel.rol = p2.rol; }
+    }
+    C = Carrera.nueva(inicioSel.nombre, inicioSel.nivel);
+    if (semanal) {
+      C.semana = Ranking.semana();
+      M = Mundo.nuevo(Ranking.semilla(C.semana));
+    } else {
+      M = Mundo.nuevo();
+    }
+    C.rkId = Ranking.token() + '-' + new Date().getTime();
+    J = null; ofertaSel = -1;
+    if (M.rival) { M.rival.nivel = C.nivel; M.rival.reputacion = C.reputacion; }
+    pedirRivalReal();
+    Carrera.ofertas(C, M); guardar();
+    var sabe = false;
+    try { sabe = !!localStorage.getItem('fundadores.sabe'); } catch (e2) {}
+    if (!sabe) mostrarIntro(); else renderOfertas();
+  }
+
+  /* The ghost rival: a real player's career from the ranking replaces the
+     NPC. They climb with the usual dice but stop at the level they actually
+     reached. Arrives async; if it never does, the NPC stays. */
+  function pedirRivalReal() {
+    var id = C.rkId;
+    Ranking.rival(C.nivel, function (g) {
+      if (!g || !g.ok || !g.nombre || !C || C.rkId !== id || !M) return;
+      M.rival = {
+        nombre:String(g.nombre).slice(0, 40), nivel:C.nivel,
+        reputacion:Math.round(g.reputacion || 38),
+        hitos:[], fundo:false, fantasma:true,
+        tope:Math.max(g.nivel || 0, C.nivel),
+        nivelReal:g.nivel || 0, patReal:g.patrimonio || 0
+      };
+      guardar();
+    });
+  }
+
+  function rachaDe(c) {
+    var mx = 0, s = 0, i;
+    for (i = 0; i < c.puestos.length; i++) {
+      if (c.puestos[i].cumplido) { s++; if (s > mx) mx = s; } else s = 0;
+    }
+    return mx;
+  }
+  function huboVenta(c) {
+    for (var i = 0; i < c.puestos.length; i++) if (c.puestos[i].final === 'venta') return true;
+    return false;
+  }
+
+  function enviarRanking(b) {
+    if (!C || C.rkEnviado) return;
+    C.rkEnviado = true;
+    var nLogros = 0, k;
+    for (k in R.logros) if (R.logros.hasOwnProperty(k) && R.logros[k]) nLogros++;
+    var datos = {
+      id:C.rkId || (Ranking.token() + '-x'), token:Ranking.token(),
+      nombre:C.nombre && C.nombre !== 'you' ? C.nombre : 'Anonymous',
+      faccion:Ranking.faccion(), semana:C.semana || null,
+      patrimonio:b.patrimonio, nivel:C.nivel, reputacion:b.reputacion,
+      anios:parseFloat(b.anios) || 0, puestos:b.puestos,
+      cumplidos:b.cumplidos, despidos:b.despidos, racha:rachaDe(C),
+      logros:nLogros, fundo:!!C.yaFundo, vendio:huboVenta(C)
+    };
+    Ranking.enviar(datos, function (r) {
+      var el = $('rk-final');
+      if (!el) return;
+      if (!r || !r.ok) {
+        el.innerHTML = 'The public Hall of Fame is out of reach right now — your career still counts at home.';
+        return;
+      }
+      var t = 'Public Hall of Fame: you\'re <b class="verde">#' + r.pos + '</b> of ' + r.total + ' players by net worth.';
+      if (r.posSemanal) t += ' This week: <b class="verde">#' + r.posSemanal + '</b> of ' + r.totalSemanal + '.';
+      if (r.destronaste) {
+        t += ' <span class="lila">You dethroned ' + esc(r.destronaste) + ' as the #1.</span>';
+        var g = Logros.dar(R, 'regicidio');
+        Logros.guardar(R);
+        if (g) {
+          t += '<div class="logro"><div class="med">★</div><div><div class="ln">' + esc(g.n) + '</div>' +
+               '<div class="ld">' + esc(g.d) + '</div></div></div>';
+        }
+      }
+      el.innerHTML = t;
+    });
+  }
+
+  function filasRk(arr, valor) {
+    if (!arr || !arr.length) return '<div class="pq mut">Nobody yet. Be the first.</div>';
+    var h = '', i;
+    for (i = 0; i < arr.length; i++) {
+      var e = arr[i];
+      var fac = e.faccion === 'growth' ? ' <span class="pill hot">G</span>' :
+                e.faccion === 'craft' ? ' <span class="pill frio">C</span>' : '';
+      h += '<div class="req rkfila' + (e.vos ? ' rkvos' : '') + '"><span class="mut num">' + (i + 1) + '.</span> ' +
+           '<b>' + esc(e.nombre) + '</b>' + fac +
+           '<span class="rkval num verde">' + valor(e) + '</span></div>';
+    }
+    return h;
+  }
+
+  function renderRanking(d, cargando) {
+    var h = '<div class="rot">Public ranking · everyone who ever finished a career</div>' +
+            '<div class="h1">Hall of Fame</div>';
+    if (cargando) {
+      h += '<div class="pq mut" style="margin-top:14px">Reaching the Hall of Fame…</div>';
+    } else if (!d || !d.ok) {
+      h += '<div class="pq mut" style="margin-top:14px">The Hall of Fame is out of reach right now. It lives on the internet — try again in a bit.</div>';
+    } else {
+      h += '<div class="pq mut" style="margin-top:4px">' + d.jugadores + ' players · ' + d.carreras + ' careers finished' +
+           (d.tu && d.tu.pos ? ' · you\'re <b class="verde">#' + d.tu.pos + '</b> by net worth' : '') + '</div>';
+      if (d.bounty) {
+        h += '<div class="caja2" style="margin-top:12px;max-width:660px"><span class="lila">BOUNTY</span> · beat <b>' +
+             esc(d.bounty.nombre) + '</b> (' + money(d.bounty.patrimonio) +
+             ') and the <b>Regicide</b> achievement is yours.</div>';
+      }
+      h += '<div class="rkcols scroll" style="-webkit-flex:1;flex:1;min-height:0">';
+      h += '<div style="width:330px;padding-right:26px">';
+      h += '<div class="rot" style="margin-bottom:6px">All-time net worth</div>';
+      h += filasRk(d.tablas.patrimonio, function (e) { return money(e.patrimonio); });
+      h += '</div>';
+      h += '<div style="width:310px;padding-right:26px">';
+      h += '<div class="rot" style="margin-bottom:6px">This week · ' + esc(d.semana) + '</div>';
+      h += filasRk(d.tablas.semanal, function (e) { return money(e.patrimonio); });
+      if (d.semanaPasada) {
+        h += '<div class="pq mut" style="margin-top:6px">Last week: <b>' + esc(d.semanaPasada.nombre) +
+             '</b> won with ' + money(d.semanaPasada.patrimonio) + '.</div>';
+      }
+      var g2 = d.facciones.growth, c2 = d.facciones.craft;
+      var totalC = g2.cumplidos + c2.cumplidos;
+      var pg = totalC ? Math.round(g2.cumplidos / totalC * 100) : 50;
+      h += '<div class="rot" style="margin:14px 0 4px 0">Faction war · mandates delivered</div>';
+      h += '<div class="facbar"><i style="width:' + pg + '%;background:#e8a33d"></i>' +
+           '<i style="width:' + (100 - pg) + '%;background:#5aa9f0"></i></div>';
+      h += '<div class="pq"><span style="color:#e8a33d"><b>Growth Legion</b> ' + g2.cumplidos + '</span> · ' +
+           '<span style="color:#5aa9f0"><b>Craft Guild</b> ' + c2.cumplidos + '</span></div>';
+      h += '</div>';
+      h += '<div style="width:260px">';
+      h += '<div class="rot" style="margin-bottom:6px">Highest role</div>';
+      h += filasRk(d.tablas.nivel, function (e) { return esc(nivelPorN(e.nivel).corto); });
+      h += '<div class="rot" style="margin:12px 0 6px 0">Mandate streak</div>';
+      h += filasRk(d.tablas.racha, function (e) { return e.racha + ' in a row'; });
+      h += '<div class="rot" style="margin:12px 0 6px 0">Achievements</div>';
+      h += filasRk(d.tablas.logros, function (e) { return e.logros + ' of ' + Logros.DEFS.length; });
+      h += '</div></div>';
+    }
+    h += '<div style="margin-top:14px"><span class="btn" data-act="cerrar-ranking">Back</span></div>';
+    $('p-ranking').innerHTML = h;
+  }
+
+  function abrirRanking() {
+    var ps = document.getElementsByClassName('pantalla'), i;
+    for (i = 0; i < ps.length; i++) {
+      if (ps[i].className.indexOf('on') >= 0 && ps[i].id !== 'p-ranking') rankingVolver = ps[i].id;
+    }
+    renderRanking(null, true);
+    ir('p-ranking');
+    Ranking.traer(function (d) {
+      var pr = $('p-ranking');
+      if (pr && pr.className.indexOf('on') >= 0) renderRanking(d, false);
+    });
   }
 
   /* ================= clicks ================= */
@@ -1112,6 +1304,15 @@
       return;
     }
 
+    v = attr(t, 'data-fac');
+    if (v !== null) {
+      Ranking.setFaccion(Ranking.faccion() === v ? null : v);
+      var inpF = $('perfil-in');
+      if (inpF) inicioSel.texto = inpF.value;
+      renderInicio();
+      return;
+    }
+
     v = attr(t, 'data-tip');
     if (v) { mostrarTip(v); return; }
 
@@ -1167,21 +1368,10 @@
     v = attr(t, 'data-act');
     if (!v) return;
 
-    if (v === 'nueva') {
-      var inp2 = $('perfil-in');
-      if (inp2 && inp2.value) {
-        inicioSel.texto = inp2.value;
-        var p2 = parsearPerfil(inp2.value);
-        if (p2.nombre) inicioSel.nombre = p2.nombre;
-        if (p2.nivel !== null) { inicioSel.nivel = p2.nivel; inicioSel.rol = p2.rol; }
-      }
-      C = Carrera.nueva(inicioSel.nombre, inicioSel.nivel); M = Mundo.nuevo(); J = null; ofertaSel = -1;
-      if (M.rival) { M.rival.nivel = C.nivel; M.rival.reputacion = C.reputacion; }
-      Carrera.ofertas(C, M); guardar();
-      var sabe = false;
-      try { sabe = !!localStorage.getItem('fundadores.sabe'); } catch (e2) {}
-      if (!sabe) mostrarIntro(); else renderOfertas();
-    }
+    if (v === 'nueva') { empezarCarrera(false); }
+    else if (v === 'semanal') { empezarCarrera(true); }
+    else if (v === 'ranking') { abrirRanking(); }
+    else if (v === 'cerrar-ranking') { ir(rankingVolver); }
     else if (v === 'cerrar-intro') {
       try { localStorage.setItem('fundadores.sabe', '1'); } catch (e3) {}
       ov('ov-intro', false);

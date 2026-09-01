@@ -22,7 +22,8 @@ var Logros = (function () {
     { id:'heisenberg',n:'The one who knocks',    d:'Finished a role with the Heat above 70, no indictment.' },
     { id:'manoslimpias',n:'Clean hands',         d:'A whole career without the Heat ever passing 20.' },
     { id:'labanca',   n:'The house wins',        d:'Delivered a mandate in the gambling industry.' },
-    { id:'zafaste',   n:'You got away',          d:'Survived a raid.' }
+    { id:'zafaste',   n:'You got away',          d:'Survived a raid.' },
+    { id:'regicidio', n:'Regicide',              d:'Dethroned the #1 of the public Hall of Fame.' }
   ];
 
   function cargar() {
