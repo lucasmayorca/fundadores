@@ -12,6 +12,32 @@ carrera del Soccer Superstar — hasta CPO o tu propia fundación. Cada puesto
 dura 8-14 meses, te contratan con un **mandato**, y al final te evalúan:
 ascenso, renovación, despido... o imputación.
 
+## Publicar cambios — SIEMPRE a todos lados
+
+El juego vive en una sola carpeta pero se publica en **tres lugares**, y un
+cambio no está terminado hasta que llegó a los tres:
+
+| Lugar | Quién lo ve | Cómo se actualiza |
+|---|---|---|
+| Servidor del panel (Mac/iPad) | vos, en casa | solo — sirve esta carpeta directo |
+| GitHub (`lucasmayorca/fundadores`) | el código público | `git push` |
+| Railway (link público) | cualquiera en internet | `railway up` |
+
+El checklist para CADA cambio, sin excepción:
+
+1. Subí el `?v=N` en `index.html` (bustea el caché del iPad y de Railway).
+2. Commit, push y deploy:
+
+```bash
+git add -A && git commit -m "qué cambió" && git push && railway up --detach
+```
+
+Si te salteás el `git push`, GitHub queda mentiroso; si te salteás
+`railway up`, el link público sirve el juego viejo. Railway **no** se
+despliega solo con el push (deploy por CLI, no está conectado al repo) —
+si algún día se conecta desde el dashboard de Railway, el `railway up`
+sobra, pero hasta entonces van los dos.
+
 ## Restricciones técnicas (las mismas del panel)
 
 iOS 9.3.5 / Safari 9: ES5 plano (sin `let`/`const`, arrows, template
