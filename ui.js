@@ -245,38 +245,45 @@
     try { x.send(null); } catch (e2) { inicioSel.buscando = false; }
   }
 
+  /* one layer of the landing explainer: indent = nesting depth */
+  function capaHtml(ind, col, tit, txt) {
+    return '<div class="capa" style="margin-left:' + ind + 'px;border-left-color:' + col + '">' +
+      '<div class="cn" style="color:' + col + '">' + tit + '</div>' +
+      '<div class="ct">' + txt + '</div></div>';
+  }
+
   function renderInicio() {
     var hay = false;
     try { hay = !!localStorage.getItem(CLAVE); } catch (e) {}
     var h = '<div class="h1">Founders</div>' +
-      '<div class="pq mut" style="margin-top:6px">A career in product, played month by month — ' +
-      'from analyst to the big chair, company by company.</div>';
+      '<div class="pq mut" style="margin-top:6px">A product management simulator: you decide what gets ' +
+      'built, month by month, with never enough people to build it all.</div>';
 
-    h += '<div style="display:-webkit-flex;display:flex;-webkit-flex:1;flex:1;min-height:0;margin-top:16px">';
+    h += '<div style="display:-webkit-flex;display:flex;-webkit-flex:1;flex:1;min-height:0;margin-top:14px">';
 
-    /* left: how it works, who you are, and the way in */
+    /* left: the game in layers, who you are, and the way in */
     h += '<div style="width:566px;padding-right:34px">';
-    h += '<div class="rot">How it works</div>';
-    h += '<div class="linea" style="font-size:13px"><div class="ic azul">◎</div><div class="tx">' +
-      '<b>One month per turn.</b> Your team produces points and you place every one — on stations ' +
-      '(Discover, Platform, Reliability, Growth) or on the projects you bet on. Close the month; ' +
-      'ships, dilemmas and incidents come back as consequences.</div></div>';
-    h += '<div class="linea" style="font-size:13px"><div class="ic verde">▲</div><div class="tx">' +
-      '<b>Every job is a mandate.</b> A company hires you to move one number before a deadline. ' +
-      'Deliver it and you climb — eight rungs from Product Analyst to Founder, where the cap table ' +
-      'is yours and the salary is lousy.</div></div>';
-    h += '<div class="linea" style="font-size:13px"><div class="ic lila">◈</div><div class="tx">' +
-      '<b>The world plays against you.</b> Eras change without warning — bubbles, capital winters, ' +
-      'regulators. Sectors heat up and freeze. And a rival climbs the same ladder, on the same clock.</div></div>';
-    h += '<div class="linea" style="font-size:13px;border-bottom:none"><div class="ic ambar">✎</div><div class="tx">' +
-      '<b>Mistakes come with receipts.</b> The rules are drawn from ' + LIBROS.length + ' real product ' +
-      'books and papers. The game charges you for the mistake first — then opens the exact card that ' +
-      'had it written down.</div></div>';
+    h += '<div class="rot" style="margin-bottom:8px">The game, layer by layer</div>';
+    h += capaHtml(48, '#5aa9f0', 'The month · your turn',
+      'Place the team\'s points on stations — Discover, Platform, Reliability, Growth — or on ' +
+      'backlog bets: probability × impact ÷ effort.');
+    h += capaHtml(32, '#35c46a', 'The job · one mandate',
+      'Move one number by a deadline. The stage — pre-PMF, validating, scaling — decides what pays; ' +
+      'political capital, how far off-script you can go.');
+    h += capaHtml(16, '#e8a33d', 'The career · the ladder',
+      'Eight rungs, Product Analyst to Founder. Rungs unlock levers, reputation opens tables, and ' +
+      'equity — worth something or nothing — makes the fortune.');
+    h += capaHtml(0, '#a98ff0', 'The world · the board',
+      'Eras rewrite the rules without warning: bubbles, winters, regulators. Sectors heat and freeze. ' +
+      'A rival climbs the same ladder, on the same clock.');
+    h += capaHtml(0, '#7fa8d8', 'The library · the receipts',
+      LIBROS.length + ' real product books power the rules. Every mistake gets charged first — ' +
+      'then the exact card that predicted it opens.');
 
-    h += '<div class="caja2" style="margin-top:12px"><div class="rot" style="margin-bottom:6px">Who are you? <span class="mut" style="text-transform:none;letter-spacing:0">(optional — you can always start from zero)</span></div>' +
+    h += '<div class="caja2" style="margin-top:10px;padding:8px 13px"><div class="rot" style="margin-bottom:5px">Who are you? <span class="mut" style="text-transform:none;letter-spacing:0">(optional — you can always start from zero)</span></div>' +
       '<input type="text" id="perfil-in" placeholder="Paste your LinkedIn URL or your current title..." ' +
-      'value="' + esc(inicioSel.texto || '') + '">' +
-      '<div style="margin-top:8px">';
+      'style="padding:8px 12px" value="' + esc(inicioSel.texto || '') + '">' +
+      '<div style="margin-top:6px">';
     for (var ti = 0; ti < ESCALAFON.length; ti++) {
       h += '<span class="rolchip' + (inicioSel.nivel === ti ? ' sel' : '') + '" data-rol="' + ti + '">' +
            esc(ESCALAFON[ti].corto) + '</span>';
