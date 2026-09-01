@@ -42,7 +42,7 @@
     mrr:'Monthly recurring revenue. What customers actually pay, every month.',
     pol:'Your credit with the organization. Spending your points off-mandate drains it - even when you are right. At zero, you are out.',
     heat:'Regulator attention. Dirty shortcuts raise it. From 40: surprise inspections and fines. At 85: they show up with a warrant.',
-    compro:'Total remaining effort you can have committed at once. This company\'s cap - pick your bets to fit under it.',
+    compro:'Project slots: how many builds this company can keep open at once. Ship one to free its slot.',
     prob:'How much to trust the estimate. Fills up as you talk to users; drops in hard-to-estimate companies.',
     impact:'How much this moves things if the estimate is right. Bets marked with the stage arrow hit x1.3.',
     evid:'How much you actually know about your users. It shapes every estimate you see - and it decays every month.',
@@ -242,7 +242,7 @@
         '<div class="mandato"><div class="rot">Your mandate · ' + o.meses + ' months</div>' + esc(o.mandatoTxt) + '</div>' +
         '<div class="fila">Salary <b>' + money(o.sueldo) + '/yr</b> · Equity <b>' +
           (o.fundar ? 'yours' : o.equity + '%') + '</b></div>' +
-        '<div class="fila">Risk <b>' + esc(o.riesgoTxt) + '</b> · Cap <b>' + o.techo + ' pts</b></div>' +
+        '<div class="fila">Risk <b>' + esc(o.riesgoTxt) + '</b> · Project slots <b>' + (o.slots || 3) + '</b></div>' +
         '<div class="fila">Bets: <b>' + (o.perfil === 'grandes' ? 'few and big' : o.perfil === 'chicas' ? 'many and small' : o.perfil === 'incierto' ? 'hard to estimate' : 'balanced portfolio') + '</b></div>' +
         '</div>';
     }
@@ -349,7 +349,7 @@
   /* ================= GAME ================= */
 
   function nuevoMes() {
-    plan = { postura:'construir', apuestas:[] };
+    plan = { desc:0, plat:0, fiab:0, crec:0, apuestas:[] };
     notasEvento = [];
     renderJuego();
     evActual = eventoAplicable(J);
@@ -407,58 +407,62 @@
       (not ? '<span class="noticia" style="margin-left:14px">◈ ' + esc(not) + '</span>' : '');
   }
 
-  var POSTURAS = [
-    { k:'construir', n:'Build', ic:'⚙', s:'Push the bets forward',
-      req:'cons', lib:'inspired', mix:{ cons:1 } },
-    { k:'descubrir', n:'Discover', ic:'◎', s:'Talk to users',
-      req:'desc', lib:'torres', mix:{ desc:0.6, cons:0.4 } },
-    { k:'sanear', n:'Clean up', ic:'⚖', s:'Debt and reliability',
-      req:'plat', lib:'fowler', mix:{ plat:0.6, fiab:0.4 } },
-    { k:'crecer', n:'Grow', ic:'↗', s:'Go hunt for market',
-      req:'crec', lib:'chasm', mix:{ crec:0.5, cons:0.5 } }
+  /* The month as a resource, Age-of-Empires style: your team produces
+     points; you station them. Whatever you don't station goes to BUILD and
+     pushes your selected projects. Every point is visible and accounted. */
+  var ESTACIONES = [
+    { k:'desc', n:'Discover', ic:'◎', col:'#5aa9f0', req:'desc', lib:'torres',
+      rinde:function (v) { return '+' + Math.round(v * 1.1 * J.calidadDesc * (1 + J.hab.producto / 200)) + ' evidence'; } },
+    { k:'plat', n:'Platform', ic:'⚙', col:'#35c46a', req:'plat', lib:'fowler',
+      rinde:function (v) { return '−' + Math.round(v * 0.55 * (1 + J.hab.tecnologia / 150)) + ' debt'; } },
+    { k:'fiab', n:'Reliability', ic:'⚖', col:'#4ecdc4', req:'fiab', lib:'sre',
+      rinde:function (v) { return '+' + Math.round(v * 0.45) + ' uptime'; } },
+    { k:'crec', n:'Growth', ic:'↗', col:'#e86ba3', req:'crec', lib:'chasm',
+      rinde:function (v) { return '+reach · $' + Math.round(v * 0.9) + 'k spend'; } }
   ];
 
-  function posturaPorK(k) {
-    for (var i = 0; i < POSTURAS.length; i++) if (POSTURAS[i].k === k) return POSTURAS[i];
-    return POSTURAS[0];
-  }
+  function asignado() { return plan.desc + plan.plat + plan.fiab + plan.crec; }
+  function paraBuild() { return Math.max(0, Motor.capacidadPropia(J) - asignado()); }
 
-  /* stance -> point split, respecting the role's levers */
-  function planDePostura(k) {
-    var p = posturaPorK(k), mio = Motor.capacidadPropia(J);
-    var out = { desc:0, cons:0, plat:0, fiab:0, crec:0 }, kk, resto = mio;
-    for (kk in p.mix) {
-      if (!p.mix.hasOwnProperty(kk)) continue;
-      if (J.palancas.indexOf(kk) < 0) continue;
-      var v = Math.round(mio * p.mix[kk]);
-      out[kk] = v; resto -= v;
+  function renderAsignacion() {
+    var mio = Motor.capacidadPropia(J), build = paraBuild();
+    var h = '<div class="rot" style="margin-bottom:6px">1 · Station your team · ' +
+            '<b class="num">' + mio + ' pts</b> this month</div>';
+
+    /* the energy bar: every point accounted, colored by station */
+    h += '<div class="ebar">';
+    var i;
+    for (i = 0; i < ESTACIONES.length; i++) {
+      var v = plan[ESTACIONES[i].k];
+      if (v > 0) h += '<i style="width:' + (v / mio * 100) + '%;background:' + ESTACIONES[i].col + '"></i>';
     }
-    out.cons += Math.max(0, resto);
-    return out;
-  }
+    h += '<i style="width:' + (build / mio * 100) + '%;background:#e8a33d"></i></div>';
 
-  function renderPostura() {
-    var h = '<div class="rot" style="margin-bottom:7px">1 · Your stance for the month</div><div class="posturas">';
-    var i, desbloqueadas = 0;
-    for (i = 0; i < POSTURAS.length; i++) {
-      var p = POSTURAS[i];
-      var puede = J.palancas.indexOf(p.req) >= 0;
-      if (puede) desbloqueadas++;
-      if (!puede) {
+    h += '<div class="estaciones">';
+    for (i = 0; i < ESTACIONES.length; i++) {
+      var st = ESTACIONES[i], vv = plan[st.k];
+      if (J.palancas.indexOf(st.req) < 0) {
         var falta = '';
         for (var k = 0; k < ESCALAFON.length; k++) {
-          if (ESCALAFON[k].palancas.indexOf(p.req) >= 0) { falta = ESCALAFON[k].corto; break; }
+          if (ESCALAFON[k].palancas.indexOf(st.req) >= 0) { falta = ESCALAFON[k].corto; break; }
         }
-        h += '<div class="post bloq"><div class="pic">' + p.ic + '</div><div class="pn">' + p.n + '</div>' +
-             '<div class="ps">at ' + falta + '</div></div>';
+        h += '<div class="stcard bloq"><div class="stn">' + st.ic + ' ' + st.n + '</div><div class="strinde">with ' + falta + '</div></div>';
         continue;
       }
-      h += '<div class="post' + (plan.postura === p.k ? ' sel' : '') + '" data-postura="' + p.k + '">' +
-           '<div class="pic">' + p.ic + '</div><div class="pn">' + p.n + '</div>' +
-           '<div class="ps">' + esc(p.s) + '</div></div>';
+      h += '<div class="stcard' + (vv > 0 ? ' viva' : '') + '">' +
+        '<div class="stn" style="color:' + (vv > 0 ? st.col : '#8b93a1') + '">' + st.ic + ' ' + st.n + chip(st.lib) + '</div>' +
+        '<div class="ctrl" style="margin-top:5px">' +
+        '<div class="b' + (vv <= 0 ? ' off' : '') + '" data-menos="' + st.k + '">−</div>' +
+        '<div class="n num">' + vv + '</div>' +
+        '<div class="b' + (build <= 0 ? ' off' : '') + '" data-mas="' + st.k + '">+</div>' +
+        '</div>' +
+        '<div class="strinde">' + (vv > 0 ? st.rinde(vv) : '—') + '</div></div>';
     }
+    /* build: donde va todo lo que no estacionaste */
+    h += '<div class="stcard viva build"><div class="stn" style="color:#e8a33d">⚒ Build</div>' +
+      '<div class="n num" style="font-size:21px;margin-top:4px">' + build + '</div>' +
+      '<div class="strinde">pushes your projects below</div></div>';
     h += '</div>';
-    if (desbloqueadas === 1) h += '<div class="pq mut" style="margin-top:4px">More stances as you climb.</div>';
     $('capa').innerHTML = h;
   }
 
@@ -473,22 +477,17 @@
     return h + '</span>';
   }
 
-  function compromisoPlan() {
-    var t = Motor.comprometido(J), i;
-    for (i = 0; i < plan.apuestas.length; i++) {
-      if (!J.enVuelo[plan.apuestas[i]]) t += Motor.costoDe(J, plan.apuestas[i]);
-    }
-    return t;
+  function slotsUsados() {
+    var n = plan.apuestas.length, id;
+    for (id in J.enVuelo) if (J.enVuelo.hasOwnProperty(id)) n++;
+    return n;
   }
 
   function renderBacklog() {
-    var techo = J.techoPts, usado = compromisoPlan();
-    var pctU = Math.min(100, Math.round(usado / techo * 100));
-    var h = '<div class="rot" style="margin:8px 0 5px 0">2 · Pick your bets · ' + tip('compro','commitment') + ' ' +
-      '<b class="num ' + (usado >= techo ? 'ambar' : '') + '">' + usado + '/' + techo + '</b>' +
-      ' <span class="pill libro" data-lib="momtest">confidence ' + Motor.confianza(J) + '</span></div>' +
-      '<div class="track" style="margin-bottom:8px"><i class="' + (pctU >= 100 ? 'a' : '') + '" style="width:' + pctU + '%"></i></div>';
-
+    var usados = slotsUsados(), i2, cajas = '';
+    for (i2 = 0; i2 < J.slots; i2++) cajas += '<span class="slot' + (i2 < usados ? ' lleno' : '') + '"></span>';
+    var h = '<div class="rot" style="margin:8px 0 7px 0">2 · Pick your projects · slots ' + cajas +
+      ' <span class="pill libro" data-lib="momtest">confidence ' + Motor.confianza(J) + '</span></div>';
     var id, i, a, d;
     for (id in J.enVuelo) if (J.enVuelo.hasOwnProperty(id)) {
       a = Motor.apuesta(id);
@@ -504,14 +503,17 @@
       for (k = 0; k < NECESIDADES.length; k++) if (NECESIDADES[k].id === a.nec) nec = NECESIDADES[k];
       var sel = plan.apuestas.indexOf(id) >= 0;
       d = Motor.estimacionDetalle(J, id);
-      var cabe = sel || (usado + d.costo <= techo);
+      var cabe = sel || slotsUsados() < J.slots;
       var obj = J.prima.indexOf(a.nec) >= 0 ? '<span class="tagobj mini">▲</span>' :
                 J.castiga.indexOf(a.nec) >= 0 ? '<span class="tagobj down mini">▽</span>' : '';
+      var DA = { core:'→ product value', flujo:'→ +usability', datos:'→ +evidence',
+                 integra:'→ gate', soporte:'→ gate', segur:'→ gate', escala:'→ +capacity' };
+      var da = '<span class="da">' + DA[a.nec] + '</span>';
       h += '<div class="ap' + (sel ? ' sel' : '') + (cabe ? '' : ' nocabe') + '" data-ap="' + id + '">' +
         '<div class="t"><div class="n2">' + esc(a.n) + '<span class="pill">' + esc(nec.corto) + '</span>' + obj + '</div>' +
         '<div class="viz">' +
           '<span class="vlbl">' + tip('prob','prob') + '</span>' + dots(d.prob) +
-          '<span class="vlbl">' + tip('impact','impact') + '</span>' + blocks(d.mag) +
+          '<span class="vlbl">' + tip('impact','impact') + '</span>' + blocks(d.mag) + da +
         '</div></div>' +
         '<div class="c"><span class="esf e' + d.esf + '">' + d.esf + '</span>' +
         '<div class="cst num">' + d.costo + ' pts</div></div></div>';
@@ -540,6 +542,14 @@
     h += barraEstado(tip('debt','Debt'), J.deuda, true, 'fowler');
     h += barraEstado(tip('morale','Morale'), J.moral, false, null);
     if ((J.lupa || 0) >= 25) h += barraEstado(tip('heat','The Heat'), J.lupa, true, null);
+    if (J.rolN >= 2) {
+      h += barraEstado(tip('load','Load'), Motor.carga(J) * 100, true, 'ddia');
+      h += barraEstado(tip('usab','Usability'), J.usabilidad, false, 'krug');
+    }
+    if (J.rolN >= 3) {
+      h += barraEstado(tip('ebudget','Error budget'), J.presupuestoError, false, 'sre');
+      h += barraEstado(tip('focus','Focus'), J.foco, false, 'grove');
+    }
     h += '<div class="pq mut" style="margin-top:6px">' + J.ing + ' eng · ' + J.prod + ' prod · ' + J.gtm + ' gtm' +
          (J.rampa.length ? ' · <span class="ambar">' + J.rampa.length + ' ramping up</span>' : '') + '</div></div>';
 
@@ -566,24 +576,13 @@
       h += '</div>';
     }
 
-    if (J.rolN >= 2) {
-      var carga = Motor.carga(J);
-      h += '<div class="caja2"><div class="rot" style="margin-bottom:5px">Engine room</div>';
-      h += barraEstado(tip('load','Load'), carga * 100, true, 'ddia');
-      h += barraEstado(tip('usab','Usability'), J.usabilidad, false, 'krug');
-      if (J.rolN >= 3) {
-        h += barraEstado(tip('ebudget','Error budget'), J.presupuestoError, false, 'sre');
-        h += barraEstado(tip('focus','Focus'), J.foco, false, 'grove');
-      }
-      h += '</div>';
-    }
+
     $('panel').innerHTML = h;
   }
 
   function renderBarra() {
-    var p = posturaPorK(plan.postura);
-    var h = '<div class="pts">Stance: <b>' + p.n + '</b> · ' + plan.apuestas.length + ' new bet' +
-      (plan.apuestas.length === 1 ? '' : 's') + '</div>';
+    var h = '<div class="pts"><span class="ambar">⚒ ' + paraBuild() + ' pts</span> on ' +
+      slotsUsados() + ' project' + (slotsUsados() === 1 ? '' : 's') + ' this month</div>';
     if (J.esFundador && !J.levantando) h += '<span class="btn chico" data-act="ronda" style="margin-right:10px">Go raise</span>';
     h += '<span class="btn pri" data-act="ejecutar">3 · Close the month</span>';
     $('barra').innerHTML = h;
@@ -592,7 +591,7 @@
   function renderJuego() {
     ir('p-juego');
     renderHud(); renderMandato(); renderEra();
-    renderPostura(); renderBacklog(); renderPanel(); renderBarra();
+    renderAsignacion(); renderBacklog(); renderPanel(); renderBarra();
   }
 
   /* ================= dilemmas ================= */
@@ -632,8 +631,8 @@
   /* ================= close the month ================= */
 
   function ejecutar() {
-    var reparto = planDePostura(plan.postura);
-    reparto.apuestas = plan.apuestas;
+    var reparto = { desc:plan.desc, plat:plan.plat, fiab:plan.fiab, crec:plan.crec,
+                    cons:paraBuild(), apuestas:plan.apuestas };
     var log = Motor.simular(J, reparto, M);
     var nuevas = fichasNuevas(J, C), fi;
     for (fi = 0; fi < nuevas.length; fi++) {
@@ -822,7 +821,7 @@
       '<h2>Four things. That\'s it.</h2>' +
       '<div class="cuerpo2" style="margin-top:6px">' +
       '<div class="linea"><div class="ic azul">1</div><div class="tx"><b>Pick a job.</b> They hire you for ONE thing: the mandate. The bar up top is your job. Deliver it and you climb.</div></div>' +
-      '<div class="linea"><div class="ic azul">2</div><div class="tx"><b>Every month: one stance and your bets.</b> You choose what your team spends the month on, and what you build from the backlog until you fill the commitment cap.</div></div>' +
+      '<div class="linea"><div class="ic azul">2</div><div class="tx"><b>Every month, station your team\'s points.</b> Whatever you don\'t station goes to Build and pushes your projects — which fit in limited slots, and each one shipped grants the company a new capability.</div></div>' +
       '<div class="linea"><div class="ic azul">3</div><div class="tx"><b>Prioritize by probability × impact ÷ effort.</b> The dots and blocks are estimates: the more you talk to users, the less they lie to you.</div></div>' +
       '<div class="linea"><div class="ic azul">4</div><div class="tx"><b>Everything else you learn by losing.</b> When the game charges you for something, it tells you which book had it written down.</div></div>' +
       '</div>' +
@@ -957,14 +956,22 @@
     v = attr(t, 'data-op');
     if (v !== null && evActual) { elegirOpcion(parseInt(v, 10)); return; }
 
-    v = attr(t, 'data-postura');
-    if (v && J) { plan.postura = v; renderPostura(); renderBarra(); return; }
+    v = attr(t, 'data-mas');
+    if (v && J) {
+      if (paraBuild() > 0) { plan[v]++; renderAsignacion(); renderBarra(); }
+      return;
+    }
+    v = attr(t, 'data-menos');
+    if (v && J) {
+      if (plan[v] > 0) { plan[v]--; renderAsignacion(); renderBarra(); }
+      return;
+    }
 
     v = attr(t, 'data-ap');
     if (v && J) {
       var i = plan.apuestas.indexOf(v);
       if (i >= 0) plan.apuestas.splice(i, 1);
-      else if (compromisoPlan() + Motor.costoDe(J, v) <= J.techoPts && !J.enVuelo[v]) plan.apuestas.push(v);
+      else if (slotsUsados() < J.slots && J.enVuelo[v] === undefined) plan.apuestas.push(v);
       renderBacklog(); renderBarra();
       return;
     }

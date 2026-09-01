@@ -112,17 +112,17 @@ function sectorPorId(id) {
 /* ---------------- STAGES ----------------
    They define what you walk into on day one. */
 var ETAPAS = {
-  semilla: { nombre:'Seed', techo:22,
+  semilla: { nombre:'Seed', techo:22, slots:2,
              fase:'Pre-product-market fit', faseCorta:'PRE-PMF',
              objetivo:'Find a problem that burns and the solution that puts it out. Nothing else matters yet.',
              prima:['core','flujo'], castiga:['escala','segur'], caja:1400000,  ing:4,  prod:1,  gtm:1,  deuda:14, arq:18, usab:32,
              usuariosBase:0.004, valoracion:9000000,  equity:[0.6, 1.8], caos:1.35 },
-  serieA:  { nombre:'Series A',  techo:30,
+  serieA:  { nombre:'Series A',  techo:30, slots:3,
              fase:'Validating product-market fit', faseCorta:'VALIDATING PMF',
              objetivo:'Prove they come back on their own: retention that doesn\'t decay and revenue that repeats.',
              prima:['flujo','datos'], castiga:['escala'], caja:6000000, ing:11, prod:3,  gtm:3,  deuda:32, arq:34, usab:44,
              usuariosBase:0.02,  valoracion:38000000, equity:[0.15, 0.5], caos:1.15 },
-  serieB:  { nombre:'Series B',  techo:40,
+  serieB:  { nombre:'Series B',  techo:40, slots:4,
              fase:'Scaling', faseCorta:'SCALING',
              objetivo:'Turn what works into a machine: open the big market without anything falling over.',
              prima:['integra','soporte','segur','escala'], castiga:[], caja:22000000,ing:26, prod:8,  gtm:11, deuda:47, arq:52, usab:55,

@@ -303,3 +303,23 @@ html, body {
   font-size:12px; background:#161b23; border:1px solid #242c39; color:#9aa3b2; cursor:pointer;
 }
 .rolchip.sel { background:#1a2740; border-color:#2f6fd0; color:#cfe0f5; }
+
+/* ---------- recursos: barra de energía, estaciones y slots ---------- */
+.ebar { height:10px; border-radius:5px; overflow:hidden; background:#191d25; margin-bottom:10px;
+  display:-webkit-flex; display:flex; }
+.ebar i { display:block; height:10px; }
+.estaciones { display:-webkit-flex; display:flex; }
+.stcard { width:118px; margin-right:8px; padding:8px 9px; border-radius:9px; text-align:center;
+  background:#12151b; border:1px solid #1c2027; }
+.stcard.viva { border-color:#2a3648; }
+.stcard.build { background:#171307; border-color:#3a2f14; width:128px; }
+.stcard.bloq { opacity:0.35; }
+.stcard .stn { font-size:12.5px; white-space:nowrap; }
+.stcard .strinde { font-size:10px; color:#767f8d; margin-top:4px; min-height:12px; }
+.stcard .ctrl { -webkit-justify-content:center; justify-content:center; }
+.stcard .ctrl .b { width:30px; height:30px; line-height:28px; font-size:17px; }
+.stcard .ctrl .n { width:30px; font-size:16px; }
+.slot { display:inline-block; width:13px; height:13px; border-radius:3px; margin:0 3px -1px 0;
+  background:#191d25; border:1px solid #2a313d; }
+.slot.lleno { background:#2f6fd0; border-color:#3f82e6; }
+.da { font-size:10px; color:#8fd39a; margin-left:10px; white-space:nowrap; }

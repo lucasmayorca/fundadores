@@ -59,6 +59,7 @@ var Motor = (function () {
       lupa:0, lupaBase:0, lupaMax:0, imputado:false, zafo:false,
       perfil:oferta.perfil || 'parejo', techoPts:oferta.techo || et.techo || 30, costos:{},
       fase:et.fase || '', faseCorta:et.faseCorta || '', objetivo:et.objetivo || '',
+      slots:oferta.slots || et.slots || 3,
       prima:et.prima || [], castiga:et.castiga || [], briefVisto:false,
       teamTopo:false, cd:false, cadenciaDesc:false, empoderado:false, fabrica:false,
       refactorFijo:false, reescritura:0, congelado:false, capacidadReservada:0,
@@ -474,13 +475,13 @@ var Motor = (function () {
     var wip = n > 2 ? Math.max(0.5, 1 - 0.15 * (n - 2)) : 1;
     if (n > 2) log.push({ tipo:'malo', texto:n + ' bets in parallel: context switching ate ' +
       Math.round((1 - wip) * 100) + '% of the effort.', libro:'grove' });
-    var comprometido = 0;
-    for (id in e.enVuelo) if (e.enVuelo.hasOwnProperty(id)) comprometido += Math.max(0, costoDe(e, id) - e.enVuelo[id]);
+    /* project slots, Catan-style: only so many builds open at once */
+    var abiertos = 0;
+    for (id in e.enVuelo) if (e.enVuelo.hasOwnProperty(id)) abiertos++;
     for (i = 0; i < sel.length; i++) {
-      if (e.enVuelo[sel[i]]) continue;
-      var cNuevo = costoDe(e, sel[i]);
-      if (comprometido + cNuevo > e.techoPts) continue;
-      comprometido += cNuevo;
+      if (e.enVuelo[sel[i]] !== undefined) continue;
+      if (abiertos >= e.slots) continue;
+      abiertos++;
       e.enVuelo[sel[i]] = 0;
     }
 
@@ -499,7 +500,21 @@ var Motor = (function () {
         var real = e.impactos[id];
         e.cobertura[a.nec] = (e.cobertura[a.nec] || 0) + real;
         var idx = e.backlog.indexOf(id); if (idx >= 0) e.backlog.splice(idx, 1);
-        var frase = 'You shipped "' + a.n + '": real impact ' + real + ' (you expected ' + esperado + ').';
+        /* every shipped project hands the company a permanent capability */
+        var regalo = '';
+        if (a.nec === 'escala') {
+          e.arquitectura += real * 0.25;
+          regalo = ' Grants: +' + Math.round(real * 0.25) + ' system capacity.';
+        } else if (a.nec === 'datos') {
+          e.evidencia = clamp(e.evidencia + 4, 0, 100);
+          regalo = ' Grants: +4 evidence.';
+        } else if (a.nec === 'flujo') {
+          e.usabilidad = clamp(e.usabilidad + 3, 0, 100);
+          regalo = ' Grants: +3 usability.';
+        } else if (a.nec === 'soporte' || a.nec === 'segur' || a.nec === 'integra') {
+          regalo = ' Grants: a tick toward the big-market gate.';
+        }
+        var frase = 'You shipped "' + a.n + '": real impact ' + real + ' (you expected ' + esperado + ').' + regalo;
         if (real < esperado * 0.55) {
           log.push({ tipo:'malo', texto:frase + ' You built without knowing.', libro:e.evidencia < 45 ? 'lean' : 'trap' });
         } else {

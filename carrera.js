@@ -111,7 +111,7 @@ var Carrera = (function () {
       meses:c.puestos.length === 0 ? Math.round(rnd(8, 10)) : Math.round(rnd(10, 14)),
       sueldo:sueldo, equity:Math.round(eq * 1000) / 1000,
       riesgo:riesgo, calor:calor,
-      perfil:emp.perfil || 'parejo', techo:et.techo,
+      perfil:emp.perfil || 'parejo', techo:et.techo, slots:et.slots || 3,
       riesgoTxt:riesgo > 1.35 ? 'Very high' : riesgo > 1.05 ? 'High' : riesgo > 0.85 ? 'Medium' : 'Low',
       fundar:false
     };
@@ -127,7 +127,7 @@ var Carrera = (function () {
       mandatoId:'ingresos', mandatoTxt:mandatoPorId('ingresos').txt,
       meses:Math.round(rnd(20, 26)),
       sueldo:70000, equity:100, riesgo:1.6, riesgoTxt:'All yours',
-      perfil:'incierto', techo:22,
+      perfil:'incierto', techo:22, slots:2,
       cajaPropia:Math.round(300000 + Math.min(1200000, c.ahorros * 0.5)),
       fundar:true
     };

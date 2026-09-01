@@ -67,17 +67,24 @@ Dotted-underlined labels (Retention, Runway, Political capital, the Heat,
 prob/impact, commitment, Evidence, Debt, Load, Error budget...) show a
 one-line explainer when tapped — 16 of them. No hover needed: it's an iPad.
 
-## The monthly loop: 3 taps
+## The monthly loop: station your team (AoE/Catan-style)
 
-1. **Stance for the month** (one button): Build / Discover / Clean up / Grow.
-   They unlock as you climb and split the points on their own.
-2. **Pick bets** until you fill the **commitment cap**. Each bet shows:
-   **prob** (dots ●●●○○: how reliable the estimate is), **impact**
-   (blocks ▂▄▆: how much it moves if it lands), **effort** (S/M/L/XL) and
-   the **▲/▽** marker for stage alignment. Prioritizing by probability ×
-   impact ÷ effort under a cap IS the game: with bots, doing it well
-   delivers ~90% of the first mandates; ignoring it, ~45%.
-3. **Close the month** and read what happened (real vs. expected impact).
+Your team produces **points** each month — one visible resource, one bar
+where every point is accounted:
+
+1. **Station your team**: +/- steppers on four stations, each showing its
+   yield live — Discover (`+N evidence`), Platform (`−N debt`), Reliability
+   (`+N uptime`), Growth (`+reach`). Stations unlock as you climb the ladder.
+   **Whatever you don't station goes to Build** and pushes your projects.
+2. **Pick your projects**: limited **slots** (2 seed / 3 Series A / 4
+   Series B) shown as boxes that fill as you pick. Each project card shows
+   prob dots, impact blocks, effort size — and **what it grants when
+   shipped**: Scale projects add permanent system capacity, Data projects
+   add evidence, Flow adds usability, Integr/Support/Security tick the
+   big-market gate. Shipping frees the slot. Engine-building, The Founder
+   style: every project makes the machine bigger.
+3. **Close the month** and read what happened (real vs expected impact,
+   plus what each shipped project granted).
 
 ## The briefing and the stages (PMF theory)
 
