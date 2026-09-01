@@ -102,6 +102,9 @@ var Motor = (function () {
        'grandes'  = a few bets dominate, the rest is worth little;
        'chicas'   = everything cheaper and evenly sized, nothing moves the needle alone;
        'incierto' = the estimates come with extra noise. */
+    var R = Math.max(6, Math.round(capacidad(e) * e.mando));
+    var FACTOR = { XL:1.0, L:0.5, M:0.25, S:0.12, XS:0.06 };
+    e.talles = {};
     for (i = 0; i < APUESTAS.length; i++) {
       var a = APUESTAS[i];
       var f = a.senuelo ? rnd(0.03, 0.20) : rnd(0.15, 1.25);
@@ -117,8 +120,12 @@ var Motor = (function () {
       }
       e.impactos[a.id] = Math.max(2, Math.round(a.imp * f));
       e.ruidos[a.id] = rnd(-1, 1) * (e.perfil === 'incierto' ? 1.6 : 1);
-      /* no bet can be bigger than the ceiling: it always has to fit */
-      e.costos[a.id] = Math.min(costo, e.techoPts);
+      /* Sizes mean TIME, literally, in YOUR monthly points: XL = the whole
+         month, L = two weeks, M = a week, S = ~3 days, XS = ~a day. Costs
+         are normalized to your capacity so the promise always holds. */
+      var talle = costo >= 24 ? 'XL' : costo >= 18 ? 'L' : costo >= 12 ? 'M' : costo >= 7 ? 'S' : 'XS';
+      e.talles[a.id] = talle;
+      e.costos[a.id] = Math.max(1, Math.round(R * FACTOR[talle]));
     }
     /* the company made it here alive: its architecture holds what it already has,
        with little headroom. The headroom is yours to build. */
@@ -323,8 +330,9 @@ var Motor = (function () {
     var prob = Math.max(1, Math.min(5, 1 + Math.round(cert * 4)));
     var mag = est >= 30 ? 5 : est >= 22 ? 4 : est >= 15 ? 3 : est >= 8 ? 2 : 1;
     var cst = costoDe(e, id);
-    var esf = cst <= 10 ? 'S' : cst <= 15 ? 'M' : cst <= 21 ? 'L' : 'XL';
-    return { est:est, prob:prob, mag:mag, esf:esf, costo:cst };
+    var esf = (e.talles && e.talles[id]) || (cst <= 10 ? 'S' : cst <= 15 ? 'M' : cst <= 21 ? 'L' : 'XL');
+    var TIEMPO = { XS:'~a day', S:'~3 days', M:'~a week', L:'~2 weeks', XL:'~a month' };
+    return { est:est, prob:prob, mag:mag, esf:esf, tiempo:TIEMPO[esf] || '', costo:cst };
   }
 
   function estimacion(e, id) {
@@ -395,6 +403,9 @@ var Motor = (function () {
       var id = NECESIDADES[i].id;
       e.cobertura[id] = Math.round(e.cobertura[id] * 0.45);
     }
+    var R = Math.max(6, Math.round(capacidad(e) * e.mando));
+    var FACTOR = { XL:1.0, L:0.5, M:0.25, S:0.12, XS:0.06 };
+    e.talles = {};
     for (i = 0; i < APUESTAS.length; i++) {
       var a = APUESTAS[i];
       var f = a.senuelo ? rnd(0.03, 0.20) : rnd(0.15, 1.25);

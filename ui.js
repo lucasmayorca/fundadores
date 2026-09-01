@@ -52,7 +52,8 @@
     load:'Users versus what the architecture can carry. Past ~85% the crash odds grow non-linearly.',
     ebudget:'Error budget for the quarter. Incidents drain it; at zero the next month is a feature freeze.',
     focus:'How aligned the org is on few things. Drifts down on its own; leadership choices push it up.',
-    usab:'How little users need to think. Multiplies the conversion of ALL traffic you bring.'
+    usab:'How little users need to think. Multiplies the conversion of ALL traffic you bring.',
+    esf:'Size is time, for your team, this month: XS ~a day, S ~3 days, M ~a week, L ~2 weeks, XL ~the whole month.'
   };
   var tipTimer = null;
   function mostrarTip(clave) {
@@ -552,8 +553,8 @@
           '<span class="vlbl">' + tip('impact','impact') + '</span>' + blocks(d.mag) +
           '<span class="da">' + DA[a.nec] + '</span>' +
         '</div></div>' +
-        '<div class="c"><span class="esf e' + d.esf + '">' + d.esf + '</span>' +
-        '<div class="cst num">' + d.costo + ' pts</div></div></div>';
+        '<div class="c"><span class="tipped" data-tip="esf"><span class="esf e' + d.esf + '">' + d.esf + '</span></span>' +
+        '<div class="cst num">' + d.tiempo + ' · ' + d.costo + ' pts</div></div></div>';
     }
     $('backlog').innerHTML = h;
   }

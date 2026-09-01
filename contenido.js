@@ -655,6 +655,373 @@ var EVENTOS = [
         e.gtm = Math.max(0, Math.round(e.gtm*0.5)); e.moral -= 15;
         nota(log,'malo','Bridge + cuts. Half the team, twice the pressure.','hard'); } }
   ]},
+/* ---------------- product craft: the hard calls ----------------
+   Harder by design: payoffs depend on your current state (the same choice
+   is right or wrong depending on the evidence you bring to it), and some
+   options are genuine gambles. */
+
+{ id:'sandbag', libro:'thinkingbets', prio:66, quien:'estrella',
+  cuando:function(e){ return e.mesPuesto > 2 && e.apuestasCompletadas >= 1; },
+  titulo:'The padded estimates',
+  texto:'"After last quarter\'s miss, engineering doubled every estimate. Nobody will ever be late again. Nothing will ever be early either."',
+  opciones:[
+    { txt:'Accept the padding. Predictability has value',
+      nota:'You bought calm and paid in capacity: padded estimates become padded work. Parkinson collects.',
+      libro:'thinkingbets',
+      ef:function(e,log){ e.penalCap = (e.penalCap||0) + 3; e.moral += 4;
+        nota(log,'neutro','Everything lands "on time" now. Your real capacity quietly shrank.','thinkingbets'); } },
+    { txt:'Cut every estimate in half, publicly',
+      nota:'You just taught the team that honest numbers get punished. Next time they pad deeper where you can\'t see.',
+      libro:'grove',
+      ef:function(e,log){ e.moral -= 8; e.deuda += 4; e.foco += 3;
+        nota(log,'malo','Faster on paper. The padding moved underground, into the code.','grove'); } },
+    { txt:'Flip it: fixed time, variable scope',
+      nota:'Shape Up\'s move — the deadline holds, the scope bends. It only works if you actually let scope drop.',
+      libro:'shapeup',
+      ef:function(e,log){
+        var id2 = null, i2;
+        for (i2 = 0; i2 < e.backlog.length; i2++) { id2 = e.backlog[i2]; break; }
+        if (id2) { e.costos[id2] = Math.max(4, Math.round((e.costos[id2] || 10) * 0.7)); e.impactos[id2] = Math.max(2, Math.round(e.impactos[id2] * 0.85)); }
+        nota(log,'bueno','Appetite set. Your next project got cheaper and slightly smaller — on purpose.','shapeup'); } }
+  ]},
+
+{ id:'peeking', libro:'analytics', prio:70, quien:'ceo',
+  cuando:function(e){ return e.mesPuesto > 3 && Motor.usuarios(e) > 150; },
+  titulo:'The test that looks great on day 3',
+  texto:'"The experiment is up 12% after three days and the board meets tomorrow. Can we call it and ship?"',
+  opciones:[
+    { txt:'Call it. 12% is 12%',
+      nota:'Peeking at tests is how novelty effects become roadmap facts. Half the time this number was noise wearing a suit.',
+      libro:'analytics',
+      ef:function(e,log){
+        if (Math.random() < 0.5) { e.retBonus = (e.retBonus||0) + 0.02; nota(log,'bueno','You got lucky: the effect was real. +2% retention. Remember it was a coin flip.','analytics'); }
+        else { e.retBonus = (e.retBonus||0) - 0.02; e.evidencia = Math.max(0, e.evidencia - 8);
+          nota(log,'malo','Novelty effect. It decayed, retention dipped, and now you trust your own data less.','analytics'); } } },
+    { txt:'Run it to significance. Board gets the honest version',
+      nota:'A week of patience against a lifetime of knowing whether your numbers mean anything.',
+      libro:'analytics',
+      ef:function(e,log){ e.politico -= 4; e.evidencia = Math.min(100, e.evidencia + 8);
+        nota(log,'bueno','The board frowned. The result held up — and now it\'s a fact, not a hope.','analytics'); } },
+    { txt:'Ship to half the users, keep a holdout',
+      nota:'The compromise that costs a little of both: some upside now, the truth in four weeks.',
+      libro:'accelerate',
+      ef:function(e,log){ e.retBonus = (e.retBonus||0) + 0.01; e.evidencia = Math.min(100, e.evidencia + 4);
+        nota(log,'neutro','Half rollout with a control group. Slower win, no lie.','accelerate'); } }
+  ]},
+
+{ id:'prfaq', libro:'workingback', prio:64, quien:'ceo',
+  cuando:function(e){ return e.mesPuesto > 3 && e.backlog.length > 2; },
+  titulo:'The initiative with momentum',
+  texto:'"Everyone loves the big idea from the offsite. I want it greenlit this week while the energy is high."',
+  opciones:[
+    { txt:'Greenlight it on momentum',
+      nota:'Enthusiasm is not evidence. Amazon writes the press release first precisely because momentum lies.',
+      libro:'workingback',
+      ef:function(e,log){
+        var id2 = e.backlog[0];
+        if (id2) e.ruidos[id2] = (e.ruidos[id2] || 0) + 0.8;
+        nota(log,'malo','Greenlit blind: your read on that bet just got noisier, not better.','workingback'); } },
+    { txt:'One week to write the press release and FAQ first',
+      nota:'Working Backwards: if the fake press release doesn\'t excite anyone, the real one won\'t either. Cheapest test that exists.',
+      libro:'workingback',
+      ef:function(e,log){
+        var id2 = e.backlog[0];
+        if (id2) { e.ruidos[id2] = 0; nota(log,'bueno','The PR/FAQ exposed what this really is. That bet\'s estimate is now dead accurate.','workingback'); }
+        else nota(log,'bueno','The exercise killed the fog. You know what you\'re deciding now.','workingback'); } },
+    { txt:'Park it: the quarter is already committed',
+      nota:'Saying no to a shiny thing mid-quarter is unpopular and correct roughly 80% of the time.',
+      libro:'rumelt',
+      ef:function(e,log){ e.foco += 6; e.politico -= 5;
+        nota(log,'neutro','The energy deflated and the quarter survived. Strategy is what you say no to.','rumelt'); } }
+  ]},
+
+{ id:'northstar', libro:'analytics', prio:63, quien:'board',
+  cuando:function(e){ return e.mesPuesto > 4 && e.mrr > 0; },
+  titulo:'Pick the north star',
+  texto:'"This company tracks forty numbers and manages none. Pick THE metric. One."',
+  opciones:[
+    { txt:'Weekly active usage',
+      nota:'Usage stars align the company around value delivered. Revenue follows — usually, eventually, if the model works.',
+      libro:'analytics',
+      ef:function(e,log){ e.retBonus = (e.retBonus||0) + 0.015; e.foco += 6;
+        nota(log,'bueno','Everyone optimizes for people coming back. Retention firms up.','analytics'); } },
+    { txt:'Monthly revenue',
+      nota:'Revenue stars focus wonderfully and cut corners invisibly: pressure flows to pricing and sales tactics, not value.',
+      libro:'analytics',
+      ef:function(e,log){ e.precio = Math.round(e.precio * 1.05); e.marca -= 4; e.foco += 6;
+        nota(log,'neutro','Price crept up 5%, brand crept down. Efficient and a little corrosive.','analytics'); } },
+    { txt:'A balanced scorecard of six KPIs',
+      nota:'Six priorities is zero priorities wearing a spreadsheet. This is the trap option, and it always looks the most reasonable.',
+      libro:'rumelt',
+      ef:function(e,log){ e.foco -= 8;
+        nota(log,'malo','Everyone kept their favorite number. Nothing changed, which was the point of choosing.','rumelt'); } }
+  ]},
+
+{ id:'jobsegment', libro:'jtbd', prio:62, quien:'ventas',
+  cuando:function(e){ return e.mesPuesto > 4; },
+  titulo:'The segmentation fight',
+  texto:'"Marketing wants personas. Sales wants industry verticals. You have one quarter of messaging budget and they\'re both in the room."',
+  opciones:[
+    { txt:'Re-segment by the job people hire us for',
+      nota:'JTBD segmentation is the right answer WITH real interview data behind it. Without it, you\'re just inventing fancier personas.',
+      libro:'jtbd',
+      ef:function(e,log){
+        if (e.evidencia >= 50) { e.cobertura.core += 6; e.marca += 5;
+          nota(log,'bueno','Your evidence held: the jobs were real, the messaging clicked, fit deepened.','jtbd'); }
+        else { e.foco -= 6; e.caja -= 15000;
+          nota(log,'malo','You segmented on guesses. The "jobs" were fiction and the quarter\'s messaging with them. Evidence first.','jtbd'); } } },
+    { txt:'Personas: keep marketing moving',
+      nota:'Demographic personas describe who buys, not why. Safe, familiar, and mostly decorative.',
+      libro:'jtbd',
+      ef:function(e,log){ e.marca += 2;
+        nota(log,'neutro','Pretty slides, mild lift. Nobody learned anything about causality.','jtbd'); } },
+    { txt:'Verticals: follow the sales pipeline',
+      nota:'Industry cuts help sales navigate and say nothing about the product. Fine for territory planning; sterile for product.',
+      libro:'positioning',
+      ef:function(e,log){ e.gtmBonus = (e.gtmBonus||0) + 0.15; e.foco -= 3;
+        nota(log,'neutro','Sales got sharper maps. Product got nothing.','positioning'); } }
+  ]},
+
+{ id:'reposition', libro:'dunford', prio:65, quien:'ventas',
+  cuando:function(e){ return e.mesPuesto > 5 && e.competidor.atencion > 0.25; },
+  titulo:'They took your category',
+  texto:'"The competitor just announced with OUR words. Analysts now describe us as \'a cheaper them\'. Prospects repeat it back to me."',
+  opciones:[
+    { txt:'Reposition into the niche where you win',
+      nota:'Dunford: change the context and you change the value. Smaller pond, but you\'re suddenly the obvious choice in it.',
+      libro:'dunford',
+      ef:function(e,log){ e.marca += 8; e.foco += 5; e.tam.visio = Math.round(e.tam.visio * 0.92);
+        nota(log,'bueno','New frame, tighter market, cleaner wins. You traded reach for obviousness.','dunford'); } },
+    { txt:'Fight for the category head-on',
+      nota:'Outspending the namer of the category to reclaim it is a rich company\'s game. Check your wallet.',
+      libro:'positioning',
+      ef:function(e,log){ e.caja -= 40000; e.competidor.atencion = Math.min(0.95, e.competidor.atencion + 0.15);
+        nota(log,'malo','$40k of counter-messaging and now they consider you a threat worth watching.','positioning'); } },
+    { txt:'Ignore it. Product wins in the end',
+      nota:'Sometimes true. But positioning happens in the buyer\'s head with or without you — abstaining just means they write it.',
+      libro:'dunford',
+      ef:function(e,log){ e.marca -= 5;
+        nota(log,'neutro','You stayed quiet. The market kept their version of the story.','dunford'); } }
+  ]},
+
+{ id:'pricing2', libro:'pricing', prio:67, quien:'ventas',
+  cuando:function(e){ return e.mesPuesto > 4 && e.mrr > Motor.burnMensual(e) * 0.15; },
+  titulo:'The quarter-end discount',
+  texto:'"Give me 40% off for these five deals and I close the quarter today. They\'ll all sign. That\'s the only thing they\'re waiting for."',
+  opciones:[
+    { txt:'Approve the discounts',
+      nota:'Revenue today, anchor forever: those five will never pay list again, and they talk to each other.',
+      libro:'pricing',
+      ef:function(e,log){ e.mrr = Math.round(e.mrr * 1.08); e.precio = Math.round(e.precio * 0.93);
+        nota(log,'malo','Quarter saved, list price quietly dead: your real price just dropped 7% for everyone next.','pricing'); } },
+    { txt:'Hold price, offer a value bundle instead',
+      nota:'Works when you actually know what they value. Guessing at a bundle is a discount with extra steps.',
+      libro:'pricing',
+      ef:function(e,log){
+        if (e.evidencia >= 55) { e.mrr = Math.round(e.mrr * 1.05); e.marca += 4;
+          nota(log,'bueno','You knew what to bundle because you knew what they valued. Price integrity intact.','pricing'); }
+        else { e.mrr = Math.round(e.mrr * 0.97); e.politico -= 5;
+          nota(log,'malo','The bundle missed what they cared about — two deals walked. You were guessing.','pricing'); } } },
+    { txt:'Let the deals slip. Price is the product',
+      nota:'Brutal and clean. A company that never bends teaches the market to stop asking.',
+      libro:'pricing',
+      ef:function(e,log){ e.politico -= 7; e.marca += 3;
+        nota(log,'neutro','Sales is furious. Next quarter, nobody opens with "waiting for the discount".','pricing'); } }
+  ]},
+
+{ id:'delight', libro:'badass', prio:61, quien:'estrella',
+  cuando:function(e){ return e.usabilidad < 55 && e.mesPuesto > 3; },
+  titulo:'The delighter vs. the basics',
+  texto:'"I designed something users will screenshot and share. I know onboarding is still rough, but THIS is what makes us lovable."',
+  opciones:[
+    { txt:'Ship the delighter',
+      nota:'Kano\'s curve is merciless: delighters on top of broken basics read as lipstick. The screenshot goes viral; the churn stays.',
+      libro:'badass',
+      ef:function(e,log){ e.marca += 6; e.usabilidad -= 2;
+        nota(log,'neutro','Lovely demo, warm tweets, same leaky funnel underneath.','badass'); } },
+    { txt:'Basics first: nobody loves what they can\'t use',
+      nota:'Users don\'t get better at your product until they get INTO your product. Badass users are built on boring foundations.',
+      libro:'krug',
+      ef:function(e,log){ e.usabilidad += 8; e.moral -= 3;
+        nota(log,'bueno','Unsexy month, +8 usability. Every future visitor converts better.','krug'); } },
+    { txt:'Both, half-time each',
+      nota:'The compromise that ships two halves of nothing. Splitting focus is how both bets lose.',
+      libro:'grove',
+      ef:function(e,log){ e.usabilidad += 2; e.marca += 1; e.foco -= 5;
+        nota(log,'malo','Two 50% things shipped. Neither moved its number. Focus paid the bill.','grove'); } }
+  ]},
+
+{ id:'empowered2', libro:'empowered', prio:68, quien:'ceo',
+  cuando:function(e){ return e.mesPuesto > 5 && e.rolN >= 2; },
+  titulo:'The spec from the dinner',
+  texto:'"I had dinner with our biggest customer\'s CEO. Here\'s exactly what we\'re building — I sketched it on the napkin. Don\'t overthink it."',
+  opciones:[
+    { txt:'Build it as sketched',
+      nota:'A solution handed down skips the only questions that matter: is it valuable, is it usable, does it generalize. Napkins answer none.',
+      libro:'empowered',
+      ef:function(e,log){
+        var id2 = e.backlog[0];
+        if (id2) e.impactos[id2] = Math.max(2, Math.round(e.impactos[id2] * 0.5));
+        e.politico += 6;
+        nota(log,'malo','The CEO beams. The napkin thing solves one dinner guest\'s problem, at half the value.','empowered'); } },
+    { txt:'Reframe: "what problem did he describe?" — then solve THAT',
+      nota:'Empowered teams take problems from above and evidence from below. It costs a hard conversation and pays in real solutions.',
+      libro:'empowered',
+      ef:function(e,log){
+        var id2 = e.backlog[0];
+        if (id2) e.ruidos[id2] = 0;
+        e.politico -= 5;
+        nota(log,'bueno','Awkward meeting, clean outcome: you now know exactly what that request was really about.','empowered'); } },
+    { txt:'Nod, then quietly build what you believe instead',
+      nota:'The gamble of gamblers: heroes get statues, corpses get case studies. Your evidence decides which one you are.',
+      libro:'hard',
+      ef:function(e,log){
+        if (e.evidencia >= 60) { e.politico += 10; e.foco += 4;
+          nota(log,'bueno','Your version worked. The CEO now tells the story like it was his idea. Statues for everyone.','hard'); }
+        else { e.politico -= 15; e.moral -= 4;
+          nota(log,'malo','Your version missed — and you disobeyed on a hunch. That meeting was very quiet.','hard'); } } }
+  ]},
+
+{ id:'sprint2', libro:'sprintk', prio:60, quien:'cto',
+  cuando:function(e){ return e.mesPuesto > 2 && e.evidencia < 60; },
+  titulo:'Big decision, thin data',
+  texto:'"We\'ve been debating the core flow for three weeks. Every meeting ends where it started. Somebody decide something."',
+  opciones:[
+    { txt:'Run a design sprint: prototype by Thursday, five users Friday',
+      nota:'Five days to compress three months of argument. The prototype doesn\'t have to work; it has to make five people react.',
+      libro:'sprintk',
+      ef:function(e,log){ e.evidencia = Math.min(100, e.evidencia + 9); e.foco += 4;
+        nota(log,'bueno','Friday\'s five users ended the debate in an hour. Nine points of evidence, one week.','sprintk'); } },
+    { txt:'Decide it yourself in the next meeting',
+      nota:'Fast, decisive, and exactly as good as your intuition — which is exactly as good as your evidence.',
+      libro:'thinkingbets',
+      ef:function(e,log){
+        if (e.evidencia >= 45) { e.foco += 5; nota(log,'neutro','Called it. Your accumulated evidence made it a fair bet.','thinkingbets'); }
+        else { e.sesgo = Math.min(1, (e.sesgo||0) + 0.2); e.foco += 3;
+          nota(log,'malo','Called it on vibes. The team moves — in a direction chosen by your loudest opinion.','thinkingbets'); } } },
+    { txt:'Copy what the market leader does',
+      nota:'Their flow encodes THEIR trade-offs for THEIR users at THEIR scale. You\'re importing conclusions without the reasoning.',
+      libro:'dunford',
+      ef:function(e,log){ e.foco += 2; e.evidencia = Math.max(0, e.evidencia - 4);
+        nota(log,'malo','Shipped their answer to your question. Now your product argues with itself.','dunford'); } }
+  ]},
+
+{ id:'coldstart2', libro:'coldstart', prio:64, quien:'ventas', sectores:['banco','apuestas','devtools','datapol'],
+  cuando:function(e){ return e.mesPuesto > 4 && Motor.usuarios(e) < e.tam.visio * 0.5; },
+  titulo:'Empty rooms',
+  texto:'"The network features are ghost towns. Every new user walks into an empty room, shrugs, and leaves. Growth wants to blast ads at it."',
+  opciones:[
+    { txt:'Shrink to one atomic network and make IT dense',
+      nota:'Chen\'s law: a hundred people who all see each other beats ten thousand who see nobody. Painful, smaller, correct.',
+      libro:'coldstart',
+      ef:function(e,log){
+        var i2; for (i2 = 0; i2 < SEGMENTOS.length; i2++) e.usuarios[SEGMENTOS[i2].id] *= 0.92;
+        e.viral += 0.35; e.retBonus = (e.retBonus||0) + 0.02;
+        nota(log,'bueno','You closed the empty rooms and packed one. It\'s alive in there — and alive spreads.','coldstart'); } },
+    { txt:'Blast ads: fill the rooms with volume',
+      nota:'Pouring strangers into empty rooms makes fuller empty rooms. They don\'t know each other; that was the problem.',
+      libro:'coldstart',
+      ef:function(e,log){ e.caja -= 30000; e.retBonus = (e.retBonus||0) - 0.015;
+        nota(log,'malo','$30k of arrivals into silence. They left slightly faster than organics do.','coldstart'); } },
+    { txt:'Seed the rooms with house activity',
+      nota:'Every marketplace did it; few admit it. It works until someone notices, and someone always notices.',
+      libro:'hard',
+      ef:function(e,log){ e.retBonus = (e.retBonus||0) + 0.015; e.lupa = Math.min(100, e.lupa + 10);
+        nota(log,'neutro','The rooms look alive. Some of the "people" are you. The Heat noticed.','hard'); } }
+  ]},
+
+{ id:'outcomes2', libro:'outcomes', prio:63, quien:'board',
+  cuando:function(e){ return e.rolN >= 3 && e.mesPuesto > 5; },
+  titulo:'The twelve-month roadmap request',
+  texto:'"The board wants feature-level commitments for the next twelve months. Dates. Names. In writing."',
+  opciones:[
+    { txt:'Give them the feature Gantt they asked for',
+      nota:'You just promised outputs a year out with quarter-one knowledge. Every future discovery is now a broken promise.',
+      libro:'outcomes',
+      ef:function(e,log){ e.politico += 6; e.fabrica = true;
+        nota(log,'malo','They loved the certainty. You\'re a feature factory with a deadline printer now.','outcomes'); } },
+    { txt:'Commit to outcomes with a now/next/later view',
+      nota:'Harder to sell, honest to run: commit to the problems and the metrics, keep the solutions negotiable.',
+      libro:'outcomes',
+      ef:function(e,log){
+        e.politico -= 6;
+        e.pactoOutcomes = true;
+        nota(log,'bueno','Tense meeting. If your mandate lands, this becomes the smartest thing you did all year.','outcomes'); } },
+    { txt:'Gantt for the board, reality for the team',
+      nota:'Two roadmaps means two truths means one eventual reckoning, scheduled for the worst possible moment.',
+      libro:'hard',
+      ef:function(e,log){ e.politico += 3; e.moral -= 6; e.lupa = Math.min(100, e.lupa + 4);
+        nota(log,'malo','The team knows the official plan is theater. Theater is corrosive.','hard'); } }
+  ]},
+
+{ id:'tornado', libro:'ousterhout', prio:62, quien:'cto',
+  cuando:function(e){ return e.deuda > 30 && e.mesPuesto > 3; },
+  titulo:'The tactical tornado',
+  texto:'"Our fastest engineer ships in hours what takes others days. Sales loves him. Every file he touches, someone else rewrites within a month."',
+  opciones:[
+    { txt:'Protect him. Speed like that is rare',
+      nota:'Ousterhout named this exact person: the tactical tornado — a hero to sales, a tax on everyone downstream.',
+      libro:'ousterhout',
+      ef:function(e,log){ e.deudaPendiente = (e.deudaPendiente||0) + 6; e.moral -= 3;
+        nota(log,'malo','The demos keep wowing. The codebase keeps paying. The team keeps rewriting.','ousterhout'); } },
+    { txt:'Pair him with your best designer of systems',
+      nota:'Speed plus depth is the rarest package in the industry. Sometimes you can manufacture it from two people.',
+      libro:'ousterhout',
+      ef:function(e,log){ e.penalCap = (e.penalCap||0) + 2; e.deuda = Math.max(0, e.deuda - 6);
+        nota(log,'bueno','Slower for a month. Then the tornado started leaving buildings standing.','ousterhout'); } },
+    { txt:'Channel him: prototypes and spikes only, never production',
+      nota:'Tornadoes are magnificent in open fields. The trick is keeping them out of town.',
+      libro:'grove',
+      ef:function(e,log){ e.evidencia = Math.min(100, e.evidencia + 5); e.moral -= 2;
+        nota(log,'neutro','He hates the lane and produces astonishing prototypes in it. Evidence up.','grove'); } }
+  ]},
+
+{ id:'contrainforme', libro:'justenough', prio:61, quien:'estrella',
+  cuando:function(e){ return e.mesPuesto > 4 && e.evidencia >= 40; },
+  titulo:'The research that says you\'re wrong',
+  texto:'"The user study came back. It contradicts the roadmap. Not a little — the thing we\'re building next scored dead last on what users actually struggle with."',
+  opciones:[
+    { txt:'Change course now, mid-quarter',
+      nota:'Expensive, embarrassing, and cheaper than the alternative — IF the research is sound. Check the method before the courage.',
+      libro:'justenough',
+      ef:function(e,log){
+        e.backlog = []; rellenarBacklog(e);
+        var i2; for (i2 in e.ruidos) if (e.ruidos.hasOwnProperty(i2)) e.ruidos[i2] *= 0.6;
+        e.politico -= 6;
+        nota(log,'bueno','You turned the ship in open water. The new backlog reads truer — your estimates sharpened.','justenough'); } },
+    { txt:'Finish the quarter, revisit in planning',
+      nota:'Momentum is a real asset and so is being wrong efficiently for three more months. Pick your poison consciously.',
+      libro:'torres',
+      ef:function(e,log){ e.evidencia = Math.max(0, e.evidencia - 8);
+        nota(log,'neutro','Steady as she goes — toward a destination the map says isn\'t there.','torres'); } },
+    { txt:'Question the methodology until it goes away',
+      nota:'Every inconvenient study has a flaw if you need one. This is how organizations install their own blindfolds.',
+      libro:'justenough',
+      ef:function(e,log){ e.sesgo = Math.min(1, (e.sesgo||0) + 0.25); e.politico += 3;
+        nota(log,'malo','The study died in committee. Your estimates now optimize for being agreed with.','justenough'); } }
+  ]},
+
+{ id:'olsen2', libro:'olsen', prio:59, quien:'ceo',
+  cuando:function(e){ return e.faseCorta === 'PRE-PMF' && e.mesPuesto > 3 && Motor.fitMax(e) < 0.5; },
+  titulo:'The pyramid check',
+  texto:'"Investors keep asking what our product-market fit story is. I need a slide. What do I tell them we\'re optimizing?"',
+  opciones:[
+    { txt:'"Underserved needs" — we\'re still mapping the market layer',
+      nota:'Olsen\'s pyramid built bottom-up: market, needs, value prop, THEN features. Boring slide, correct sequence.',
+      libro:'olsen',
+      ef:function(e,log){ e.evidencia = Math.min(100, e.evidencia + 6); e.politico -= 3;
+        nota(log,'bueno','Unsexy honesty. The next investor question was sharper — and answerable.','olsen'); } },
+    { txt:'"UX polish" — show the beautiful new screens',
+      nota:'Optimizing the top of the pyramid before the base exists: gorgeous, load-bearing on nothing.',
+      libro:'olsen',
+      ef:function(e,log){ e.usabilidad += 3; e.evidencia = Math.max(0, e.evidencia - 4);
+        nota(log,'malo','The screens got applause. The unanswered question underneath got bigger.','olsen'); } },
+    { txt:'"Growth" — traction answers everything',
+      nota:'Pouring growth on pre-fit product is renting users to impress people. They churn on schedule.',
+      libro:'seibel',
+      ef:function(e,log){ e.caja -= 20000; e.retBonus = (e.retBonus||0) - 0.01;
+        nota(log,'malo','$20k of borrowed traction. The cohort curves will testify against you.','seibel'); } }
+  ]},
 
 /* ---------------- the gray zone ---------------- */
 
@@ -748,7 +1115,7 @@ var EVENTOS = [
         nota(log,'neutro','The company now has a revenue line nobody can explain to the board. Heat +10.','hard'); } }
   ]},
 
-{ id:'wolf', libro:'analytics', prio:90, quien:'ventas',
+{ id:'wolf', libro:'analytics', prio:90, quien:'ventas', sectores:['banco','apuestas','devtools','datapol'],
   cuando:function(e){ return e.mesPuesto > 5 && e.mandatoId === 'crecer' && Motor.progresoMandato(e) < 0.6; },
   titulo:'Wolf users',
   texto:'"I know an install farm. Ten thousand users in two weeks. The board looks at the total; it doesn\'t look at where it came from."',
@@ -888,8 +1255,10 @@ var EVENTOS = [
 /* Dilemmas that can honestly repeat across jobs: they're situational,
    not one-time lessons. Everything else gets heavily deprioritized once
    you've lived it in a previous company. */
-var EVERGREEN = { okr:1, roadmap:1, discovery:1, errorbudget:1, escala:1,
-                  fiscal:1, allanamiento:1, ronda:1, caza:1, despidos:1 };
+/* per-career caps: conversational evergreens get a few appearances;
+   situational ones (incidents, the prosecutor, raids) stay unlimited */
+var EVERGREEN = { okr:3, roadmap:2, discovery:3, errorbudget:99, escala:99,
+                  fiscal:99, allanamiento:99, ronda:99, caza:2, despidos:99 };
 
 function eventoAplicable(e, c) {
   var cand = [], i;
@@ -897,14 +1266,15 @@ function eventoAplicable(e, c) {
   for (i = 0; i < EVENTOS.length; i++) {
     var ev = EVENTOS[i];
     if (e.eventosVistos[ev.id]) continue;
+    if (ev.sectores && ev.sectores.indexOf(e.sectorId) < 0) continue;
     var repes = vistosCarrera[ev.id] || 0;
     /* one-time lessons never repeat; skinned ones may return once with a
        different scene; situational (evergreen) ones can always come back */
-    var tope = EVERGREEN[ev.id] ? 99 : (ev.variantes ? 2 : 1);
+    var tope = EVERGREEN[ev.id] || (ev.variantes ? 2 : 1);
     if (repes >= tope) continue;
     var ok = false;
     try { ok = ev.cuando(e); } catch (err) { ok = false; }
-    if (ok) cand.push({ ev:ev, prio:ev.prio - repes * 45 });
+    if (ok) cand.push({ ev:ev, prio:ev.prio - repes * 45 + Math.random() * 18 });
   }
   if (!cand.length) return null;
   cand.sort(function(a,b){ return b.prio - a.prio; });
