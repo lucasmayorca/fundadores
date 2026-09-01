@@ -1527,7 +1527,19 @@ function eventoAplicable(e, c) {
   }
   if (!cand.length) return null;
   cand.sort(function(a,b){ return b.prio - a.prio; });
-  return cand[0].ev;
+
+  /* Dilemmas are OCCASIONAL, not a monthly tax. Critical ones (prio >= 100:
+     raids, error-budget freezes, the opening interview call) always fire.
+     The rest respect a cooldown: rare right after one, likely after a few
+     quiet months. Decisions land harder when they're not routine. */
+  var elegido = cand[0];
+  if (elegido.ev.prio < 100) {
+    var desde = e.mesPuesto - (e.ultimoDilema === undefined ? -9 : e.ultimoDilema);
+    var prob = desde >= 3 ? 0.65 : desde === 2 ? 0.4 : 0.15;
+    if (Math.random() > prob) return null;
+  }
+  e.ultimoDilema = e.mesPuesto;
+  return elegido.ev;
 }
 
 /* Company-flavored skins: same dilemma, different scene, so job 2 never
