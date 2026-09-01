@@ -162,11 +162,31 @@
     var hay = false;
     try { hay = !!localStorage.getItem(CLAVE); } catch (e) {}
     var h = '<div class="h1">Founders</div>' +
-      '<div class="pq mut" style="margin-top:8px;max-width:680px">A career in product: from analyst to the big ' +
-      'chair, company by company, in a world that changes eras without warning you. The game doesn\'t explain ' +
-      'mistakes up front: it charges you for them, then tells you which book had it written down.</div>';
+      '<div class="pq mut" style="margin-top:6px">A career in product, played month by month — ' +
+      'from analyst to the big chair, company by company.</div>';
 
-    h += '<div class="caja2" style="margin-top:18px;max-width:680px"><div class="rot" style="margin-bottom:6px">Who are you? <span class="mut" style="text-transform:none;letter-spacing:0">(optional — you can always start from zero)</span></div>' +
+    h += '<div style="display:-webkit-flex;display:flex;-webkit-flex:1;flex:1;min-height:0;margin-top:16px">';
+
+    /* left: how it works, who you are, and the way in */
+    h += '<div style="width:566px;padding-right:34px">';
+    h += '<div class="rot">How it works</div>';
+    h += '<div class="linea" style="font-size:13px"><div class="ic azul">◎</div><div class="tx">' +
+      '<b>One month per turn.</b> Your team produces points and you place every one — on stations ' +
+      '(Discover, Platform, Reliability, Growth) or on the projects you bet on. Close the month; ' +
+      'ships, dilemmas and incidents come back as consequences.</div></div>';
+    h += '<div class="linea" style="font-size:13px"><div class="ic verde">▲</div><div class="tx">' +
+      '<b>Every job is a mandate.</b> A company hires you to move one number before a deadline. ' +
+      'Deliver it and you climb — eight rungs from Product Analyst to Founder, where the cap table ' +
+      'is yours and the salary is lousy.</div></div>';
+    h += '<div class="linea" style="font-size:13px"><div class="ic lila">◈</div><div class="tx">' +
+      '<b>The world plays against you.</b> Eras change without warning — bubbles, capital winters, ' +
+      'regulators. Sectors heat up and freeze. And a rival climbs the same ladder, on the same clock.</div></div>';
+    h += '<div class="linea" style="font-size:13px;border-bottom:none"><div class="ic ambar">✎</div><div class="tx">' +
+      '<b>Mistakes come with receipts.</b> The rules are drawn from ' + LIBROS.length + ' real product ' +
+      'books and papers. The game charges you for the mistake first — then opens the exact card that ' +
+      'had it written down.</div></div>';
+
+    h += '<div class="caja2" style="margin-top:12px"><div class="rot" style="margin-bottom:6px">Who are you? <span class="mut" style="text-transform:none;letter-spacing:0">(optional — you can always start from zero)</span></div>' +
       '<input type="text" id="perfil-in" placeholder="Paste your LinkedIn URL or your current title..." ' +
       'value="' + esc(inicioSel.texto || '') + '">' +
       '<div style="margin-top:8px">';
@@ -182,9 +202,15 @@
       (inicioSel.nivel > 0 ? ' — your real rung. Or tap APM to run the whole ladder.' : ' — the full climb, from the bottom.') +
       '</div></div>';
 
-    h += '<div style="display:-webkit-flex;display:flex;margin-top:18px">';
-    h += '<div style="width:560px;padding-right:30px">';
-    h += '<div class="rot" style="margin-bottom:8px">Hall of records</div>';
+    h += '<div style="margin-top:14px">' +
+      '<span class="btn pri xl" data-act="nueva">New career</span> ' +
+      (hay ? '<span class="btn" data-act="continuar" style="margin-left:6px">Continue</span>' : '') +
+      '<span class="btn sec" data-act="biblio" style="margin-left:6px">Library</span></div>';
+    h += '</div>';
+
+    /* right: the trophy shelf — records on top, achievements scroll below */
+    h += '<div style="width:328px;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;min-height:0">';
+    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Hall of records</div>';
     if (R.records.carreras > 0) {
       h += '<div class="req"><span class="mut">Careers played</span> <b class="num"> ' + R.records.carreras + '</b></div>' +
            '<div class="req"><span class="mut">Best net worth</span> <b class="num verde"> ' + money(R.records.patrimonio) + '</b></div>' +
@@ -198,21 +224,19 @@
     } else {
       h += '<div class="pq mut">Nobody\'s played yet. Records live here.</div>';
     }
-    h += '<div style="margin-top:22px">' +
-      '<span class="btn pri" data-act="nueva">New career</span> ' +
-      (hay ? '<span class="btn" data-act="continuar">Continue</span> ' : '') +
-      '<span class="btn sec" data-act="biblio">Library</span></div>';
     h += '</div>';
 
-    h += '<div style="width:360px"><div class="rot" style="margin-bottom:8px">Achievements</div>';
-    var k, n = 0;
+    var items = '', k, n = 0;
     for (k = 0; k < Logros.DEFS.length; k++) {
       var d = Logros.DEFS[k], ok = !!R.logros[d.id];
       if (ok) n++;
-      h += '<div class="req ' + (ok ? 'verde' : 'mut') + '" style="' + (ok ? '' : 'opacity:0.45') + '">' +
+      items += '<div class="req ' + (ok ? 'verde' : 'mut') + '" style="' + (ok ? '' : 'opacity:0.45') + '">' +
            (ok ? '★ ' : '☆ ') + esc(d.n) + ' <span class="mut" style="font-size:11px">— ' + esc(d.d) + '</span></div>';
     }
-    h += '<div class="pq mut" style="margin-top:6px">' + n + ' of ' + Logros.DEFS.length + '</div></div>';
+    h += '<div class="rot" style="margin:4px 0 6px 0">Achievements · ' + n + ' of ' + Logros.DEFS.length + '</div>';
+    h += '<div class="scroll" style="-webkit-flex:1;flex:1;min-height:0">' + items + '</div>';
+    h += '</div>';
+
     h += '</div>';
     $('p-inicio').innerHTML = h;
   }
@@ -854,7 +878,7 @@
       h += '<div class="logro"><div class="med">★</div><div><div class="ln">' + esc(nuevos[i].n) + '</div>' +
            '<div class="ld">' + esc(nuevos[i].d) + '</div></div></div>';
     }
-    h += '<div class="pq mut" style="margin-top:8px">You opened ' + Object.keys(C.codex).length + ' of 20 cards.</div>';
+    h += '<div class="pq mut" style="margin-top:8px">You opened ' + Object.keys(C.codex).length + ' of ' + LIBROS.length + ' cards.</div>';
     h += '</div></div>';
 
     h += '<div style="margin-top:16px"><span class="btn pri" data-act="reiniciar">Another career</span> ' +

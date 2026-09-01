@@ -57,6 +57,7 @@ html, body {
 .btn.pri.off { background:#232833; border-color:#2a313d; color:#5b6472; }
 .btn.chico { padding:7px 12px; min-height:34px; font-size:13px; line-height:18px; }
 .btn.sec { background:transparent; }
+.btn.xl { padding:14px 30px; min-height:52px; font-size:17px; line-height:22px; }
 .btn:active { opacity:0.7; }
 
 /* ---------- chips ---------- */
