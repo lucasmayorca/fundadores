@@ -1,7 +1,11 @@
 # Fundadores — una carrera en producto
 
-Juego de carrera para el iPad 3, servido por el mismo servidor del panel:
-`http://MacBook-Air-de-Lucas.local:8000/juego/` (en la Mac: `localhost:8000/juego/`).
+**Jugalo acá: https://fundadores-production.up.railway.app/**
+
+Juego de carrera para navegador, pensado originalmente para un iPad 3
+(iOS 9.3.5), por eso corre en cualquier cosa. En casa lo sirve el servidor
+del panel (`localhost:8000/juego/`); en internet, Railway con el
+`server.js` de este repo (`npm start` para correrlo local).
 
 Arrancás de Analista de Producto y saltás de startup en startup — como la
 carrera del Soccer Superstar — hasta CPO o tu propia fundación. Cada puesto
