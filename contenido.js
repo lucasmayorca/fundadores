@@ -1022,6 +1022,30 @@ var EVENTOS = [
       ef:function(e,log){ e.caja -= 20000; e.retBonus = (e.retBonus||0) - 0.01;
         nota(log,'malo','$20k of borrowed traction. The cohort curves will testify against you.','seibel'); } }
   ]},
+{ id:'recruiter', libro:'hard', prio:58, quien:'board',
+  cuando:function(e){ return e.mesPuesto >= 4 && e.mesPuesto < e.meses - 2 && Math.random() < 0.5; },
+  titulo:'The recruiter\'s call',
+  texto:'"I\'ll be brief. A company in another space wants you — same level, better equity, they move fast. They need an answer this week. Interested?"',
+  opciones:[
+    { txt:'Take the meeting. If it\'s real, jump',
+      nota:'Leaving mid-mandate reads very differently depending on your numbers: on track it\'s ambition, behind plan it\'s escape.',
+      libro:'hard',
+      ef:function(e,log){ e.vivo = false; e.final = 'renuncia';
+        nota(log,'neutro','You took the call, then the offer. New offers land on your desk next week.','hard'); } },
+    { txt:'"I finish what I start." Hang up',
+      nota:'Loyalty is a compounding asset — IF you then actually deliver. Otherwise it was just a missed exit.',
+      libro:'grove',
+      ef:function(e,log){ e.moral += 3; e.politico += 4;
+        nota(log,'bueno','Word of the rejected offer got around. Staying by choice reads as strength.','grove'); } },
+    { txt:'Use it: tell your CEO you\'re being hunted',
+      nota:'The oldest lever in compensation. It works once, marks you as a flight risk forever, and everyone does it anyway.',
+      libro:'48laws',
+      ef:function(e,log){ e.politico += 6; e.moral -= 2;
+        if (Math.random() < 0.3) { e.politico -= 14;
+          nota(log,'malo','The CEO called your bluff: "then take it." You stayed anyway. That conversation follows you.','48laws'); }
+        else nota(log,'neutro','A sudden equity refresh appeared. So did a note in someone\'s mental file: flight risk.','48laws'); } }
+  ]},
+
 /* ---------------- the street: power plays ----------------
    House of Cards inside the building. None of these options are clean;
    the street teaches by invoice. */
@@ -1482,7 +1506,7 @@ var EVENTOS = [
    you've lived it in a previous company. */
 /* per-career caps: conversational evergreens get a few appearances;
    situational ones (incidents, the prosecutor, raids) stay unlimited */
-var EVERGREEN = { okr:3, roadmap:2, discovery:3, errorbudget:99, escala:99,
+var EVERGREEN = { okr:3, roadmap:2, discovery:3, errorbudget:99, escala:99, recruiter:2,
                   fiscal:99, allanamiento:99, ronda:99, caza:2, despidos:99 };
 
 function eventoAplicable(e, c) {

@@ -294,7 +294,7 @@ html, body {
 #tipbar .tipt { color:#7fa8d8; font-size:10px; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:3px; }
 
 /* ---------- arranque personalizado ---------- */
-#perfil-in {
+#perfil-in, #nombre-in {
   width:100%; padding:11px 13px; font-size:14px; border-radius:7px;
   background:#0d1118; border:1px solid #262e3b; color:#e8eaed; outline:none;
   font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -373,3 +373,30 @@ html, body {
   border-radius:0 8px 8px 0; background:#10141b; }
 .capa .cn { font-size:10px; letter-spacing:1.4px; text-transform:uppercase; font-weight:700; }
 .capa .ct { font-size:12px; line-height:1.35; color:#9aa3b2; margin-top:2px; }
+
+/* ---------- vector de métricas y funnel ---------- */
+.vchip { display:inline-block; padding:2px 7px; margin-right:5px; border-radius:6px;
+  font-size:10.5px; font-weight:600; font-variant-numeric:tabular-nums; }
+.vchip.vpos { background:#122718; color:#4ade7c; }
+.vchip.vneg { background:#2b1416; color:#f37b72; }
+.vchip.vmeta { box-shadow:0 0 0 1.5px #3f82e6; }
+.fun { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; padding:3.5px 0; }
+.fun .fk { width:110px; font-size:12.5px; color:#8b93a1; }
+.fun .fv { font-size:15px; }
+.fun .fsub { font-size:10px; }
+
+/* ---------- building ---------- */
+#building { display:none; position:absolute; left:0; top:0; width:1024px; height:768px;
+  background:rgba(6,8,12,0.9); z-index:60; }
+#building.on { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  -webkit-justify-content:center; justify-content:center; }
+.bld-t { font-size:38px; font-weight:200; text-align:center; }
+.bld-s { font-size:13px; color:#767f8d; margin-top:10px; text-align:center; }
+.bdots i { display:inline-block; -webkit-animation:latir 1s infinite; animation:latir 1s infinite; font-style:normal; }
+.bdots i:nth-child(2) { -webkit-animation-delay:.2s; animation-delay:.2s; }
+.bdots i:nth-child(3) { -webkit-animation-delay:.4s; animation-delay:.4s; }
+.res-mandato { padding:10px 13px; margin-bottom:8px; background:#10151d; border:1px solid #1e2a3c;
+  border-left:3px solid #2f6fd0; border-radius:8px; font-size:14.5px; }
+.res-ship { display:-webkit-flex; display:flex; padding:9px 0; border-bottom:1px solid #171b22; font-size:14px; line-height:1.4; }
+.res-ship .ic { width:24px; -webkit-flex-shrink:0; flex-shrink:0; }
+.res-ship .tx { -webkit-flex:1; flex:1; }

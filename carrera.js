@@ -27,16 +27,23 @@ var Carrera = (function () {
     serieC:['estabilidad','deuda','retencion']
   };
 
-  function nueva(nombre, nivel0) {
+  function nueva(nombre, nivel0, bg) {
     var n0 = Math.max(0, Math.min(7, nivel0 || 0));
-    /* starting mid-ladder seeds seniority: reputation and skills scale with
-       the level you bring in, so the world treats you like you have a past */
+    /* starting mid-ladder seeds seniority; your BACKGROUND (design, eng,
+       business, data, product) tilts which skills you arrive with */
     var habBase = 8 + n0 * 6;
+    var hab = { producto:habBase, tecnologia:Math.round(habBase * 0.6),
+                negocio:Math.round(habBase * 0.7), liderazgo:Math.round(habBase * 0.8) };
+    if (bg === 'design') { hab.producto += 8; }
+    else if (bg === 'eng') { hab.tecnologia += 12; hab.producto -= 2; }
+    else if (bg === 'biz') { hab.negocio += 12; hab.tecnologia -= 2; }
+    else if (bg === 'data') { hab.producto += 4; hab.negocio += 4; }
+    var k2; for (k2 in hab) if (hab.hasOwnProperty(k2)) hab[k2] = Math.max(4, hab[k2]);
     return {
       nombre:nombre || 'you',
+      bg:bg || 'product',
       mes:0, nivel:n0, nivelInicial:n0, reputacion:35 + n0 * 4,
-      hab:{ producto:habBase, tecnologia:Math.round(habBase * 0.6),
-            negocio:Math.round(habBase * 0.7), liderazgo:Math.round(habBase * 0.8) },
+      hab:hab,
       puestos:[], equities:[], ahorros:0,
       trabajadas:{}, codex:{}, dilemasVistos:{},
       ofertas:null, ofertaActual:null,
@@ -157,7 +164,13 @@ var Carrera = (function () {
     };
 
     /* reputation and movement */
-    if (e.final === 'imputado') {
+    if (e.final === 'renuncia') {
+      var enCamino = Motor.progresoMandato(e) >= ((e.mesPuesto / e.meses) * 0.9);
+      r.dRep = enCamino ? 2 : -5;
+      r.notas.push([enCamino ?
+        'You left with the mandate on track. The industry reads that as ambition.' :
+        'You jumped ship mid-mandate, behind plan. People remember who leaves when it\'s hard.', 'hard']);
+    } else     if (e.final === 'imputado') {
       r.despido = true; r.imputado = true; r.dRep = -22;
       c.nivel = Math.max(0, c.nivel - 2);
       r.notas.push(['An indictment with your name on it. This business forgives failure; a rap sheet, never.', 'hard']);

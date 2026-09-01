@@ -106,6 +106,8 @@ var Motor = (function () {
     var R = Math.max(6, Math.round(capacidad(e) * e.mando));
     var FACTOR = { XL:1.0, L:0.5, M:0.25, S:0.12, XS:0.06 };
     e.talles = {};
+    e.vectores = {};
+    e.ruidosVec = {};
     for (i = 0; i < APUESTAS.length; i++) {
       var a = APUESTAS[i];
       var f = a.senuelo ? rnd(0.03, 0.20) : rnd(0.15, 1.25);
@@ -127,6 +129,29 @@ var Motor = (function () {
       var talle = costo >= 24 ? 'XL' : costo >= 18 ? 'L' : costo >= 12 ? 'M' : costo >= 7 ? 'S' : 'XS';
       e.talles[a.id] = talle;
       e.costos[a.id] = Math.max(1, Math.round(R * FACTOR[talle]));
+
+      /* Pirate-metrics impact vector (McClure's AARRR + Reliability).
+         Every bet moves 1-3 metrics, sometimes NEGATIVELY: new surface
+         area costs reliability, complexity costs activation. The mandate
+         points at one of these metrics — that's the through-line. */
+      var m2 = e.impactos[a.id];
+      var vec = { adq:0, act:0, ret:0, rev:0, rel:0 };
+      if (a.nec === 'core') { vec.act = m2 * 0.5; vec.ret = m2 * 0.35; }
+      else if (a.nec === 'flujo') { vec.act = m2 * 0.7; vec.adq = m2 * 0.2; }
+      else if (a.nec === 'datos') { vec.ret = m2 * 0.35; vec.rev = m2 * 0.3; }
+      else if (a.nec === 'integra') { vec.adq = m2 * 0.4; vec.ret = m2 * 0.25; }
+      else if (a.nec === 'soporte') { vec.ret = m2 * 0.5; vec.adq = m2 * 0.2; }
+      else if (a.nec === 'segur') { vec.adq = m2 * 0.35; vec.rel = m2 * 0.25; }
+      else if (a.nec === 'escala') { vec.rel = m2 * 0.8; }
+      /* the side effect: features add surface, surface costs something */
+      if (Math.random() < 0.35 && a.nec !== 'escala' && a.nec !== 'segur') {
+        if (Math.random() < 0.6) vec.rel -= rnd(1.5, 4.5);
+        else vec.act -= rnd(1, 3);
+      }
+      var mk, vv2 = {};
+      for (mk in vec) if (vec.hasOwnProperty(mk)) vv2[mk] = Math.round(vec[mk] * 10) / 10;
+      e.vectores[a.id] = vv2;
+      e.ruidosVec[a.id] = { adq:rnd(-1,1), act:rnd(-1,1), ret:rnd(-1,1), rev:rnd(-1,1), rel:rnd(-1,1) };
     }
     /* the company made it here alive: its architecture holds what it already has,
        with little headroom. The headroom is yours to build. */
@@ -333,7 +358,16 @@ var Motor = (function () {
     var cst = costoDe(e, id);
     var esf = (e.talles && e.talles[id]) || (cst <= 10 ? 'S' : cst <= 15 ? 'M' : cst <= 21 ? 'L' : 'XL');
     var TIEMPO = { XS:'~a day', S:'~3 days', M:'~a week', L:'~2 weeks', XL:'~a month' };
-    return { est:est, prob:prob, mag:mag, esf:esf, tiempo:TIEMPO[esf] || '', costo:cst };
+    /* expected metric vector: the real one plus evidence-scaled noise */
+    var vecReal = (e.vectores && e.vectores[id]) || {};
+    var nv = (e.ruidosVec && e.ruidosVec[id]) || {};
+    var vecEsp = {}, mk;
+    for (mk in vecReal) if (vecReal.hasOwnProperty(mk)) {
+      var vx = vecReal[mk];
+      if (vx === 0) { vecEsp[mk] = 0; continue; }
+      vecEsp[mk] = Math.round((vx + (nv[mk] || 0) * 4 * incert) * 10) / 10;
+    }
+    return { est:est, prob:prob, mag:mag, esf:esf, tiempo:TIEMPO[esf] || '', costo:cst, vec:vecEsp };
   }
 
   function estimacion(e, id) {
@@ -407,6 +441,8 @@ var Motor = (function () {
     var R = Math.max(6, Math.round(capacidad(e) * e.mando));
     var FACTOR = { XL:1.0, L:0.5, M:0.25, S:0.12, XS:0.06 };
     e.talles = {};
+    e.vectores = {};
+    e.ruidosVec = {};
     for (i = 0; i < APUESTAS.length; i++) {
       var a = APUESTAS[i];
       var f = a.senuelo ? rnd(0.03, 0.20) : rnd(0.15, 1.25);
@@ -532,25 +568,24 @@ var Motor = (function () {
         var real = e.impactos[id];
         e.cobertura[a.nec] = (e.cobertura[a.nec] || 0) + real;
         var idx = e.backlog.indexOf(id); if (idx >= 0) e.backlog.splice(idx, 1);
-        /* every shipped project hands the company a permanent capability */
-        var regalo = '';
-        if (a.nec === 'escala') {
-          e.arquitectura += real * 0.25;
-          regalo = ' Grants: +' + Math.round(real * 0.25) + ' system capacity.';
-        } else if (a.nec === 'datos') {
-          e.evidencia = clamp(e.evidencia + 4, 0, 100);
-          regalo = ' Grants: +4 evidence.';
-        } else if (a.nec === 'flujo') {
-          e.usabilidad = clamp(e.usabilidad + 3, 0, 100);
-          regalo = ' Grants: +3 usability.';
-        } else if (a.nec === 'soporte' || a.nec === 'segur' || a.nec === 'integra') {
-          regalo = ' Grants: a tick toward the big-market gate.';
-        }
+        /* the shipped project applies its REAL metric vector to the company */
+        var vec3 = (e.vectores && e.vectores[id]) || {};
+        var regalo = '', partes = [];
+        if (vec3.adq) { e.marca = clamp(e.marca + vec3.adq * 0.6, 0, 100); partes.push('ACQ ' + (vec3.adq > 0 ? '+' : '') + vec3.adq); }
+        if (vec3.act) { e.usabilidad = clamp(e.usabilidad + vec3.act * 0.8, 0, 100); partes.push('ACT ' + (vec3.act > 0 ? '+' : '') + vec3.act); }
+        if (vec3.ret) { e.retBonus = (e.retBonus || 0) + vec3.ret * 0.0015; partes.push('RET ' + (vec3.ret > 0 ? '+' : '') + vec3.ret); }
+        if (vec3.rev) { e.precio = Math.max(1, Math.round(e.precio * (1 + vec3.rev * 0.004))); partes.push('REV ' + (vec3.rev > 0 ? '+' : '') + vec3.rev); }
+        if (vec3.rel) { e.arquitectura += vec3.rel * 0.5; e.fiabPercibida = clamp(e.fiabPercibida + vec3.rel * 0.4, 0, 100); partes.push('REL ' + (vec3.rel > 0 ? '+' : '') + vec3.rel); }
+        if (a.nec === 'datos') { e.evidencia = clamp(e.evidencia + 4, 0, 100); partes.push('+4 evidence'); }
+        if (a.nec === 'soporte' || a.nec === 'segur' || a.nec === 'integra') partes.push('gate tick');
+        if (partes.length) regalo = ' Moved: ' + partes.join(' · ') + '.';
         var frase = 'You shipped "' + a.n + '": real impact ' + real + ' (you expected ' + esperado + ').' + regalo;
         if (real < esperado * 0.55) {
-          log.push({ tipo:'malo', texto:frase + ' You built without knowing.', libro:e.evidencia < 45 ? 'lean' : 'trap' });
+          log.push({ tipo:'malo', texto:frase + ' You built without knowing.', libro:e.evidencia < 45 ? 'lean' : 'trap',
+                     ship:{ n:a.n, real:real, esperado:esperado, vec:vec3 } });
         } else {
-          log.push({ tipo:real >= esperado * 0.8 ? 'bueno' : 'malo', texto:frase, libro:'inspired' });
+          log.push({ tipo:real >= esperado * 0.8 ? 'bueno' : 'malo', texto:frase, libro:'inspired',
+                     ship:{ n:a.n, real:real, esperado:esperado, vec:vec3 } });
         }
       }
     }
@@ -632,6 +667,37 @@ var Motor = (function () {
       log.push({ tipo:'malo', texto:'A lot of reach into the big market converted into nothing. It\'s not the price: it\'s ' +
         e.gateNombre.toLowerCase() + '.', libro:'chasm' });
       e.gateRevelado = true;
+    }
+
+    /* 8b. funnel bookkeeping: new users this month, for the pirate panel */
+    e.adqMes = Math.max(0, Math.round(usuarios(e) - (e.hist.length ? e.hist[e.hist.length - 1].u : e.usuariosInicio)));
+
+    /* 8c. contingencies, The Founder style: things that just HAPPEN to you */
+    if (Math.random() < 0.055 && e.mesPuesto > 1) {
+      var cont = Math.floor(Math.random() * 4);
+      if (cont === 0) {
+        if ((e.cobertura.segur || 0) >= 50) {
+          log.push({ tipo:'neutro', texto:'An employee tried to walk out with the customer database. Your access controls caught it at the door. Money well spent.', libro:'sre' });
+        } else {
+          e.lupa = clamp(e.lupa + 8, 0, 100); e.marca = clamp(e.marca - 8, 0, 100);
+          for (i = 0; i < SEGMENTOS.length; i++) e.usuarios[SEGMENTOS[i].id] *= 0.95;
+          log.push({ tipo:'malo', texto:'A departing employee stole customer data and it made the news. Weak access controls made it easy.', libro:'sre' });
+        }
+      } else if (cont === 1) {
+        e.marca = clamp(e.marca - 9, 0, 100);
+        log.push({ tipo:'malo', texto:'A hit piece dropped: an influential newsletter called your product "a case study in overpromising". It travels.', libro:'hard' });
+      } else if (cont === 2) {
+        e.fiabPercibida = clamp(e.fiabPercibida - 8, 0, 100); e.penalCap = (e.penalCap || 0) + 3;
+        log.push({ tipo:'malo', texto:'Your cloud provider had a region-wide outage. Not your fault. Still your pager, your apologies, your churn.', libro:'sre' });
+      } else {
+        if (e.lupa > 20) {
+          var multa2 = Math.round(burnMensual(e) * 0.6);
+          e.caja -= multa2;
+          log.push({ tipo:'malo', texto:'A regulatory sweep hit the whole sector. Your file was not clean enough: fine of ' + Math.round(multa2 / 1000) + 'k.', libro:'hard' });
+        } else {
+          log.push({ tipo:'neutro', texto:'A regulatory sweep hit the whole sector. Your file was boring, in the best way. They moved on.', libro:'hard' });
+        }
+      }
     }
 
     /* 9. money */

@@ -93,8 +93,8 @@
     var coach = $('coach');
     coach.className = 'on';
     coach.style.left = Math.max(16, Math.min(1024 - 436, x + w / 2 - 210)) + 'px';
-    if (abajo) { coach.style.top = (y + h2 + 14) + 'px'; coach.style.bottom = 'auto'; }
-    else { coach.style.top = 'auto'; coach.style.bottom = (768 - y + 14) + 'px'; }
+    if (abajo) { coach.style.top = Math.min(768 - 190, y + h2 + 14) + 'px'; coach.style.bottom = 'auto'; }
+    else { coach.style.top = Math.max(10, y - 200) + 'px'; coach.style.bottom = 'auto'; }
     coach.innerHTML = '<div class="cpaso">' + (tourPaso + 1) + ' / ' + TOUR.length + '</div>' +
       '<div class="ctx">' + paso.texto + '</div>' +
       (paso.accion ? '<div class="chace">' + paso.textoAccion + '</div>' :
@@ -141,7 +141,9 @@
     ebudget:'Error budget for the quarter. Incidents drain it; at zero the next month is a feature freeze.',
     focus:'How aligned the org is on few things. Drifts down on its own; leadership choices push it up.',
     usab:'How little users need to think. Multiplies the conversion of ALL traffic you bring.',
-    esf:'Size is time, for your team, this month: XS ~a day, S ~3 days, M ~a week, L ~2 weeks, XL ~the whole month.'
+    esf:'Size is time, for your team, this month: XS ~a day, S ~3 days, M ~a week, L ~2 weeks, XL ~the whole month.',
+    vec:'Expected impact per product metric (ACQ acquisition, ACT activation, RET retention, REV revenue, REL reliability). Negative chips are real side effects. The glowing chip is YOUR mandate\'s metric. Estimates sharpen with evidence.',
+    funnel:'The pirate funnel (AARRR): acquisition brings them, activation converts them, retention keeps them, revenue charges them, referral multiplies them. Profit = revenue minus burn.'
   };
   var tipTimer = null;
   function mostrarTip(clave) {
@@ -210,6 +212,11 @@
     for (var k = 0; k < TITULOS.length; k++) {
       if (TITULOS[k].re.test(texto)) { out.nivel = TITULOS[k].n; out.rol = TITULOS[k].rol; break; }
     }
+    if (/design|ux|\bui\b/i.test(texto)) out.bg = 'design';
+    else if (/engineer|developer|cto|software|swe/i.test(texto)) out.bg = 'eng';
+    else if (/sales|marketing|mba|business|growth|commercial|finance/i.test(texto)) out.bg = 'biz';
+    else if (/data|analytics|scientist/i.test(texto)) out.bg = 'data';
+    else if (out.nivel !== null) out.bg = 'product';
     return out;
   }
 
@@ -284,7 +291,19 @@
     h += '<div class="caja2" style="margin-top:10px;padding:8px 13px"><div class="rot" style="margin-bottom:5px">Who are you? <span class="mut" style="text-transform:none;letter-spacing:0">(optional — you can always start from zero)</span></div>' +
       '<input type="text" id="perfil-in" placeholder="Paste your LinkedIn URL or your current title..." ' +
       'style="padding:8px 12px" value="' + esc(inicioSel.texto || '') + '">' +
-      '<div style="margin-top:6px">';
+      '<input type="text" id="nombre-in" placeholder="Your name (or we\'ll take it from the URL)" ' +
+      'style="padding:8px 12px;margin-top:7px" value="' + esc(inicioSel.nombreManual ? (inicioSel.nombre || '') : '') + '">' +
+      '<div class="rot" style="margin:9px 0 4px 0">Where do you come from?</div>' +
+      '<div>' + (function () {
+        var BGS = [['product','Product'],['design','Design'],['eng','Engineering'],['biz','Business'],['data','Data']];
+        var hb = '';
+        for (var bi = 0; bi < BGS.length; bi++) {
+          hb += '<span class="rolchip' + ((inicioSel.bg || 'product') === BGS[bi][0] ? ' sel' : '') + '" data-bg="' + BGS[bi][0] + '">' + BGS[bi][1] + '</span>';
+        }
+        return hb;
+      })() + '</div>' +
+      '<div class="rot" style="margin:9px 0 4px 0">Your rung</div>' +
+      '<div style="margin-top:0">';
     for (var ti = 0; ti < ESCALAFON.length; ti++) {
       h += '<span class="rolchip' + (inicioSel.nivel === ti ? ' sel' : '') + '" data-rol="' + ti + '">' +
            esc(ESCALAFON[ti].corto) + '</span>';
@@ -371,7 +390,7 @@
         '<h3>' + esc(o.nombre) + '</h3>' +
         '<div class="rolof">' + esc(o.rol) + ' · control ' + Math.round(o.mando * 100) + '%</div>' +
         '<div class="desc">' + esc(o.pitch) + '<br><br><i>' + esc(o.eje) + '</i></div>' +
-        '<div class="mandato"><div class="rot">Your mandate · ' + o.meses + ' months</div>' + esc(o.mandatoTxt) + '</div>' +
+        '<div class="mandato"><div class="rot">Contract · ' + o.meses + ' months</div><span class="mut">The mandate is revealed on day one — they never tell you the real job in the interview.</span></div>' +
         '<div class="fila">Salary <b>' + money(o.sueldo) + '/yr</b> · Equity <b>' +
           (o.fundar ? 'yours' : o.equity + '%') + '</b></div>' +
         '<div class="fila">Risk <b>' + esc(o.riesgoTxt) + '</b> · Project slots <b>' + (o.slots || 3) + '</b></div>' +
@@ -614,6 +633,26 @@
     $('capa').innerHTML = h;
   }
 
+  /* the through-line: your mandate IS one of the pirate metrics */
+  var MET_MANDATO = { retencion:'ret', crecer:'adq', ingresos:'rev',
+                      activacion:'act', estabilidad:'rel', deuda:'rel', abismo:'adq' };
+  var MET_NOMBRE = { adq:'ACQ', act:'ACT', ret:'RET', rev:'REV', rel:'REL' };
+
+  function chipsVec(vec, metaMet) {
+    var h = '', mk, mostrados = 0;
+    var orden = ['adq','act','ret','rev','rel'];
+    for (var i = 0; i < orden.length && mostrados < 3; i++) {
+      mk = orden[i];
+      var v = vec[mk];
+      if (!v) continue;
+      mostrados++;
+      var cls = v > 0 ? 'vpos' : 'vneg';
+      var star = mk === metaMet ? ' vmeta' : '';
+      h += '<span class="vchip ' + cls + star + '">' + MET_NOMBRE[mk] + ' ' + (v > 0 ? '+' : '') + v + '</span>';
+    }
+    return h;
+  }
+
   function dots(n) {
     var h = '<span class="dots">', i;
     for (i = 1; i <= 5; i++) h += '<i class="' + (i <= n ? 'on' : '') + '"></i>';
@@ -675,14 +714,13 @@
       var cabe = slotsUsados() < J.slots && sinUsar() > 0;
       var obj = J.prima.indexOf(a.nec) >= 0 ? '<span class="tagobj mini">▲</span>' :
                 J.castiga.indexOf(a.nec) >= 0 ? '<span class="tagobj down mini">▽</span>' : '';
-      var DA = { core:'→ product value', flujo:'→ +usability', datos:'→ +evidence',
-                 integra:'→ gate', soporte:'→ gate', segur:'→ gate', escala:'→ +capacity' };
+      var metaMet = MET_MANDATO[J.mandatoId] || null;
       h += '<div class="ap' + (cabe ? '' : ' nocabe') + '" data-ap="' + id + '">' +
         '<div class="t"><div class="n2">' + esc(a.n) + '<span class="pill">' + esc(nec.corto) + '</span>' + obj + '</div>' +
+        '<div class="d2" style="margin-top:2px">' + esc(a.d) + '</div>' +
         '<div class="viz">' +
           '<span class="vlbl">' + tip('prob','prob') + '</span>' + dots(d.prob) +
-          '<span class="vlbl">' + tip('impact','impact') + '</span>' + blocks(d.mag) +
-          '<span class="da">' + DA[a.nec] + '</span>' +
+          '<span class="vlbl">' + tip('vec','expected') + '</span>' + chipsVec(d.vec, metaMet) +
         '</div></div>' +
         '<div class="c"><span class="tipped" data-tip="esf"><span class="esf e' + d.esf + '">' + d.esf + '</span></span>' +
         '<div class="cst num">' + d.tiempo + ' · ' + d.costo + ' pts</div></div></div>';
@@ -705,6 +743,24 @@
 
   function renderPanel() {
     var h = '', i;
+
+    /* the pirate funnel: the numbers you decide with */
+    var actPct = Math.round((0.35 + (J.usabilidad / 100) * 0.65) * 100);
+    var retPct = Math.round(Motor.retencionMedia(J) * 100);
+    var profit = J.mrr - Motor.burnMensual(J);
+    var refCoef = Math.round(J.viral * Motor.fitMax(J) * 100) / 100;
+    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">' + tip('funnel','Funnel') + ' · AARRR</div>';
+    h += '<div class="fun"><span class="fk">Acquisition</span><span class="fv num">+' + mil(J.adqMes || 0) + '<span class="mut fsub"> new/mo</span></span></div>';
+    h += '<div class="fun"><span class="fk">Activation</span><span class="fv num">' + actPct + '%</span></div>';
+    h += '<div class="fun"><span class="fk">Retention</span><span class="fv num ' + (retPct >= 88 ? 'verde' : retPct >= 80 ? '' : 'rojo') + '">' + retPct + '%</span></div>';
+    if (J.rolN >= 1) {
+      h += '<div class="fun"><span class="fk">Revenue</span><span class="fv num">' + money(J.mrr) + '<span class="mut fsub">/mo</span></span></div>';
+      h += '<div class="fun"><span class="fk">Profit</span><span class="fv num ' + (profit >= 0 ? 'verde' : 'rojo') + '">' + (profit >= 0 ? '+' : '') + money(profit) + '</span></div>';
+    }
+    h += '<div class="fun"><span class="fk">Referral</span><span class="fv num">' + refCoef + '<span class="mut fsub"> coef</span></span></div>';
+    var metaMet2 = MET_MANDATO[J.mandatoId];
+    if (metaMet2) h += '<div class="pq mut" style="font-size:11px;margin-top:5px">Your mandate lives in <b class="azul">' + MET_NOMBRE[metaMet2] + '</b>. Bets with that chip glowing move it.</div>';
+    h += '</div>';
 
     h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Where we stand</div>';
     h += barraEstado(tip('evid','Evidence'), J.evidencia, false, 'lean');
@@ -808,11 +864,20 @@
   /* ================= close the month ================= */
 
   function ejecutar() {
+    var m0 = mandatoPorId(J.mandatoId);
+    var valorAntes = m0 ? m0.valor(J) : 0;
     var nuevas = [], ni;
     for (ni = 0; ni < plan.orden.length; ni++) if (J.enVuelo[plan.orden[ni]] === undefined) nuevas.push(plan.orden[ni]);
     var reparto = { desc:plan.desc, plat:plan.plat, fiab:plan.fiab, crec:plan.crec,
                     cons:enProyectos() + sinUsar() * 0, asig:plan.asig, apuestas:nuevas };
     var log = Motor.simular(J, reparto, M);
+    if (m0) {
+      var valorDespues = m0.valor(J);
+      var mejor = m0.invertido ? valorDespues < valorAntes : valorDespues > valorAntes;
+      var igual = m0.fmt(valorDespues) === m0.fmt(valorAntes);
+      log.unshift({ tipo: igual ? 'neutro' : (mejor ? 'bueno' : 'malo'),
+        mandato:{ antes:m0.fmt(valorAntes), despues:m0.fmt(valorDespues), meta:m0.fmt(m0.meta(J)), txt:m0.txt } });
+    }
     var fichas2 = fichasNuevas(J, C), fi;
     for (fi = 0; fi < fichas2.length; fi++) {
       log.push({ tipo:'nota', texto:'A card opened in the library: the moment you\'re living has a name.',
@@ -835,11 +900,28 @@
     if (!log.length) h += '<div class="pq mut">A month with no surprises. Sometimes that\'s exactly what you need.</div>';
     var i, ic;
     for (i = 0; i < log.length; i++) {
-      ic = log[i].tipo === 'bueno' ? '<span class="verde">▲</span>' :
-           log[i].tipo === 'malo'  ? '<span class="rojo">▼</span>' :
-           log[i].tipo === 'nota'  ? '<span class="azul">✎</span>' : '<span class="mut">•</span>';
+      var l = log[i];
+      if (l.mandato) {
+        var cls2 = l.tipo === 'bueno' ? 'verde' : l.tipo === 'malo' ? 'rojo' : 'mut';
+        h += '<div class="res-mandato"><span class="rot" style="margin-right:10px">Your mandate</span>' +
+          esc(l.mandato.txt) + ': <b class="num ' + cls2 + '">' + esc(l.mandato.antes) + ' → ' + esc(l.mandato.despues) + '</b>' +
+          '<span class="mut num"> · target ' + esc(l.mandato.meta) + '</span></div>';
+        continue;
+      }
+      if (l.ship) {
+        var s2 = l.ship;
+        var metaMet3 = MET_MANDATO[J.mandatoId] || null;
+        h += '<div class="res-ship"><div class="ic">' + (l.tipo === 'bueno' ? '<span class="verde">▲</span>' : '<span class="rojo">▼</span>') + '</div>' +
+          '<div class="tx"><b>Shipped: ' + esc(s2.n) + '</b> — real impact ' + s2.real + ', you expected ' + s2.esperado +
+          (s2.real < s2.esperado * 0.55 ? ' <span class="rojo">(you built without knowing)</span>' : '') +
+          '<div style="margin-top:4px">' + chipsVec(s2.vec, metaMet3) + '</div></div></div>';
+        continue;
+      }
+      ic = l.tipo === 'bueno' ? '<span class="verde">▲</span>' :
+           l.tipo === 'malo' ? '<span class="rojo">▼</span>' :
+           l.tipo === 'nota' ? '<span class="azul">✎</span>' : '<span class="mut">•</span>';
       h += '<div class="linea"><div class="ic">' + ic + '</div><div class="tx">' +
-           esc(log[i].texto) + ' ' + (log[i].libro ? chip(log[i].libro) : '') + '</div></div>';
+           esc(l.texto) + ' ' + (l.libro ? chip(l.libro) : '') + '</div></div>';
     }
     if (esDecision && libroTeoria) {
       var lt = libroPorId(libroTeoria);
@@ -867,7 +949,8 @@
     var nuevos = Logros.evaluarPuesto(R, C, e, cierre);
     J = null;
 
-    var titulo = cierre.final === 'imputado' ? 'You left in handcuffs through the glass door' :
+    var titulo = cierre.final === 'renuncia' ? 'You took the call, and then the exit' :
+                 cierre.final === 'imputado' ? 'You left in handcuffs through the glass door' :
                  cierre.final === 'quiebra' ? 'The company ran out of cash' :
                  cierre.final === 'despido' ? 'They asked for your resignation' :
                  cierre.final === 'venta' ? 'The company got sold' :
@@ -1076,10 +1159,13 @@
     if (inp2 && inp2.value) {
       inicioSel.texto = inp2.value;
       var p2 = parsearPerfil(inp2.value);
-      if (p2.nombre) inicioSel.nombre = p2.nombre;
+      if (p2.nombre && !inicioSel.nombreManual) inicioSel.nombre = p2.nombre;
       if (p2.nivel !== null) { inicioSel.nivel = p2.nivel; inicioSel.rol = p2.rol; }
+      if (p2.bg && !inicioSel.bgManual) inicioSel.bg = p2.bg;
     }
-    C = Carrera.nueva(inicioSel.nombre, inicioSel.nivel);
+    var inpN2 = $('nombre-in');
+    if (inpN2 && inpN2.value) inicioSel.nombre = inpN2.value;
+    C = Carrera.nueva(inicioSel.nombre, inicioSel.nivel, inicioSel.bg);
     if (semanal) {
       C.semana = Ranking.semana();
       M = Mundo.nuevo(Ranking.semilla(C.semana));
@@ -1250,33 +1336,32 @@
 
   document.addEventListener('change', function (ev) {
     var t = ev.target;
+    if (t && t.id === 'nombre-in') {
+      inicioSel.nombre = t.value || null;
+      inicioSel.nombreManual = !!t.value;
+      return;
+    }
     if (!t || t.id !== 'perfil-in') return;
     inicioSel.texto = t.value;
     var p = parsearPerfil(t.value);
-    if (p.nombre) inicioSel.nombre = p.nombre;
+    if (p.nombre && !inicioSel.nombreManual) inicioSel.nombre = p.nombre;
     if (p.nivel !== null) { inicioSel.nivel = p.nivel; inicioSel.rol = p.rol; }
+    if (p.bg && !inicioSel.bgManual) inicioSel.bg = p.bg;
     if (/linkedin\.com\/in\//i.test(t.value)) consultarLinkedin(t.value);
-    /* scale the 1024x768 stage to the viewport, centered. iPad 3 lands at 1. */
-  function escalar() {
-    var st = document.getElementById('stage');
-    if (!st) return;
-    var w = window.innerWidth || 1024, h2 = window.innerHeight || 768;
-    var s = Math.min(w / 1024, h2 / 768);
-    if (s > 0.98 && s < 1.02) s = 1;
-    escalaActual = s;
-    var t = 'translate(-50%,-50%) scale(' + s + ')';
-    st.style.webkitTransform = t;
-    st.style.transform = t;
-    st.className = s === 1 ? '' : 'suelto';
-  }
-  window.onresize = escalar;
-  escalar();
-
-  renderInicio();
+    renderInicio();
   }, false);
 
   document.addEventListener('click', function (ev) {
     var t = ev.target, v;
+
+    v = attr(t, 'data-bg');
+    if (v !== null && !J) {
+      inicioSel.bg = v; inicioSel.bgManual = true;
+      var inpN0 = $('nombre-in'); if (inpN0 && inpN0.value) { inicioSel.nombre = inpN0.value; inicioSel.nombreManual = true; }
+      var inpU0 = $('perfil-in'); if (inpU0) inicioSel.texto = inpU0.value;
+      renderInicio();
+      return;
+    }
 
     v = attr(t, 'data-rol');
     if (v !== null) {
@@ -1284,23 +1369,8 @@
       inicioSel.rol = nivelPorN(inicioSel.nivel).rol;
       var inp = $('perfil-in');
       if (inp) inicioSel.texto = inp.value;
-      /* scale the 1024x768 stage to the viewport, centered. iPad 3 lands at 1. */
-  function escalar() {
-    var st = document.getElementById('stage');
-    if (!st) return;
-    var w = window.innerWidth || 1024, h2 = window.innerHeight || 768;
-    var s = Math.min(w / 1024, h2 / 768);
-    if (s > 0.98 && s < 1.02) s = 1;
-    escalaActual = s;
-    var t = 'translate(-50%,-50%) scale(' + s + ')';
-    st.style.webkitTransform = t;
-    st.style.transform = t;
-    st.className = s === 1 ? '' : 'suelto';
-  }
-  window.onresize = escalar;
-  escalar();
-
-  renderInicio();
+      var inpN1 = $('nombre-in'); if (inpN1 && inpN1.value) { inicioSel.nombre = inpN1.value; inicioSel.nombreManual = true; }
+      renderInicio();
       return;
     }
 
@@ -1413,7 +1483,14 @@
     else if (v === 'biblio') { mostrarBiblio(); }
     else if (v === 'cerrar-biblio') { ov('ov-biblio', false); }
     else if (v === 'cerrar-libro') { ov('ov-libro', false); }
-    else if (v === 'ejecutar') { if (tourActivo()) tourFin(); ejecutar(); }
+    else if (v === 'ejecutar') {
+      if (tourActivo()) tourFin();
+      var bld = $('building');
+      bld.className = 'on';
+      bld.innerHTML = '<div class="bld-in"><div class="bld-t">Building<span class="bdots"><i>.</i><i>.</i><i>.</i></span></div>' +
+        '<div class="bld-s">The month runs: code ships, users decide, the market answers.</div></div>';
+      setTimeout(function () { bld.className = ''; ejecutar(); }, 1100);
+    }
     else if (v === 'ronda') { if (J) { J.levantando = true; evActual = eventoAplicable(J, C); if (evActual) mostrarEvento(evActual); } }
     else if (v === 'cerrar-result') {
       var esDec = $('t-result').getAttribute('data-decision') === '1';
