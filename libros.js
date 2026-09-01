@@ -856,7 +856,48 @@ var LIBROS = [
        'smiles at you while voting on your replacement, and the VC math that turns a good '+
        'company into a disappointment. Honesty as a literary genre.',
   juego:'You went through a down round. Fishkin wrote this book for this exact moment.',
-  cuando:function(e,c){ return !!e.eventosVistos.downround; } }
+  cuando:function(e,c){ return !!e.eventosVistos.downround; } },
+
+/* ================= THE STREET ================= */
+{ id:'elprincipe', pilar:'calle', titulo:'The Prince', autor:'Niccolo Machiavelli',
+  concepto:'Feared or loved',
+  idea:'Five hundred years old and still the operating manual nobody admits to reading: power is kept, '+
+       'not deserved; it is better to be feared than loved if you cannot be both; and princes keep clean '+
+       'hands by renting dirty ones. Machiavelli did not invent the game — he just refused to lie about it.',
+  juego:'It opened because you touched a scapegoat decision or your political capital hit the floor. The game was already Machiavellian; now you have the manual.',
+  cuando:function(e,c){ return e.politico < 25 || !!(c && c.dilemasVistos && c.dilemasVistos.chivoexpiatorio); } },
+
+{ id:'48laws', pilar:'calle', titulo:'The 48 Laws of Power', autor:'Robert Greene',
+  concepto:'Never outshine the master',
+  idea:'Greene catalogued what courtiers always knew: credit flows upward, appearances outrank facts, and '+
+       'the person who corrects the boss in public wins the argument and loses the war. Read as manual or '+
+       'as vaccine — most people need the vaccine.',
+  juego:'Someone touched your team\'s credit, or you played the quiet counter. Either way: law 1 is in effect at your company, whether you read it or not.',
+  cuando:function(e,c){ return !!(c && c.dilemasVistos && (c.dilemasVistos.creditos || c.dilemasVistos.kompromat)); } },
+
+{ id:'artofwar', pilar:'calle', titulo:'The Art of War', autor:'Sun Tzu',
+  concepto:'Win without fighting',
+  idea:'The supreme art is subduing the enemy without battle: know yourself, know them, choose the ground, '+
+       'and let their structure defeat them. Every competitive dirty trick in your industry is a worse '+
+       'translation of a chapter Sun Tzu wrote better, sober, 2,500 years ago.',
+  juego:'Your competitor is watching you now. Every option you get against them — the whisper, the poach, the bake-off — is a Sun Tzu chapter with a legal department.',
+  cuando:function(e,c){ return e.competidor.atencion >= 0.5 || !!(c && c.dilemasVistos && (c.dilemasVistos.rumor || c.dilemasVistos.cazatalentos)); } },
+
+{ id:'pitchanything', pilar:'calle', titulo:'Pitch Anything', autor:'Oren Klaff',
+  concepto:'Frame control',
+  idea:'Klaff\'s thesis from a thousand deal rooms: whoever owns the frame owns the meeting. Prizes are '+
+       'chased, chasers are discounted — so be the prize. Status games happen in the first ninety seconds '+
+       'whether you play or not; the only choice is whether you notice.',
+  juego:'You\'ve sat the fundraising table as a founder. Recall who set the frame in that room — the money, or you.',
+  cuando:function(e,c){ return e.esFundador && e.rondas.length >= 1; } },
+
+{ id:'mafia', pilar:'calle', titulo:'The Godfather', autor:'Mario Puzo',
+  concepto:'It\'s not personal',
+  idea:'A novel about a family business that every operator quotes at work: favors are currency, loyalty '+
+       'is tested not assumed, and "it\'s not personal, it\'s strictly business" is what people say '+
+       'precisely when it is deeply personal. The street runs on debts — know who holds yours.',
+  juego:'You met the man who knows everyone, or you\'re holding leverage. Someone, somewhere, has your name in a ledger of favors. So does this game.',
+  cuando:function(e,c){ return e.palancaSecreta || !!(c && c.dilemasVistos && (c.dilemasVistos.padrino || c.dilemasVistos.favores)); } }
 ];
 
 function libroPorId(id) {
@@ -873,7 +914,8 @@ var PILARES = [
   { id:'growth',   nombre:'Growth & sales', cls:'pil-g' },
   { id:'capital',  nombre:'Capital',      cls:'pil-c' },
   { id:'gente',    nombre:'People',       cls:'pil-e' },
-  { id:'historias',nombre:'War stories',  cls:'pil-h' }
+  { id:'historias',nombre:'War stories',  cls:'pil-h' },
+  { id:'calle', nombre:'The Street', cls:'pil-k' }
 ];
 function pilarDe(id) {
   for (var i = 0; i < PILARES.length; i++) if (PILARES[i].id === id) return PILARES[i];

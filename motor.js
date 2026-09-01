@@ -57,6 +57,7 @@ var Motor = (function () {
             negocio:carrera.hab.negocio, liderazgo:carrera.hab.liderazgo },
 
       lupa:0, lupaBase:0, lupaMax:0, imputado:false, zafo:false,
+      palancaSecreta:false, conflictoInteres:false,
       perfil:oferta.perfil || 'parejo', techoPts:oferta.techo || et.techo || 30, costos:{},
       fase:et.fase || '', faseCorta:et.faseCorta || '', objetivo:et.objetivo || '',
       slots:oferta.slots || et.slots || 3,
@@ -646,6 +647,21 @@ var Motor = (function () {
     if (e.penalCap) dPol -= 5;
     if (mioUsado < mio * 0.6) dPol -= 3;
     e.politico = clamp(e.politico + dPol, -20, 100);
+
+    /* street mechanics: leverage saves your neck exactly once, and the
+       secret conflict of interest is a dice roll every single month */
+    if (e.politico < 0 && e.palancaSecreta) {
+      e.palancaSecreta = false;
+      e.politico = 14;
+      log.push({ tipo:'neutro', texto:'They moved to push you out. You made one phone call and reminded someone what you know. You\'re still here — and that card is spent.', libro:'hard' });
+    }
+    if (e.conflictoInteres && Math.random() < 0.05) {
+      e.conflictoInteres = false;
+      e.politico -= 25;
+      e.moral -= 6;
+      e.lupa = clamp(e.lupa + 12, 0, 100);
+      log.push({ tipo:'malo', texto:'Someone found your advisor shares in the competitor. The word "conflict" is now permanently attached to your name here.', libro:'hard' });
+    }
 
     /* 10b. if you're not a founder, the company funds itself — and dilutes you */
     if (!e.esFundador && runwayMeses(e) < 5 && Math.random() < 0.35) {

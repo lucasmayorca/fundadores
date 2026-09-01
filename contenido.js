@@ -1022,6 +1022,231 @@ var EVENTOS = [
       ef:function(e,log){ e.caja -= 20000; e.retBonus = (e.retBonus||0) - 0.01;
         nota(log,'malo','$20k of borrowed traction. The cohort curves will testify against you.','seibel'); } }
   ]},
+/* ---------------- the street: power plays ----------------
+   House of Cards inside the building. None of these options are clean;
+   the street teaches by invoice. */
+
+{ id:'kompromat', libro:'hard', prio:72, quien:'estrella',
+  cuando:function(e){ return e.mesPuesto > 3 && e.rolN >= 2; },
+  titulo:'What you found in the logs',
+  texto:'"Reviewing the expense system I found... something. The CTO has been billing personal trips as customer visits for a year. Nobody else knows. What do I do with this?"',
+  opciones:[
+    { txt:'Nothing. But keep the file',
+      nota:'You now own an insurance policy on your own job. Leverage protects you exactly once — and owning it changes you.',
+      libro:'hard',
+      ef:function(e,log){ e.palancaSecreta = true; e.moral -= 2;
+        nota(log,'neutro','The file exists. Nobody knows it exists. You check that it exists more often than you\'d admit.','hard'); } },
+    { txt:'Report it to the board, by the book',
+      nota:'Clean hands, public price: you just became the person who reports people. Useful reputation, cold lunches.',
+      libro:'grove',
+      ef:function(e,log){ e.politico -= 8; e.moral += 4; e.lupa = Math.max(e.lupaBase, e.lupa - 5);
+        nota(log,'bueno','The CTO "transitioned out". You did the right thing and everyone is very careful around you now.','grove'); } },
+    { txt:'Show it to the CTO. Privately',
+      nota:'The House of Cards move: not blackmail, just... clarity between colleagues. He\'ll never move against you. Probably.',
+      libro:'hard',
+      ef:function(e,log){ e.politico += 10; e.lupa = Math.min(100, e.lupa + 8); e.moral -= 4;
+        nota(log,'malo','He understood immediately. You have an ally now — the kind held together by fear.','hard'); } }
+  ]},
+
+{ id:'palanca', libro:'deals', prio:74, quien:'board',
+  cuando:function(e){ return e.rolN >= 3 && e.mesPuesto > 4; },
+  titulo:'The board member\'s coffee',
+  texto:'"This stays between us. Some of us have... questions about the CEO\'s numbers. You see everything from where you sit. Keep me informed, and I\'ll remember it when things change."',
+  opciones:[
+    { txt:'Become their eyes',
+      nota:'You\'re either backing the winning coup or documenting your own betrayal. There is no third outcome.',
+      libro:'hard',
+      ef:function(e,log){ e.palancaSecreta = true; e.moral -= 5;
+        nota(log,'neutro','You report monthly now. If the knives come out, you\'re covered. If they don\'t, you\'re the leak.','hard'); } },
+    { txt:'"I report to the CEO. Ask him"',
+      nota:'Loyalty, stated plainly, to the person who can hear about this coffee later. Old-fashioned and load-bearing.',
+      libro:'grove',
+      ef:function(e,log){ e.politico += 5; e.moral += 3;
+        nota(log,'bueno','The board member smiled thinly. The CEO heard about your answer within a week — as you knew he would.','grove'); } },
+    { txt:'Tell the CEO everything, today',
+      nota:'Now the CEO owes you — and knows the board is circling. You just picked a side in a war that hasn\'t started.',
+      libro:'hard',
+      ef:function(e,log){ e.politico += 12; e.marca -= 3;
+        nota(log,'neutro','The CEO went pale, then grateful. You\'re inner circle now. Inner circles are where the shrapnel lands.','hard'); } }
+  ]},
+
+{ id:'chivoexpiatorio', libro:'hard', prio:88, quien:'ceo',
+  cuando:function(e){ return e.incidentesPuesto >= 1 && e.mesPuesto > 3; },
+  titulo:'Someone has to wear it',
+  texto:'"The board wants a name for the outage. Not a process — a name. Your infra lead signed the deploy. Give me him and this is over by Friday."',
+  opciones:[
+    { txt:'Give them the name',
+      nota:'The Prince, chapter seven: princes keep clean hands by renting dirty ones. It works. It also becomes what your team knows about you.',
+      libro:'hard',
+      ef:function(e,log){ e.politico += 10; e.moral -= 12; e.penalCap = (e.penalCap||0) + 3;
+        nota(log,'malo','He cleared his desk by Friday. The board moved on. Your team now works with one eye on the exit.','hard'); } },
+    { txt:'"It was my call. Take me or drop it"',
+      nota:'Falling on the sword is expensive today and legendary forever. Teams follow people who\'ve done this.',
+      libro:'hard',
+      ef:function(e,log){ e.politico -= 14; e.moral += 12;
+        nota(log,'bueno','The board grumbled and dropped it. Your team would now walk through walls for you.','hard'); } },
+    { txt:'Bury them in the post-mortem data',
+      nota:'The SRE defense: blameless post-mortems exist precisely for this. It only works if your evidence is real.',
+      libro:'sre',
+      ef:function(e,log){
+        if (e.evidencia >= 45) { e.politico += 4; e.moral += 5;
+          nota(log,'bueno','Forty slides of causality later, the board was bored into fairness. Process 1, scapegoating 0.','sre'); }
+        else { e.politico -= 8;
+          nota(log,'malo','Your post-mortem had opinions where data should be. The board smelled it. Now they want two names.','sre'); } } }
+  ]},
+
+{ id:'padrino', libro:'hard', prio:76, quien:'ventas', sectores:['banco','apuestas','biogen','saludgold'],
+  cuando:function(e){ return e.mesPuesto > 4 && Motor.compuerta(e,'pragm') < 0.6; },
+  titulo:'The man who knows everyone',
+  texto:'"Your license file has been \'under review\' for months, no? I know the people who review it. A consulting engagement with my firm — $60k — and reviews have a way of... concluding."',
+  opciones:[
+    { txt:'Hire the "consultant"',
+      nota:'It will work. It always works. That\'s exactly what makes it the most expensive $60k you\'ll ever spend.',
+      libro:'hard',
+      ef:function(e,log){ e.caja -= 60000; e.cobertura.segur += 14; e.lupa = Math.min(100, e.lupa + 22);
+        nota(log,'malo','The review concluded favorably in eleven days. Somewhere, a ledger has your name in it now.','hard'); } },
+    { txt:'Decline. Loudly enough to be heard',
+      nota:'The refusal that gets around town: regulators talk, and "the one who didn\'t pay" is a reputation with compound interest.',
+      libro:'hard',
+      ef:function(e,log){ e.marca += 5; e.lupa = Math.max(e.lupaBase, e.lupa - 6);
+        nota(log,'bueno','Word traveled. Your file still crawls — but the people reviewing it treat you differently now.','hard'); } },
+    { txt:'Hire real regulatory counsel instead',
+      nota:'The legitimate version costs more, moves slower, and never shows up in anyone\'s testimony.',
+      libro:'hard',
+      ef:function(e,log){ e.caja -= 90000; e.cobertura.segur += 8;
+        nota(log,'neutro','$90k of lawyers who bill by the hour and sleep at night. Progress, the boring way.','hard'); } }
+  ]},
+
+{ id:'rumor', libro:'artofwar', prio:69, quien:'ventas',
+  cuando:function(e){ return e.mesPuesto > 5 && e.competidor.atencion > 0.3; },
+  titulo:'The whisper campaign',
+  texto:'"Three enterprise deals are stuck choosing between us and them. A friendly analyst would happily \'hear\' that their Series C fell through. It even might be true."',
+  opciones:[
+    { txt:'Make the call',
+      nota:'Sun Tzu approves of the method and stays silent on the invoice: markets remember who poisons wells.',
+      libro:'artofwar',
+      ef:function(e,log){
+        if (Math.random() < 0.6) { e.usuarios.pragm += e.tam.pragm * 0.02; e.lupa = Math.min(100, e.lupa + 8);
+          nota(log,'neutro','Two of three deals broke your way. The rumor is now weather — nobody knows where it started. Almost nobody.','artofwar'); }
+        else { e.marca -= 12; e.lupa = Math.min(100, e.lupa + 14);
+          nota(log,'malo','The analyst named a source when pressed. Guess whose company. The three deals froze, on principle.','artofwar'); } } },
+    { txt:'Beat them in the bake-off instead',
+      nota:'Winning the evaluation is slower, costs real work, and produces a reference instead of a body.',
+      libro:'challenger',
+      ef:function(e,log){ e.cobertura.soporte += 5; e.foco += 3;
+        nota(log,'bueno','You won one clean, lost one, and the third stalled. The one you won will testify for you for years.','challenger'); } },
+    { txt:'Say nothing, do nothing',
+      nota:'Sometimes the street-smart move is refusing to play at all. The deals fall where they fall.',
+      libro:'hard',
+      ef:function(e,log){
+        nota(log,'neutro','The deals split on merit. You kept your hands in your pockets, which is where clean hands live.','hard'); } }
+  ]},
+
+{ id:'doblesueldo', libro:'hard', prio:71, quien:'board',
+  cuando:function(e){ return e.rolN >= 3 && e.mesPuesto > 5 && !e.conflictoInteres; },
+  titulo:'The advisor offer',
+  texto:'An old colleague, now founding something "adjacent" to your space: "Advisory shares, 0.5%, one call a month. Nobody needs to know. You\'d be great."',
+  opciones:[
+    { txt:'Take it. Quietly',
+      nota:'0.5% of a maybe against a monthly dice roll on your reputation. The street calls this a side bet; compliance calls it something shorter.',
+      libro:'hard',
+      ef:function(e,log){ e.conflictoInteres = true; e.ventaSecundaria = (e.ventaSecundaria||0) + 15000;
+        nota(log,'malo','Shares signed, calls scheduled. Every month from now on, a die rolls that you never see.','hard'); } },
+    { txt:'Take it, disclosed and papered',
+      nota:'The boring version: legal reviews it, the CEO signs off, the upside shrinks and so does the bomb.',
+      libro:'deals',
+      ef:function(e,log){ e.politico -= 4; e.ventaSecundaria = (e.ventaSecundaria||0) + 8000;
+        nota(log,'bueno','Half the mystique, none of the fuse. The CEO raised an eyebrow and signed.','deals'); } },
+    { txt:'Pass. Your equity is here',
+      nota:'Focus is also a portfolio decision. One cap table at a time.',
+      libro:'psych',
+      ef:function(e,log){ e.foco += 4;
+        nota(log,'neutro','You said no in one sentence. Your old colleague respected it. Your calendar thanked you.','psych'); } }
+  ]},
+
+{ id:'creditos', libro:'48laws', prio:67, quien:'estrella',
+  cuando:function(e){ return e.rolN >= 1 && e.mesPuesto > 4 && e.apuestasCompletadas >= 2; },
+  titulo:'Your slide, their name',
+  texto:'"Did you see the QBR deck? The growth numbers from OUR launch are in the VP of Sales\' section. Titled \'Commercial excellence\'. He\'s presenting them tomorrow."',
+  opciones:[
+    { txt:'Correct it in the room, mid-presentation',
+      nota:'Publicly right, politically radioactive. Law 1: never outshine the master — especially not by fact-checking him live.',
+      libro:'48laws',
+      ef:function(e,log){ e.politico -= 10; e.moral += 6;
+        nota(log,'malo','You were correct in front of everyone. He was humiliated in front of everyone. Only one of those is remembered.','48laws'); } },
+    { txt:'Send the board the full data — beforehand, "for context"',
+      nota:'The quiet counter: by the time he presents, everyone in the room already knows whose work it is. He never learns how.',
+      libro:'48laws',
+      ef:function(e,log){ e.politico += 8; e.lupa = Math.min(100, e.lupa + 3);
+        nota(log,'bueno','He presented to a room of small knowing smiles. Your name never came up. It didn\'t need to.','48laws'); } },
+    { txt:'Let it go. The work speaks eventually',
+      nota:'Sometimes it does. In organizations, "eventually" is often measured in other people\'s promotions.',
+      libro:'grove',
+      ef:function(e,log){ e.moral -= 5;
+        nota(log,'neutro','The team noticed you didn\'t fight for their credit. They\'ll remember it at the worst possible time.','grove'); } }
+  ]},
+
+{ id:'cazatalentos', libro:'artofwar', prio:66, quien:'cto',
+  cuando:function(e){ return e.mesPuesto > 4 && e.competidor.atencion > 0.2 && e.caja > Motor.burnMensual(e) * 4; },
+  titulo:'Their best engineer is "just curious"',
+  texto:'"The competitor\'s lead architect reached out. Wants to talk. She built their whole platform — she\'d arrive knowing everything about how they work. Everything."',
+  opciones:[
+    { txt:'Hire her fast, debrief everything',
+      nota:'The knowledge walks in the door and so does the lawsuit exposure. Trade secrets don\'t stop being secrets because someone changed badges.',
+      libro:'artofwar',
+      ef:function(e,log){ Motor.contratar(e,'ing'); e.competidor.fuerza = Math.max(0.2, e.competidor.fuerza - 0.1);
+        e.lupa = Math.min(100, e.lupa + 12);
+        nota(log,'malo','She drew their architecture on your whiteboard in week one. Their lawyers drew something too: a timeline.','artofwar'); } },
+    { txt:'Hire her clean: six-month cooling off, no debriefs',
+      nota:'You get the talent and forgo the loot. Slower, defensible, and she\'ll respect you for not asking.',
+      libro:'grove',
+      ef:function(e,log){ Motor.contratar(e,'ing'); e.moral += 3;
+        nota(log,'bueno','She noticed you never asked about their internals. "That\'s why I came," she said.','grove'); } },
+    { txt:'Pass, and tell the competitor\'s CTO she\'s shopping',
+      nota:'The long-game move: you just banked a favor with your enemy. The street runs on debts like this.',
+      libro:'48laws',
+      ef:function(e,log){ e.competidor.atencion = Math.max(0, e.competidor.atencion - 0.15);
+        nota(log,'neutro','Their CTO owes you one and knows it. Somewhere in a future negotiation, this phone call is waiting.','48laws'); } }
+  ]},
+
+{ id:'favores', libro:'hard', prio:70, quien:'ventas', sectores:['datapol','banco','renov','apuestas'],
+  cuando:function(e){ return e.mesPuesto > 5 && Motor.compuerta(e,'pragm') < 0.8; },
+  titulo:'The community fund',
+  texto:'"The undersecretary loved the demo. Loved it. He also mentioned — twice — that the district\'s youth sports fund is short this year. He said you\'d understand each other."',
+  opciones:[
+    { txt:'Fund the little league',
+      nota:'It\'s not a bribe, it\'s philanthropy with a receipt and a wink. Prosecutors collect receipts.',
+      libro:'hard',
+      ef:function(e,log){ e.caja -= 35000; e.cobertura.soporte += 8; e.lupa = Math.min(100, e.lupa + 15);
+        nota(log,'malo','The kids got uniforms, your file got unstuck, and a photo of you at the ceremony now exists forever.','hard'); } },
+    { txt:'Offer a transparent public partnership instead',
+      nota:'Same money, through the front door, with a press release. Slower magic, zero afterlife.',
+      libro:'hard',
+      ef:function(e,log){ e.caja -= 35000; e.marca += 6;
+        nota(log,'bueno','A public program with your logo on it. The undersecretary was less warm and your lawyers slept fine.','hard'); } },
+    { txt:'"We don\'t do that." End of meeting',
+      nota:'Doors close. Some of them were doors you needed. Knowing which ones was the whole game.',
+      libro:'hard',
+      ef:function(e,log){ e.politico -= 4; e.marca += 3;
+        nota(log,'neutro','The meeting ended politely and early. That file of yours found the bottom of a very tall pile.','hard'); } }
+  ]},
+
+{ id:'exitintel', libro:'artofwar', prio:68, quien:'estrella',
+  cuando:function(e){ return e.mesPuesto > 3 && e.competidor.atencion > 0.15; },
+  titulo:'The parting gift',
+  texto:'"My last day is Friday. One thing before I go — I interviewed at the competitor last month. I still have the pricing deck they walked me through. Want it on your desk or in the shredder?"',
+  opciones:[
+    { txt:'On the desk',
+      nota:'Their entire pricing logic, gift-wrapped. Also: documented, timestamped, and yours now in every legal sense.',
+      libro:'artofwar',
+      ef:function(e,log){ e.precio = Math.round(e.precio * 1.06); e.lupa = Math.min(100, e.lupa + 10);
+        nota(log,'malo','You repriced with perfect information. Perfect information has a paper trail.','artofwar'); } },
+    { txt:'The shredder. And thank them for asking',
+      nota:'What the team sees you do with free poison defines what they\'ll bring you in the future.',
+      libro:'grove',
+      ef:function(e,log){ e.moral += 4;
+        nota(log,'bueno','Shredded unread, in front of them. The story traveled internally within a day — the version of you it tells is worth more than the deck.','grove'); } }
+  ]},
 
 /* ---------------- the gray zone ---------------- */
 
