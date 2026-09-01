@@ -69,7 +69,25 @@ html, body {
 .pill.rojo { color:#e2564a; border-color:#442222; }
 
 /* ---------- INICIO / FINAL ---------- */
-#p-inicio, #p-final, #p-cierre, #p-ofertas { padding:36px 48px; }
+#p-final, #p-cierre, #p-ofertas { padding:36px 48px; }
+
+/* landing: a fixed hero (title, skyline, the New career button — always in
+   view, never behind a scroll) on top of a scrollable "more" section. */
+#p-inicio { padding:0; overflow:hidden; }
+.landhero { -webkit-flex-shrink:0; flex-shrink:0; padding:26px 40px 14px 40px; }
+.landtop { display:-webkit-flex; display:flex; -webkit-align-items:flex-start; align-items:flex-start; }
+.landleft { width:552px; padding-right:24px; }
+.landright { width:368px; }
+.skycard { background:#0d1420; border:1px solid #1c2740; border-radius:12px; padding:12px 12px 9px 12px; }
+.skysvg { width:100%; height:auto; display:block; }
+.skycol { cursor:pointer; }
+.skybar { -webkit-transition:fill .15s ease, stroke .15s ease; transition:fill .15s ease, stroke .15s ease; }
+.skyhint { margin-top:7px; font-size:11px; color:#5b6472; text-align:center; }
+.landmore { -webkit-flex:1; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding:14px 40px 30px 40px; border-top:1px solid #171b23; }
+.landcols { display:-webkit-flex; display:flex; }
+.landcols .lcL { width:552px; padding-right:24px; }
+.landcols .lcR { width:368px; }
 
 .tarjetas { display:-webkit-flex; display:flex; margin-top:20px; }
 .oferta {
@@ -153,7 +171,8 @@ html, body {
 .ap.vuelo { border-color:#4a3a1c; background:#1a1710; }
 .ap .t { -webkit-flex:1; flex:1; }
 .ap .n2 { font-size:14px; }
-.ap .d2 { font-size:11px; color:#767f8d; margin-top:1px; }
+.ap .d2 { font-size:11px; color:#767f8d; margin-top:1px; overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; max-width:400px; }
 .ap .c { text-align:right; width:96px; }
 .ap .c .imp { font-size:16px; }
 .ap .c .cst { font-size:11px; color:#767f8d; }
@@ -239,11 +258,11 @@ html, body {
 .viz { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; margin-top:4px; }
 .vlbl { font-size:9.5px; letter-spacing:0.8px; text-transform:uppercase; color:#5b6472; margin:0 5px 0 0; }
 .dots { margin-right:12px; }
-.dots i { display:inline-block; width:7px; height:7px; border-radius:4px; background:#232a35; margin-right:3px; }
-.dots i.on { background:#5aa9f0; }
-.blocks i { display:inline-block; width:6px; margin-right:2px; background:#232a35; vertical-align:bottom; }
-.blocks i.b1{height:5px}.blocks i.b2{height:8px}.blocks i.b3{height:11px}.blocks i.b4{height:14px}.blocks i.b5{height:17px}
-.blocks i.on { background:#35c46a; }
+.dots i { display:inline-block; width:8px; height:8px; border-radius:4px; background:#232a35; margin-right:3px; }
+.dots i.on { background:#5aa9f0; box-shadow:0 0 5px rgba(90,169,240,0.55); }
+.blocks i { display:inline-block; width:7px; margin-right:2px; background:#232a35; vertical-align:bottom; border-radius:1.5px 1.5px 0 0; }
+.blocks i.b1{height:6px}.blocks i.b2{height:9px}.blocks i.b3{height:12px}.blocks i.b4{height:15px}.blocks i.b5{height:18px}
+.blocks i.on { background:#35c46a; box-shadow:0 0 5px rgba(53,196,106,0.5); }
 .esf { display:inline-block; min-width:26px; padding:2px 5px; border-radius:5px; text-align:center;
   font-size:11px; font-weight:600; }
 .esf.eXS { background:#12251f; color:#4ecdc4; }
@@ -256,7 +275,9 @@ html, body {
 
 /* ---------- estado en barras ---------- */
 .est { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; padding:4px 0; }
-.est .elbl { width:150px; font-size:12.5px; color:#8b93a1; }
+.est .esti { width:20px; -webkit-flex-shrink:0; flex-shrink:0; margin-right:2px; }
+.est .esti.v { color:#35c46a; } .est .esti.a { color:#e8a33d; } .est .esti.r { color:#e2564a; }
+.est .elbl { width:132px; font-size:12.5px; color:#8b93a1; }
 .est .etrk { -webkit-flex:1; flex:1; }
 
 /* ---------- briefing y fase ---------- */
@@ -265,16 +286,44 @@ html, body {
   margin-top:12px; padding:13px 16px; background:#12151b; border:1px solid #1c2027; border-radius:10px; }
 .fasechip { display:inline-block; padding:5px 12px; border-radius:14px; font-size:12px;
   font-weight:700; letter-spacing:1.2px; border:1px solid; }
+.fasechip .ic { margin-right:5px; vertical-align:-2px; }
 .fasechip.ambar { color:#e8a33d; border-color:#4a3a1c; background:#1d1810; }
 .fasechip.azul { color:#5aa9f0; border-color:#1c2f44; background:#101823; }
 .fasechip.verde { color:#35c46a; border-color:#1c3a26; background:#0f1d14; }
 .fasechip.mini { padding:2px 8px; font-size:9.5px; margin-right:10px; cursor:pointer; }
+.fasechip.mini .ic { width:12px; height:12px; margin-right:3px; }
 .faseobj { font-size:16px; line-height:1.4; margin-left:14px; }
 .tagobj { display:inline-block; padding:4px 10px; margin:0 6px 6px 0; border-radius:7px; font-size:12.5px;
   background:#141c14; border:1px solid #234023; color:#8fd39a; }
 .tagobj.down { background:#1a1717; border-color:#2e2626; color:#8b7f7f; }
 .tagobj.mini { padding:1px 5px; margin:0 0 0 6px; font-size:10px; }
 .hot2 { color:#e8a33d; } .frio2 { color:#5aa9f0; }
+
+/* ---------- ficha de mision estilo GTA ---------- */
+.mision-cinta { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  margin-bottom:6px; }
+.mision-cinta .raya { width:22px; height:3px; margin-right:8px; background:#e8a33d; }
+.mision-cinta.azul .raya { background:#5aa9f0; } .mision-cinta.verde .raya { background:#35c46a; }
+.mision-cinta b { font-size:11px; letter-spacing:2.4px; text-transform:uppercase; color:#e8a33d; }
+.mision-cinta.azul b { color:#5aa9f0; } .mision-cinta.verde b { color:#35c46a; }
+.situacion { margin-top:10px; padding:12px 14px; background:#14100a; border:1px solid #2e2416;
+  border-left:3px solid #e8a33d; border-radius:8px; font-size:14px; line-height:1.55; color:#e0c9a0; }
+.situacion.azul { background:#0b1420; border-color:#1c2f44; border-left-color:#5aa9f0; color:#bcd6f2; }
+.situacion.verde { background:#0b1710; border-color:#1c3a26; border-left-color:#35c46a; color:#b9e6c4; }
+.indicadores { margin-top:14px; }
+.indicador { margin-bottom:11px; }
+.indicador .ind-cab { display:-webkit-flex; display:flex; -webkit-justify-content:space-between;
+  justify-content:space-between; font-size:12.5px; margin-bottom:4px; }
+.indicador .ind-nom { color:#c3c9d3; }
+.indicador .ind-val { font-weight:700; }
+.indicador .ind-val.ok { color:#35c46a; } .indicador .ind-val.no { color:#e2564a; }
+.ind-track { position:relative; height:8px; background:#191d25; border-radius:4px; overflow:visible; }
+.ind-track .ind-fill { position:absolute; left:0; top:0; height:8px; border-radius:4px;
+  background:#2f6fd0; display:block; }
+.ind-track .ind-fill.ok { background:#35c46a; } .ind-track .ind-fill.no { background:#e2564a; }
+.ind-track .ind-obj { position:absolute; top:-3px; width:2px; height:14px; background:#fff;
+  opacity:0.85; }
+.ind-meta { margin-top:3px; font-size:10.5px; color:#6c7685; }
 
 /* ---------- teoría aplicada al caso ---------- */
 .teoria-caso { margin-top:12px; padding:11px 14px; background:#10151d; border:1px solid #1e2a3c;
@@ -399,9 +448,12 @@ html, body {
 .vchip.vneg { background:#2b1416; color:#f37b72; }
 .vchip.vmeta { box-shadow:0 0 0 1.5px #3f82e6; }
 .fun { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; padding:3.5px 0; }
-.fun .fk { width:110px; font-size:12.5px; color:#8b93a1; }
+.fun .fk { width:110px; font-size:12.5px; color:#8b93a1; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; }
 .fun .fv { font-size:15px; }
 .fun .fsub { font-size:10px; }
+.funic { width:19px; height:19px; -webkit-flex-shrink:0; flex-shrink:0; margin-right:6px; color:#5b6472; }
+.funic .ic { width:14px; height:14px; }
+.funic.verde { color:#35c46a; } .funic.rojo { color:#e2564a; }
 
 /* ---------- building ---------- */
 #building { display:none; position:absolute; left:0; top:0; width:1024px; height:768px;
@@ -420,6 +472,6 @@ html, body {
 .res-ship .tx { -webkit-flex:1; flex:1; }
 
 /* pantallas largas: scrollean dentro del lienzo de 768 */
-#p-inicio, #p-brief, #p-final, #p-cierre, #p-ofertas {
+#p-brief, #p-final, #p-cierre, #p-ofertas {
   overflow-y:auto; -webkit-overflow-scrolling:touch;
 }

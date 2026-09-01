@@ -19,6 +19,15 @@ var Motor = (function () {
     return null;
   }
 
+  /* Company capabilities: producto/tecnologia/gtm/gente compound only when
+     funded by raised capital (e.capFondeo) — no fuel, no growth, slow erosion
+     instead. Capital compounds only from closing rounds. Older saves may not
+     have these fields yet, so every reader/writer goes through this guard. */
+  function asegurarCapacidades(e) {
+    if (!e.capacidades) e.capacidades = { producto:20, tecnologia:20, gtm:20, gente:20, capital:20 };
+    if (e.capFondeo === undefined || e.capFondeo === null) e.capFondeo = 0;
+  }
+
   /* ---------------- starting a role ---------------- */
 
   function nuevoPuesto(oferta, carrera, mundo) {
@@ -55,6 +64,17 @@ var Motor = (function () {
       /* the player's skills, already applied as modifiers */
       hab:{ producto:carrera.hab.producto, tecnologia:carrera.hab.tecnologia,
             negocio:carrera.hab.negocio, liderazgo:carrera.hab.liderazgo },
+
+      /* the company's own capabilities: they start from a seed the founder's
+         skills gave it, then grow on their own trajectory, fueled by capital raised */
+      capacidades:{
+        producto:clamp(12 + carrera.hab.producto / 6, 0, 100),
+        tecnologia:clamp(12 + carrera.hab.tecnologia / 6, 0, 100),
+        gtm:clamp(12 + carrera.hab.negocio / 6, 0, 100),
+        gente:clamp(12 + carrera.hab.liderazgo / 6, 0, 100),
+        capital:12
+      },
+      capFondeo:0,
 
       lupa:0, lupaBase:0, lupaMax:0, imputado:false, zafo:false,
       palancaSecreta:false, conflictoInteres:false,
@@ -300,12 +320,13 @@ var Motor = (function () {
   /* ---------------- capacity ---------------- */
 
   function capacidad(e) {
+    asegurarCapacidades(e);
     var base = e.ing * 20 + e.prod * 14;
     var fDeuda = 1 - (e.deuda / 100) * 0.55;
     var fMoral = 0.75 + (e.moral / 100) * 0.35;
     var fFoco = 0.85 + (clamp(e.foco, 0, 100) / 100) * 0.30;
     var tam = e.ing + e.prod;
-    var umbral = (e.teamTopo ? 12 : 8) + Math.round(e.hab.liderazgo / 12);
+    var umbral = (e.teamTopo ? 12 : 8) + Math.round(e.hab.liderazgo / 12) + Math.round(e.capacidades.gente / 20);
     var fCarga = tam <= umbral ? 1 : Math.max(0.55, 1 - 0.05 * (tam - umbral));
     var fCd = e.cd ? 1.12 : 1;
     var p = base * fDeuda * fMoral * fFoco * fCarga * fCd;
@@ -319,12 +340,13 @@ var Motor = (function () {
   function capacidadPropia(e) { return Math.max(2, Math.round(capacidad(e) * e.mando)); }
 
   function desgloseCapacidad(e) {
+    asegurarCapacidades(e);
     var base = e.ing * 20 + e.prod * 14, d = [];
     d.push({ k:'Org capacity', v:base });
     d.push({ k:'Under your command (' + Math.round(e.mando * 100) + '%)', v:capacidadPropia(e) });
     if (e.deuda > 0) d.push({ k:'Technical debt', v:-Math.round(base * (e.deuda/100) * 0.55), libro:'fowler' });
     if (e.rampa.length) d.push({ k:'Mentoring new hires', v:-e.rampa.length * 6, libro:'brooks' });
-    if (e.ing + e.prod > (e.teamTopo ? 12 : 8) + Math.round(e.hab.liderazgo/12)) d.push({ k:'Cognitive load', v:'-', libro:'topologies' });
+    if (e.ing + e.prod > (e.teamTopo ? 12 : 8) + Math.round(e.hab.liderazgo/12) + Math.round(e.capacidades.gente/20)) d.push({ k:'Cognitive load', v:'-', libro:'topologies' });
     if (e.moral < 60) d.push({ k:'Low morale', v:'-', libro:'grove' });
     if (e.foco < 45) d.push({ k:'Lack of focus', v:'-', libro:'grove' });
     if (e.cd) d.push({ k:'Continuous deployment', v:'+12%', libro:'accelerate' });
@@ -413,6 +435,10 @@ var Motor = (function () {
   function contratar(e, rol) { e.rampa.push({ rol:rol, listoEn:2 }); }
 
   function ronda(e, monto, pre, mult, participativa, pool, poolPre) {
+    asegurarCapacidades(e);
+    /* a stronger fundraising capability means better terms next time: it
+       nudges the pre-money you're able to negotiate, up or down */
+    pre = Math.round(pre * (1 + (e.capacidades.capital - 20) / 400));
     var post = pre + monto, fInv = monto / post;
     var f = e.capTable.fund, inv = e.capTable.inv, p = e.capTable.pool;
     if (poolPre !== false) {
@@ -430,6 +456,11 @@ var Motor = (function () {
     e.preferencias.push({ monto:monto, mult:mult, part:!!participativa });
     e.rondas.push({ mes:e.mesPuesto, monto:monto, pre:pre, mult:mult, part:!!participativa, pool:pool });
     e.levantando = false;
+
+    /* raised capital is the fuel that turns this month's initiatives into
+       lasting capability (see the end-of-month block in simular) */
+    e.capFondeo += monto * 0.10;
+    e.capacidades.capital = clamp(e.capacidades.capital + 3 * (1 + e.hab.negocio / 200), 0, 100);
   }
 
   function pivotar(e) {
@@ -460,6 +491,7 @@ var Motor = (function () {
 
   function simular(e, plan, mundo) {
     var log = [], i, id;
+    asegurarCapacidades(e);
     if (mundo) { e.calor = Mundo.calorSector(mundo, e.sectorId); e.eraId = mundo.eraId; }
 
     /* 1. new hires: two months until they produce */
@@ -507,7 +539,7 @@ var Motor = (function () {
 
     /* 3. discovery */
     if (p.desc > 0) {
-      var gan = p.desc * 1.1 * e.calidadDesc * (1 + e.hab.producto / 200);
+      var gan = p.desc * 1.1 * e.calidadDesc * (1 + e.hab.producto / 200 + e.capacidades.producto / 300);
       e.evidencia = clamp(e.evidencia + gan, 0, 100);
       for (id in e.ruidos) if (e.ruidos.hasOwnProperty(id)) e.ruidos[id] *= 0.88;
       e.usabilidad += p.desc * 0.14;
@@ -589,12 +621,12 @@ var Motor = (function () {
         }
       }
     }
-    e.deuda += p.cons * 0.15 * (1 - e.hab.tecnologia / 180);
+    e.deuda += p.cons * 0.15 * (1 - e.hab.tecnologia / 180 - e.capacidades.tecnologia / 260);
     if (e.fabrica) e.deuda += 2;
 
     /* 5. platform */
     if (p.plat > 0) {
-      e.deuda -= p.plat * 0.55 * (1 + e.hab.tecnologia / 150);
+      e.deuda -= p.plat * 0.55 * (1 + e.hab.tecnologia / 150 + e.capacidades.tecnologia / 200);
       e.arquitectura += p.plat * 0.28;
     }
     e.deuda += 2.5;
@@ -635,7 +667,7 @@ var Motor = (function () {
     var saturacion = 1 + usuarios(e) / (mercado * 0.14);
     var alcance = 35 * Math.pow(Math.max(0, p.crec), 0.75) * (1 + e.gtm * 0.25) *
                   (0.75 + e.marca / 220) * (1 + (e.gtmBonus || 0)) * e.cac *
-                  (1 + e.hab.negocio / 150) / saturacion;
+                  (1 + e.hab.negocio / 150 + e.capacidades.gtm / 220) / saturacion;
     if (mundo) alcance *= Mundo.modAlcance(mundo, e.sectorId);
     var boca = Math.min(usuarios(e) * 0.03 * e.viral,
                         usuarios(e) * fitMax(e) * 0.022 * e.viral * (0.6 + e.marca / 160));
@@ -709,7 +741,7 @@ var Motor = (function () {
     var alin = alineacion(e, e.gastoPropio);
     var prog = progresoMandato(e);
     var esperado2 = (e.mesPuesto + 1) / e.meses;
-    var dPol = (alin - 0.55) * 10 + (prog >= esperado2 ? 2 : -4) + e.hab.liderazgo / 50;
+    var dPol = (alin - 0.55) * 10 + (prog >= esperado2 ? 2 : -4) + e.hab.liderazgo / 50 + e.capacidades.gente / 90;
     if (e.penalCap) dPol -= 5;
     if (mioUsado < mio * 0.6) dPol -= 3;
     e.politico = clamp(e.politico + dPol, -20, 100);
@@ -761,6 +793,39 @@ var Motor = (function () {
       log.push({ tipo:'neutro', texto:'New quarter: the error budget resets to 100.', libro:'sre' });
     }
     rellenarBacklog(e);
+
+    /* 11b. company capabilities: what the org just built only turns into
+       lasting capability when there's raised capital funding it (capFondeo,
+       topped up in ronda()). No fuel means treading water — capabilities
+       drift down instead of up. Founder skills accelerate the conversion. */
+    if (e.capFondeo > 0) {
+      var gastadoFondeo = 0;
+      if (p.desc > 0) {
+        e.capacidades.producto = clamp(e.capacidades.producto +
+          p.desc * 0.05 * (1 + e.hab.producto / 150), 0, 100);
+        gastadoFondeo += p.desc * 40;
+      }
+      if (p.plat > 0) {
+        e.capacidades.tecnologia = clamp(e.capacidades.tecnologia +
+          p.plat * 0.06 * (1 + e.hab.tecnologia / 150), 0, 100);
+        gastadoFondeo += p.plat * 40;
+      }
+      if (p.crec > 0) {
+        e.capacidades.gtm = clamp(e.capacidades.gtm +
+          p.crec * 0.05 * (1 + e.hab.negocio / 150), 0, 100);
+        gastadoFondeo += p.crec * 40;
+      }
+      if (e.moral > 55 && e.foco > 35) {
+        e.capacidades.gente = clamp(e.capacidades.gente + 0.6 * (1 + e.hab.liderazgo / 150), 0, 100);
+        gastadoFondeo += 20;
+      }
+      e.capFondeo = Math.max(0, e.capFondeo - gastadoFondeo);
+    } else {
+      e.capacidades.producto = clamp(e.capacidades.producto - 0.15, 0, 100);
+      e.capacidades.tecnologia = clamp(e.capacidades.tecnologia - 0.15, 0, 100);
+      e.capacidades.gtm = clamp(e.capacidades.gtm - 0.15, 0, 100);
+      e.capacidades.gente = clamp(e.capacidades.gente - 0.1, 0, 100);
+    }
 
     /* 12. is the role over? */
     e.valoracion = Math.max(e.valoracion * 0.995, e.mrr * 12 * 6);
