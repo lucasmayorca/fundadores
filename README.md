@@ -46,6 +46,27 @@ literals, `class` or `fetch`), flexbox with `-webkit-` prefixes, fixed
 Script tags carry `?v=N` for cache busting: **bump the number whenever
 you touch any file**.
 
+## Personalized start (LinkedIn)
+
+The start screen asks **Who are you?** (optional): paste your LinkedIn URL or
+your current title, or tap a rung (APM -> Founder — every product position
+maps to one: Product Owner->PM, Head of Product->Director, Principal/Lead->GPM,
+and so on). Starting from zero is always available.
+
+- On the **public deploy**, the Node server fetches the public LinkedIn page
+  (`/api/perfil?u=...`) and extracts your name + headline server-side
+  (LinkedIn may authwall; it degrades gracefully).
+- On the **iPad/LAN** there is no endpoint: the client parses the URL slug
+  for your name and the pasted title for your rung. Same experience, offline.
+- Starting mid-ladder seeds reputation and skills to match, and your rival
+  starts at your same level.
+
+## Touch tooltips
+
+Dotted-underlined labels (Retention, Runway, Political capital, the Heat,
+prob/impact, commitment, Evidence, Debt, Load, Error budget...) show a
+one-line explainer when tapped — 16 of them. No hover needed: it's an iPad.
+
 ## The monthly loop: 3 taps
 
 1. **Stance for the month** (one button): Build / Discover / Clean up / Grow.
