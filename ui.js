@@ -261,10 +261,12 @@
   }
 
   /* one layer of the landing explainer: indent = nesting depth */
-  function capaHtml(ind, col, tit, txt) {
-    return '<div class="capa" style="margin-left:' + ind + 'px;border-left-color:' + col + '">' +
-      '<div class="cn" style="color:' + col + '">' + tit + '</div>' +
-      '<div class="ct">' + txt + '</div></div>';
+  /* one step of "how it works": same numbered-line pattern as the in-game
+     intro ("Four things. That's it.") — proven readable, so reused as-is
+     instead of a new one-off layout. */
+  function pasoHtml(n, col, tit, txt) {
+    return '<div class="linea"><div class="ic" style="color:' + col + '">' + n + '</div>' +
+      '<div class="tx"><b>' + tit + '.</b> ' + txt + '</div></div>';
   }
 
   function rungChipsHtml() {
@@ -286,10 +288,18 @@
     var svg = '<svg viewBox="0 0 ' + vw + ' ' + vh + '" class="skysvg" preserveAspectRatio="xMidYMax meet">' +
       '<defs><linearGradient id="skysky" x1="0" y1="0" x2="0" y2="1">' +
       '<stop offset="0" stop-color="#0a0f1c"></stop><stop offset="1" stop-color="#131b2c"></stop>' +
-      '</linearGradient></defs>' +
+      '</linearGradient><radialGradient id="skyglow" cx="0.5" cy="1" r="0.75">' +
+      '<stop offset="0" stop-color="#3a2e12" stop-opacity="0.55"></stop>' +
+      '<stop offset="1" stop-color="#3a2e12" stop-opacity="0"></stop></radialGradient></defs>' +
       '<rect x="0" y="0" width="' + vw + '" height="' + vh + '" fill="url(#skysky)"></rect>' +
-      '<circle cx="26" cy="22" r="1.1" fill="#3a4456"></circle>' +
-      '<circle cx="72" cy="38" r="1" fill="#2a313d"></circle>' +
+      '<rect x="0" y="0" width="' + vw + '" height="' + vh + '" fill="url(#skyglow)"></rect>' +
+      '<circle cx="44" cy="34" r="8" fill="#232c40"></circle>' +
+      '<circle cx="48" cy="31" r="8" fill="#0a0f1c"></circle>' +
+      '<circle cx="18" cy="52" r="1" fill="#2a313d"></circle>' +
+      '<circle cx="72" cy="46" r="1" fill="#2a313d"></circle>' +
+      '<circle cx="108" cy="26" r="1.1" fill="#3a4456"></circle>' +
+      '<circle cx="150" cy="42" r="1" fill="#2a313d"></circle>' +
+      '<circle cx="192" cy="18" r="1" fill="#2a313d"></circle>' +
       '<circle cx="235" cy="20" r="1.2" fill="#3a4456"></circle>' +
       '<circle cx="296" cy="34" r="1" fill="#2a313d"></circle>' +
       '<line x1="0" y1="' + baseY + '" x2="' + vw + '" y2="' + baseY + '" stroke="#1c2438"></line>';
@@ -338,9 +348,10 @@
     var h = '<div class="landhero"><div class="landtop">';
     h += '<div class="landleft">';
     h += '<div class="h1">Founder Mode</div>' +
-      '<div class="pq mut" style="margin-top:5px;max-width:500px">A product management simulator. ' +
-      'Pick a rung, run one company at a time, and climb from a one-desk garage to the corner office ' +
-      '— or build your own.</div>';
+      '<div class="hook" style="margin-top:8px;max-width:520px">Can you make CPO without breaking the ' +
+      'product or burning out your team?</div>' +
+      '<div class="pq mut" style="margin-top:6px;max-width:500px">Make real calls. Survive CEOs, crises ' +
+      'and competitors. Then see how your career stacks up against everyone else who played.</div>';
     h += '<div class="rot" style="margin:16px 0 6px 0">Start as</div><div>' + rungChipsHtml() + '</div>';
     h += '<div class="pq mut" style="margin-top:8px" id="perfil-eco">' +
       (inicioSel.buscando ? '<span class="azul">Reading your LinkedIn profile…</span> · ' : '') +
@@ -350,10 +361,12 @@
       (inicioSel.nivel > 0 ? ' — your real rung. Or tap APM to run the whole ladder.' : ' — the full climb, from the bottom.') +
       '</div>';
     h += '<div style="margin-top:16px">' +
-      '<span class="btn pri xl" data-act="nueva">New career</span> ' +
-      '<span class="btn" data-act="semanal" style="margin-left:6px">Weekly challenge</span>' +
-      (hay ? '<span class="btn" data-act="continuar" style="margin-left:6px">Continue</span>' : '') +
-      '<span class="btn sec" data-act="biblio" style="margin-left:6px">Library</span></div>';
+      '<span class="btn pri xl" data-act="nueva">New career</span>' +
+      (hay ? ' <span class="btn" data-act="continuar">Continue</span>' : '') + '</div>';
+    h += '<div class="pq mut" style="margin-top:10px">' +
+      '<span class="linklike" data-act="semanal">Weekly challenge</span>' +
+      '<span class="mut"> · </span>' +
+      '<span class="linklike" data-act="biblio">Library</span></div>';
     h += '</div>'; /* landleft */
 
     h += '<div class="landright"><div class="skycard">' + skylineSvg(inicioSel.nivel) +
@@ -361,29 +374,29 @@
     h += '</div></div>'; /* landtop, landhero */
 
     /* ---- everything else: depth, personalization, the hall of fame. scrolls on its own ---- */
-    h += '<div class="landmore scroll">';
-    h += '<div class="rot" style="margin-bottom:12px">More below · how it works, your profile, the hall of fame</div>';
+    h += '<div class="landmore scroll"><div class="landchevron">⌄</div>';
     h += '<div class="landcols">';
 
     h += '<div class="lcL">';
-    h += '<div class="rot" style="margin-bottom:8px">The game, layer by layer</div>';
-    h += capaHtml(48, '#5aa9f0', 'The month · your turn',
+    h += '<div class="h2">How it works</div>' +
+      '<div class="pq mut" style="margin-bottom:6px">Five things happening at once, every month.</div>';
+    h += pasoHtml(1, '#5aa9f0', 'The month, your turn',
       'Place the team\'s points on stations — Discover, Platform, Reliability, Growth — or on ' +
       'backlog bets: probability × impact ÷ effort.');
-    h += capaHtml(32, '#35c46a', 'The job · one mandate',
+    h += pasoHtml(2, '#35c46a', 'The job, one mandate',
       'Move one number by a deadline. The stage — pre-PMF, validating, scaling — decides what pays; ' +
       'political capital, how far off-script you can go.');
-    h += capaHtml(16, '#e8a33d', 'The career · the ladder',
+    h += pasoHtml(3, '#e8a33d', 'The career, the ladder',
       'Eight rungs, Product Analyst to Founder. Rungs unlock levers, reputation opens tables, and ' +
       'equity — worth something or nothing — makes the fortune.');
-    h += capaHtml(0, '#a98ff0', 'The world · the board',
+    h += pasoHtml(4, '#a98ff0', 'The world, the board',
       'Eras rewrite the rules without warning: bubbles, winters, regulators. Sectors heat and freeze. ' +
       'A rival climbs the same ladder, on the same clock.');
-    h += capaHtml(0, '#7fa8d8', 'The library · the receipts',
+    h += pasoHtml(5, '#7fa8d8', 'The library, the receipts',
       LIBROS.length + ' real product books power the rules. Every mistake gets charged first — ' +
       'then the exact card that predicted it opens.');
 
-    h += '<div class="caja2" style="margin-top:12px"><div class="rot" style="margin-bottom:5px">Who are you? <span class="mut" style="text-transform:none;letter-spacing:0">(optional — you can always start from zero)</span></div>' +
+    h += '<div class="caja2" style="margin-top:14px"><div class="rot" style="margin-bottom:5px">Who are you? <span class="mut" style="text-transform:none;letter-spacing:0">(optional — you can always start from zero)</span></div>' +
       '<input type="text" id="perfil-in" placeholder="Paste your LinkedIn URL or your current title..." ' +
       'value="' + esc(inicioSel.texto || '') + '">' +
       '<input type="text" id="nombre-in" placeholder="Your name (or we\'ll take it from the URL)" ' +
@@ -410,7 +423,10 @@
     h += '</div>'; /* lcL */
 
     h += '<div class="lcR">';
-    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Hall of records</div>';
+    h += '<div class="h2">Hall of Fame</div>' +
+      '<div class="pq mut" style="margin-bottom:6px">Your best runs, everyone\'s achievements, one public leaderboard.</div>';
+
+    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Your records</div>';
     if (R.records.carreras > 0) {
       h += '<div class="req"><span class="mut">Careers played</span> <b class="num"> ' + R.records.carreras + '</b></div>' +
            '<div class="req"><span class="mut">Best net worth</span> <b class="num verde"> ' + money(R.records.patrimonio) + '</b></div>' +
@@ -424,9 +440,8 @@
     } else {
       h += '<div class="pq mut">Nobody\'s played yet. Records live here.</div>';
     }
+    h += '<div class="pq" style="margin-top:8px"><span class="linklike" data-act="ranking">See the public ranking →</span></div>';
     h += '</div>';
-
-    h += '<span class="btn sec" data-act="ranking" style="margin-bottom:10px">Hall of Fame · public ranking</span>';
 
     var items = '', k, n = 0;
     for (k = 0; k < Logros.DEFS.length; k++) {
@@ -435,8 +450,8 @@
       items += '<div class="req ' + (ok ? 'verde' : 'mut') + '" style="' + (ok ? '' : 'opacity:0.45') + '">' +
            (ok ? '★ ' : '☆ ') + esc(d.n) + ' <span class="mut" style="font-size:11px">— ' + esc(d.d) + '</span></div>';
     }
-    h += '<div class="rot" style="margin:4px 0 6px 0">Achievements · ' + n + ' of ' + Logros.DEFS.length + '</div>';
-    h += items;
+    h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:6px">Achievements · ' +
+      n + ' of ' + Logros.DEFS.length + '</div>' + items + '</div>';
     h += '</div>'; /* lcR */
 
     h += '</div>'; /* landcols */
@@ -498,12 +513,14 @@
   function indBarra(nombre, valor, objetivo, mayorMejor) {
     var pasa = mayorMejor ? valor >= objetivo : valor <= objetivo;
     var cls = pasa ? 'ok' : 'no';
+    var estado = pasa ? 'On track' : 'Not there yet';
+    var meta = mayorMejor ? ('needs ' + Math.round(objetivo) + '%') : ('must stay under ' + Math.round(objetivo) + '%');
     return '<div class="indicador">' +
       '<div class="ind-cab"><span class="ind-nom">' + esc(nombre) + '</span>' +
-      '<span class="ind-val ' + cls + '">' + Math.round(valor) + '%</span></div>' +
+      '<span class="ind-badge ' + cls + '">' + estado + '</span></div>' +
       '<div class="ind-track"><i class="ind-fill ' + cls + '" style="width:' + Math.max(0, Math.min(100, valor)) + '%"></i>' +
       '<i class="ind-obj" style="left:' + Math.max(0, Math.min(100, objetivo)) + '%"></i></div>' +
-      '<div class="ind-meta">' + (mayorMejor ? 'target ' : 'ceiling ') + Math.round(objetivo) + '% to clear this stage</div></div>';
+      '<div class="ind-meta"><b class="' + cls + '">' + Math.round(valor) + '%</b> now · ' + meta + ' to clear this stage</div></div>';
   }
 
   function mostrarBrief() {
@@ -534,26 +551,25 @@
     var i, k, nec;
     h += '<div style="display:-webkit-flex;display:flex;margin-top:8px">';
     h += '<div style="width:470px;padding-right:26px">';
-    h += '<div class="rot" style="margin-bottom:6px">What pays off at this stage</div><div>';
+    h += '<div class="rot" style="margin-bottom:6px">Bets that count double toward your mandate</div><div>';
     for (i = 0; i < J.prima.length; i++) {
       nec = null;
       for (k = 0; k < NECESIDADES.length; k++) if (NECESIDADES[k].id === J.prima[i]) nec = NECESIDADES[k];
-      if (nec) h += '<span class="tagobj up">▲ ' + esc(nec.nombre) + '</span>';
+      if (nec) h += '<span class="tagobj up">▲ ' + esc(nec.nombre) + ' <b>×1.3</b></span>';
     }
     h += '</div>';
     if (J.castiga.length) {
-      h += '<div class="rot" style="margin:10px 0 6px 0">Barely matters yet</div><div>';
+      h += '<div class="rot" style="margin:10px 0 6px 0">Bets that barely count right now</div><div>';
       for (i = 0; i < J.castiga.length; i++) {
         nec = null;
         for (k = 0; k < NECESIDADES.length; k++) if (NECESIDADES[k].id === J.castiga[i]) nec = NECESIDADES[k];
-        if (nec) h += '<span class="tagobj down">▽ ' + esc(nec.nombre) + '</span>';
+        if (nec) h += '<span class="tagobj down">▽ ' + esc(nec.nombre) + ' <b>×0.5</b></span>';
       }
       h += '</div>';
     }
-    h += '<div class="pq mut" style="margin-top:8px">Bets marked ▲ push this goal: their real impact pays ×1.3. The ▽ ones pay half.</div>';
 
     /* indicators you actually have to move to clear this stage */
-    h += '<div class="rot" style="margin-top:14px;margin-bottom:2px">Indicators to move</div>';
+    h += '<div class="rot" style="margin-top:16px;margin-bottom:2px">What clears this stage</div>';
     h += '<div class="indicadores">';
     if (J.faseCorta === 'PRE-PMF') {
       h += indBarra('Product-market fit', Motor.fitMax(J) * 100, 50, true);
@@ -596,12 +612,14 @@
         '" and system load is at ' + Math.round(Motor.carga(J) * 100) + '%. Whatever\'s missing from that list IS your roadmap.';
     }
     h += '<div class="teoria-caso" style="margin-top:10px">' +
-         '<div class="rot" style="margin-bottom:4px">Where this stage comes from</div>' +
+         '<div class="rot" style="margin-bottom:4px">The playbook this stage follows</div>' +
          '<div class="pq" style="line-height:1.5">' + teo + '</div>' +
-         '<div class="pq caso-linea">' + caso + '</div></div>';
+         '<div class="rot" style="margin:10px 0 4px 0">' + esc(J.empresa) + ', right now</div>' +
+         '<div class="pq caso-linea" style="border-top:none;margin-top:0;padding-top:0">' + caso + '</div></div>';
     h += '</div>';
 
-    h += '<div style="width:400px"><div class="rot" style="margin-bottom:8px">Who you\'ll be working with</div>';
+    h += '<div style="width:400px"><div class="rot" style="margin-bottom:4px">Who you\'ll be working with</div>' +
+      '<div class="pq mut" style="margin-bottom:10px">They can help you land the ▲ bets above — or block them.</div>';
     var elencoKeys = ['ceo','cto','ventas','estrella'];
     for (i = 0; i < elencoKeys.length; i++) {
       var per = J.elenco[elencoKeys[i]];

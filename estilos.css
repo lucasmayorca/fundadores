@@ -83,11 +83,16 @@ html, body {
 .skycol { cursor:pointer; }
 .skybar { -webkit-transition:fill .15s ease, stroke .15s ease; transition:fill .15s ease, stroke .15s ease; }
 .skyhint { margin-top:7px; font-size:11px; color:#5b6472; text-align:center; }
+.hook { font-size:20px; font-weight:500; line-height:1.32; color:#dbe4f0; }
+.linklike { color:#7fa8d8; cursor:pointer; padding:4px 2px; }
+.linklike:active { opacity:0.6; }
 .landmore { -webkit-flex:1; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
-  padding:14px 40px 30px 40px; border-top:1px solid #171b23; }
+  padding:6px 40px 30px 40px; border-top:1px solid #171b23; position:relative; }
+.landchevron { text-align:center; color:#3c434f; font-size:15px; margin-bottom:6px; }
 .landcols { display:-webkit-flex; display:flex; }
 .landcols .lcL { width:552px; padding-right:24px; }
 .landcols .lcR { width:368px; }
+.landcols .h2 { margin-bottom:3px; }
 
 .tarjetas { display:-webkit-flex; display:flex; margin-top:20px; }
 .oferta {
@@ -297,6 +302,9 @@ html, body {
   background:#141c14; border:1px solid #234023; color:#8fd39a; }
 .tagobj.down { background:#1a1717; border-color:#2e2626; color:#8b7f7f; }
 .tagobj.mini { padding:1px 5px; margin:0 0 0 6px; font-size:10px; }
+.tagobj b { margin-left:5px; font-weight:700; }
+.tagobj.up b { color:#4ade7c; }
+.tagobj.down b { color:#a89a9a; }
 .hot2 { color:#e8a33d; } .frio2 { color:#5aa9f0; }
 
 /* ---------- ficha de mision estilo GTA ---------- */
@@ -317,6 +325,9 @@ html, body {
 .indicador .ind-nom { color:#c3c9d3; }
 .indicador .ind-val { font-weight:700; }
 .indicador .ind-val.ok { color:#35c46a; } .indicador .ind-val.no { color:#e2564a; }
+.ind-badge { font-size:10px; font-weight:700; letter-spacing:0.3px; padding:2px 8px; border-radius:9px; border:1px solid; }
+.ind-badge.ok { color:#35c46a; background:#0f1d14; border-color:#1c3a26; }
+.ind-badge.no { color:#e2564a; background:#1d1010; border-color:#3a1c1c; }
 .ind-track { position:relative; height:8px; background:#191d25; border-radius:4px; overflow:visible; }
 .ind-track .ind-fill { position:absolute; left:0; top:0; height:8px; border-radius:4px;
   background:#2f6fd0; display:block; }
@@ -324,6 +335,7 @@ html, body {
 .ind-track .ind-obj { position:absolute; top:-3px; width:2px; height:14px; background:#fff;
   opacity:0.85; }
 .ind-meta { margin-top:3px; font-size:10.5px; color:#6c7685; }
+.ind-meta b.ok { color:#35c46a; } .ind-meta b.no { color:#e2564a; }
 
 /* ---------- teoría aplicada al caso ---------- */
 .teoria-caso { margin-top:12px; padding:11px 14px; background:#10151d; border:1px solid #1e2a3c;
@@ -434,12 +446,6 @@ html, body {
 .facbar { height:14px; border-radius:7px; overflow:hidden; background:#20242e;
   display:-webkit-flex; display:flex; margin:4px 0; }
 .facbar i { display:block; height:100%; }
-
-/* ---------- landing: el juego por capas ---------- */
-.capa { padding:5px 11px 6px 11px; margin-bottom:4px; border-left:3px solid #2a313d;
-  border-radius:0 8px 8px 0; background:#10141b; }
-.capa .cn { font-size:10px; letter-spacing:1.4px; text-transform:uppercase; font-weight:700; }
-.capa .ct { font-size:12px; line-height:1.35; color:#9aa3b2; margin-top:2px; }
 
 /* ---------- vector de métricas y funnel ---------- */
 .vchip { display:inline-block; padding:2px 7px; margin-right:5px; border-radius:6px;
