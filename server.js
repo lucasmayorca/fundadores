@@ -562,14 +562,36 @@ http.createServer(function (req, res) {
     res.writeHead(403);
     return res.end('Forbidden');
   }
-  fs.readFile(archivo, function (err, datos) {
-    if (err) {
+  /* Cache por validacion, no por nombre de archivo: el navegador pregunta
+     "¿cambio?" y el servidor contesta 304 si no. Por eso los <script> de
+     index.html ya NO llevan ?v=N: ese contador obligaba a tocar las mismas 10
+     lineas en cada cambio y era el conflicto garantizado de todo PR.
+     Ver CONTRIBUTING.md. */
+  fs.stat(archivo, function (errS, st) {
+    if (errS || !st.isFile()) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       return res.end('Not found');
     }
     var ext = path.extname(archivo).toLowerCase();
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
-    res.end(datos);
+    var etag = '"' + st.size.toString(16) + '-' + st.mtime.getTime().toString(16) + '"';
+    var inmutable = ext === '.png' || ext === '.ico' || ext === '.svg';
+    var cabeceras = {
+      'Content-Type': MIME[ext] || 'application/octet-stream',
+      'ETag': etag,
+      'Cache-Control': inmutable ? 'public, max-age=86400' : 'no-cache'
+    };
+    if (req.headers['if-none-match'] === etag) {
+      res.writeHead(304, cabeceras);
+      return res.end();
+    }
+    fs.readFile(archivo, function (err, datos) {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        return res.end('Not found');
+      }
+      res.writeHead(200, cabeceras);
+      res.end(datos);
+    });
   });
 }).listen(PORT, '0.0.0.0', function () {
   console.log('Founders listening on port ' + PORT);

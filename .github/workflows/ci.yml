@@ -1,0 +1,22 @@
+# Corre en cada PR y en cada push a main. Es el chequeo obligatorio que protege
+# main: si esto falla, el PR no se puede mergear.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  humo:
+    name: Test de humo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Sintaxis de cada archivo
+        run: for f in *.js; do node --check "$f" || exit 1; done
+      - name: Test de humo
+        run: node test/humo.js

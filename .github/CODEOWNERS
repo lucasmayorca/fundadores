@@ -1,0 +1,32 @@
+# Quién revisa qué. GitHub pide automáticamente la review del dueño del archivo.
+#
+# COMPLETAR: cambiá @lucasmayorca por el usuario de GitHub de cada carril cuando
+# se sumen las otras dos personas. Los tres usuarios tienen que tener acceso de
+# escritura al repo (Settings -> Collaborators).
+
+# Por defecto, todo lo revisa Lucas.
+*                   @lucasmayorca
+
+# Carril CONTENIDO — el mundo del juego: sectores, empresas, apuestas, dilemas, libros.
+/sectores.js        @lucasmayorca
+/libros.js          @lucasmayorca
+/contenido.js       @lucasmayorca
+
+# Carril MOTOR — la simulación y el balance.
+/motor.js           @lucasmayorca
+/carrera.js         @lucasmayorca
+/mundo.js           @lucasmayorca
+/logros.js          @lucasmayorca
+
+# Carril INTERFAZ / PLATAFORMA — lo que se ve y lo que sirve.
+/ui.js              @lucasmayorca
+/estilos.css        @lucasmayorca
+/index.html         @lucasmayorca
+/server.js          @lucasmayorca
+/ranking.js         @lucasmayorca
+
+# Infraestructura compartida: la revisa el dueño del repo.
+/.github/           @lucasmayorca
+/test/              @lucasmayorca
+/CONTRIBUTING.md    @lucasmayorca
+/package.json       @lucasmayorca
