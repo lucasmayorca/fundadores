@@ -291,7 +291,7 @@
     return out;
   }
 
-  var inicioSel = { nivel:0, rol:'Analista de Producto', nombre:null, deLinkedin:null, buscando:false };
+  var inicioSel = { nivel:0, rol:'Analista de Producto', nombre:null, deLinkedin:null, buscando:false, modo:'manual' };
 
   /* En el deploy público, el servidor puede leer la página PÚBLICA de LinkedIn
      y darnos nombre + titular (/api/perfil). En el servidor LAN del iPad ese
@@ -436,17 +436,34 @@
     h += '<div class="landright"><div class="skycard">' + skylineSvg(inicioSel.nivel) +
       '<div class="skyhint">Toca un edificio para elegir tu escalón</div>';
     h += '<div class="skyform"><div class="rot" style="margin-bottom:5px">¿Quién eres? ' +
-      '<span class="mut" style="text-transform:none;letter-spacing:0">(opcional)</span></div>' +
-      '<input type="text" id="perfil-in" placeholder="Pega tu URL de LinkedIn o tu cargo actual..." ' +
-      'value="' + esc(inicioSel.texto || '') + '">' +
-      '<div class="rot" style="margin:9px 0 4px 0">¿De dónde vienes?</div><div>' + (function () {
+      '<span class="mut" style="text-transform:none;letter-spacing:0">(opcional)</span></div>';
+    h += '<div style="margin-bottom:9px">' +
+      '<span class="rolchip' + (inicioSel.modo !== 'linkedin' ? ' sel' : '') + '" data-modo="manual">Configurar manual</span>' +
+      '<span class="rolchip' + (inicioSel.modo === 'linkedin' ? ' sel' : '') + '" data-modo="linkedin">Pegar mi LinkedIn</span></div>';
+    if (inicioSel.modo === 'linkedin') {
+      h += '<input type="text" id="perfil-in" placeholder="Pega tu URL de LinkedIn..." ' +
+        'value="' + esc(inicioSel.texto || '') + '">';
+      h += '<div class="pq mut" style="margin-top:7px">' +
+        (inicioSel.buscando ? '<span class="azul">Leyendo tu perfil…</span>' :
+         inicioSel.nombre || inicioSel.deLinkedin ?
+           '<span class="verde">Detectado:</span> ' + (inicioSel.nombre ? esc(inicioSel.nombre) : 'perfil encontrado') +
+           (inicioSel.deLinkedin && inicioSel.deLinkedin !== 'perfil encontrado' ? ' — ' + esc(inicioSel.deLinkedin) : '') +
+           ' · escalón <b>' + esc(nivelPorN(inicioSel.nivel).rol) + '</b>' :
+         'Leemos tu nombre y cargo para ubicarte en el escalón correcto — lo podés ajustar arriba en cualquier momento.') +
+        '</div>';
+    } else {
+      h += '<input type="text" id="nombre-in" placeholder="Tu nombre (opcional)" ' +
+        'value="' + esc(inicioSel.nombre || '') + '">';
+      h += '<div class="rot" style="margin:9px 0 4px 0">¿De dónde vienes?</div><div>' + (function () {
         var BGS = [['product','Producto'],['design','Diseño'],['eng','Ingeniería'],['biz','Negocio'],['data','Datos']];
         var hb = '';
         for (var bi = 0; bi < BGS.length; bi++) {
           hb += '<span class="rolchip' + ((inicioSel.bg || 'product') === BGS[bi][0] ? ' sel' : '') + '" data-bg="' + BGS[bi][0] + '">' + BGS[bi][1] + '</span>';
         }
         return hb;
-      })() + '</div></div>';
+      })() + '</div>';
+    }
+    h += '</div>';
     h += '</div></div>'; /* skycard, landright */
     h += '</div></div>'; /* landtop, landhero */
 
@@ -473,17 +490,13 @@
       LIBROS.length + ' libros reales de producto alimentan las reglas. Cada error se cobra primero — ' +
       'y después se abre la tarjeta exacta que lo predijo.');
 
-    h += '<div class="caja2" style="margin-top:14px"><div class="rot" style="margin-bottom:5px">¿Cómo te llamamos? ' +
-      '<span class="mut" style="text-transform:none;letter-spacing:0">(opcional — lo tomamos de LinkedIn si no lo dices)</span></div>' +
-      '<input type="text" id="nombre-in" placeholder="Tu nombre" ' +
-      'value="' + esc(inicioSel.nombreManual ? (inicioSel.nombre || '') : '') + '"></div>';
-
     var fac = Ranking.faccion();
-    h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:5px">Elige un bando</div>' +
+    h += '<div class="caja2" style="margin-top:14px"><div class="rot" style="margin-bottom:5px">Bando ' +
+      '<span class="mut" style="text-transform:none;letter-spacing:0">(opcional, para el ranking público)</span></div>' +
+      '<div class="pq mut" style="margin-bottom:7px">No cambia cómo jugás: solo suma tus mandatos cumplidos al ' +
+      'marcador de tu bando en el Salón de la Fama.</div>' +
       '<span class="rolchip' + (fac === 'growth' ? ' sel' : '') + '" data-fac="growth">Legión del Crecimiento</span>' +
-      '<span class="rolchip' + (fac === 'craft' ? ' sel' : '') + '" data-fac="craft">Gremio del Oficio</span>' +
-      '<div class="pq mut" style="margin-top:6px">Cada carrera terminada — la tuya incluida — suma sus mandatos ' +
-      'cumplidos al total de tu facción en el ranking público.</div></div>';
+      '<span class="rolchip' + (fac === 'craft' ? ' sel' : '') + '" data-fac="craft">Gremio del Oficio</span></div>';
 
     h += '<div class="pq mut" style="margin-top:10px;max-width:540px">Desafío semanal: todos juegan el mismo ' +
       'mundo esta semana (' + esc(Ranking.semana()) + ') — mismas eras, mismas tormentas, mismo timing del rival. Una tabla ' +
@@ -1793,6 +1806,15 @@
 
   document.addEventListener('click', function (ev) {
     var t = ev.target, v;
+
+    v = attr(t, 'data-modo');
+    if (v !== null && !J) {
+      var inpN3 = $('nombre-in'); if (inpN3 && inpN3.value) { inicioSel.nombre = inpN3.value; inicioSel.nombreManual = true; }
+      var inpU3 = $('perfil-in'); if (inpU3) inicioSel.texto = inpU3.value;
+      inicioSel.modo = v;
+      renderInicio();
+      return;
+    }
 
     v = attr(t, 'data-bg');
     if (v !== null && !J) {
