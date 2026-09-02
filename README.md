@@ -19,31 +19,40 @@ ascenso, renovación, despido... o imputación.
 inglés — Founder Mode, como el ensayo de Paul Graham — igual que los títulos
 de los libros de la biblioteca, que son el canon.
 
-## Publicar cambios — SIEMPRE en todas partes
+## Publicar cambios
 
-El juego vive en una sola carpeta pero se despliega en **tres lugares**, y un
-cambio no está terminado hasta que llegó a los tres:
+Somos tres trabajando en paralelo, así que nada entra directo a `main`: todo
+pasa por una rama corta y un Pull Request. El detalle completo — qué archivos
+son de cada carril, cómo se nombran las ramas y dónde un cambio tuyo puede
+romperle el día al de al lado — está en [CONTRIBUTING.md](CONTRIBUTING.md).
+
+El ciclo, entero:
+
+```bash
+git checkout main && git pull
+git checkout -b feat/<carril>/<tema>     # contenido | motor | ui
+# ... trabajas ...
+npm test                                 # 49 pruebas, sin dependencias
+git add -A && git commit -m "qué cambió" && git push -u origin HEAD
+gh pr create --fill
+```
+
+Con el CI en verde y la aprobación del dueño del archivo: **Squash and merge**.
+Eso es el deploy — Railway publica solo lo que entra a `main`.
 
 | Lugar | Quién lo ve | Cómo se actualiza |
 |---|---|---|
-| Servidor del panel (Mac/iPad) | tú, en casa | solo — sirve esta carpeta directamente |
-| GitHub (`lucasmayorca/fundadores`) | el código público | `git push` |
-| Railway (link público) | cualquiera en internet | `railway up` |
+| Tu máquina | vos, mientras trabajás | `npm start` → localhost:3000 |
+| GitHub | el código | el PR mergeado a `main` |
+| Railway | cualquiera en internet | automático al entrar a `main` |
 
-La checklist para CADA cambio, sin excepciones:
+Dos cosas que **ya no** hay que hacer, y que antes eran obligatorias:
 
-1. Sube el `?v=N` en `index.html` (revienta las cachés del navegador y de Railway).
-2. Commit, push y deploy:
-
-```bash
-git add -A && git commit -m "qué cambió" && git push && railway up --detach
-```
-
-Si te saltas el `git push`, GitHub se vuelve un mentiroso; si te saltas
-`railway up`, el link público sirve el juego viejo. Railway **no** se
-despliega solo con el push (los deploys van por la CLI, no está conectado al
-repo) — si algún día se conecta desde el dashboard de Railway, el
-`railway up` se vuelve redundante, pero hasta entonces haces los dos.
+- **Subir el `?v=N` de `index.html`.** Ya no existe. El servidor maneja el caché
+  por validación (`ETag` + `no-cache`), así que el navegador se entera solo de
+  qué cambió. Eran diez líneas que todo cambio tenía que tocar: el conflicto
+  garantizado de cualquier trabajo en paralelo. El test de humo falla si vuelve.
+- **Correr `railway up` a mano.** El deploy sale de `main`, no de tu máquina.
 
 ## Restricciones técnicas
 
@@ -344,7 +353,7 @@ Todo corre con SVG inline + CSS, sin dependencias nuevas. Orden de trabajo:
 ## Archivos
 
 ```
-index.html     shell + metas de web app (script tags con ?v=N)
+index.html     shell + metas de web app (sin ?v=N: el caché es del servidor)
 estilos.css    tema oscuro, flexbox con prefijos, animaciones -webkit-,
                y al final el bloque `body.movil` con el layout de teléfono
 libros.js      100 tarjetas + gatillos contextuales + APLICAR (caso en vivo)
@@ -358,7 +367,10 @@ logros.js      logros y récords (localStorage, entre carreras)
 ranking.js     cliente del ranking público: token, semilla semanal, envíos, rival
 ui.js          render + un solo manejador de clicks delegado
 server.js      servidor de Railway: estáticos + /api/perfil + API de ranking + /ranking
-icono.png      generado por scripts/make_icono_juego.py
+icono.png      generado por make_icono.py
+test/humo.js   49 pruebas sin dependencias — lo que corre el CI en cada PR
+CONTRIBUTING.md  los tres carriles, las ramas y los contratos entre módulos
+.github/       CI, CODEOWNERS y la plantilla de PR
 ```
 
 Motor, Carrera y Mundo nunca tocan el DOM: cargan en node para simular
