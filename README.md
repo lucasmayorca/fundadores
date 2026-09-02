@@ -9,8 +9,13 @@ de este repo (`npm start` para correrlo en local).
 
 Empiezas como Analista de Producto y saltas de startup en startup — como la
 carrera de Soccer Superstar — hasta CPO o hasta fundar lo tuyo. Cada puesto
-dura 8-14 meses, te contratan con un **mandato**, y al final te juzgan:
+dura 8-14 meses, te contratan con un **mandato** (que recién conoces el día
+uno: en la entrevista nunca te dicen el trabajo real), y al final te juzgan:
 ascenso, renovación, despido... o imputación.
+
+**Todo el juego está en español latinoamericano** (v23). La marca queda en
+inglés — Founder Mode, como el ensayo de Paul Graham — igual que los títulos
+de los libros de la biblioteca, que son el canon.
 
 ## Publicar cambios — SIEMPRE en todas partes
 
@@ -87,8 +92,30 @@ donde cada punto está contado:
    Integr/Support/Security marcan la compuerta del mercado grande. Entregar
    libera el slot. Construcción de motor, estilo The Founder: cada proyecto
    agranda la máquina.
-3. **Cierra el mes** y lee qué pasó (impacto real vs esperado, más lo que
-   otorgó cada proyecto entregado).
+3. **Cierra el mes** ("Construyendo…") y lee qué pasó: el resultado abre
+   con el delta de tu mandato (93% → 95% · objetivo 88%) y cada entrega
+   muestra su impacto real contra el esperado, chip por chip.
+
+**Las métricas pirata son la columna vertebral (AARRR de Dave McClure).**
+Cada proyecto lleva un vector de impacto esperado sobre ACQ/ACT/RET/REV/REL
+— positivo o NEGATIVO (la superficie nueva cuesta confiabilidad, la
+complejidad cuesta activación) — y el chip de la métrica de tu mandato
+brilla en cada tarjeta. El panel EMBUDO muestra Adquisición → Activación →
+Retención → Ingresos → **Ganancia** → Referidos: los números con los que se
+decide. El panel RECURSOS (caja, runway, valoración, capital político,
+reputación) completa el tablero.
+
+**Los dilemas son ocasionales, no un impuesto mensual** (~39% de los meses):
+los críticos (allanamientos, congelamiento por presupuesto de error) siempre
+salen; el resto respeta un enfriamiento y una memoria de carrera — las
+lecciones de una sola vez no se repiten, y las frecuentes llegan con pieles
+distintas por empresa. Un reclutador puede tentarte a mitad de mandato:
+irte con el plan encaminado es ambición; atrasado, te persigue.
+
+**La pista de Edad** marca tu progresión (APM → … → Fndr) y qué desbloquea
+el siguiente escalón; los **retos** de la semana y las contingencias estilo
+The Founder (robo de datos, notas demoledoras, caídas del proveedor,
+barridas regulatorias) mantienen el mes vivo.
 
 ## El briefing y las etapas (teoría de PMF)
 
@@ -177,11 +204,13 @@ encuentran algo, **imputación** (−22 reputación, −2 niveles). La tentació
 siempre es la primera opción y siempre paga hoy: en bots, jugar sucio
 termina en ~$6.8M y limpio en ~$16.6M.
 
-## La biblioteca: 100 tarjetas
+## La biblioteca: 105 tarjetas
 
-8 pilares: startup (19), producto (24), tech (13), YC/ensayos (12),
-growth (10), capital (5), gente (9), historias (8). Las 20 canónicas están
-cableadas a mecánicas; las otras 80 tienen un **gatillo contextual**
+9 pilares: startup (19), producto (24), tecnología (13), YC/ensayos (12),
+growth (10), capital (5), gente (9), historias de guerra (8) y **La Calle**
+(5: El Príncipe, Las 48 leyes del poder, El arte de la guerra, Pitch
+Anything, El Padrino). Las 20 canónicas están cableadas a mecánicas; el
+resto tiene un **gatillo contextual**
 (runway < 7 → *Default Alive or Default Dead?*; Lupa ≥ 60 → *Bad Blood*;
 despido → *Chaos Monkeys*). Máximo 2 por mes. Una carrera abre ~71;
 completarla exige estilos de juego distintos entre carreras.
