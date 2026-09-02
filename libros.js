@@ -1,6 +1,6 @@
 /* Biblioteca: los libros que el juego usa como modelo mental.
    Cada ficha explica el concepto en mis palabras y dice cómo lo simula el motor.
-   ES5 estricto (Safari 9). */
+   Sin build ni dependencias. */
 
 var LIBROS = [
 
@@ -940,7 +940,7 @@ function fichasNuevas(e, c) {
 /* ================================================================
    Aplicado a tu caso: cada función toma el puesto actual y
    devuelve la teoría aplicada a TUS números de hoy. Se muestra al
-   abrir una ficha y al decidir un dilema. ES5 estricto.
+   abrir una ficha y al decidir un dilema. Sin build ni dependencias.
    ================================================================ */
 var APLICAR = {
 

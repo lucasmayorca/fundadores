@@ -2,11 +2,12 @@
 
 **Juégalo aquí: https://fundadores-production.up.railway.app/**
 
-Juego de carrera para el navegador, construido originalmente para un iPad 3
-(iOS 9.3.5), y por eso corre en cualquier cosa — incluido el teléfono, que
-tiene su propio layout (ver *En el teléfono*). En casa lo sirve el servidor
-del panel (`localhost:8000/juego/`); en internet, Railway con el `server.js`
-de este repo (`npm start` para correrlo en local).
+Juego de carrera para el navegador. Nació para un iPad 3 (iOS 9.3.5) y por
+eso corre en cualquier cosa, pero **hoy el objetivo es Mac y teléfono** — el
+iPad ya no condiciona las decisiones técnicas (ver *Restricciones técnicas*).
+El teléfono tiene su propio layout (ver *En el teléfono*). En casa lo sirve
+el servidor del panel (`localhost:8000/juego/`); en internet, Railway con el
+`server.js` de este repo (`npm start` para correrlo en local).
 
 Empiezas como Analista de Producto y saltas de startup en startup — como la
 carrera de Soccer Superstar — hasta CPO o hasta fundar lo tuyo. Cada puesto
@@ -31,7 +32,7 @@ cambio no está terminado hasta que llegó a los tres:
 
 La checklist para CADA cambio, sin excepciones:
 
-1. Sube el `?v=N` en `index.html` (revienta las cachés del iPad y de Railway).
+1. Sube el `?v=N` en `index.html` (revienta las cachés del navegador y de Railway).
 2. Commit, push y deploy:
 
 ```bash
@@ -44,17 +45,33 @@ despliega solo con el push (los deploys van por la CLI, no está conectado al
 repo) — si algún día se conecta desde el dashboard de Railway, el
 `railway up` se vuelve redundante, pero hasta entonces haces los dos.
 
-## Restricciones técnicas (las mismas del panel)
+## Restricciones técnicas
 
-iOS 9.3.5 / Safari 9: ES5 puro (nada de `let`/`const`, arrows, template
-literals, `class` ni `fetch`), flexbox con prefijos `-webkit-`, sin build,
-sin dependencias. Todo el estado en `localStorage`.
-Los script tags llevan `?v=N` para reventar caché: **sube el número cada
-vez que toques cualquier archivo**.
+**El iPad 3 dejó de ser un objetivo (decidido en septiembre de 2026).** El
+juego se juega sobre todo en Mac y en el teléfono, así que Safari 9 ya no
+manda: usá recursos modernos sin pedir permiso — CSS actual (variables,
+grid, `filter`, `backdrop-filter`, animaciones y transiciones sin prefijar),
+JS actual (`let`/`const`, arrows, template literals, `class`, `fetch`),
+SVG/Canvas/WebGL, tipografías web, lo que haga falta para que se vea bien.
+Si algo se ve mejor y cuesta la compatibilidad con el iPad 3, se hace.
 
-El lienzo sigue siendo de **1024×768**, escalado y centrado al viewport — en
-el iPad 3 la escala cae exacto en 1. Los teléfonos son la excepción: ahí el
-lienzo suelta el tamaño fijo (ver abajo).
+Lo que se mantiene, pero por decisión propia y no por compatibilidad:
+
+- **Sin build y sin dependencias**: los archivos se sirven tal cual. Es lo
+  que hace que desplegar sea copiar una carpeta.
+- **Todo el estado del jugador en `localStorage`** (el ranking público vive
+  en el servidor).
+- **Los script tags llevan `?v=N`**: subí el número cada vez que toques
+  cualquier archivo, o las cachés sirven el juego viejo.
+- **Motor, Carrera y Mundo no tocan el DOM**, para poder cargarlos en node y
+  balancear el juego con bots.
+
+El código que ya está escrito sigue en ES5 con prefijos `-webkit-`: funciona,
+así que no hay que reescribirlo por deporte — pero el código nuevo no tiene
+por qué imitarlo.
+
+El lienzo sigue siendo de **1024×768**, escalado y centrado al viewport, y
+por debajo de 700px de lado corto entra el modo móvil (ver abajo).
 
 ## En el teléfono
 
@@ -312,8 +329,7 @@ Diagnóstico y propuesta, comparando contra 100 juegos de habilidades y eras
 Dungeon, Duolingo, GTA...): **[La Identidad Visual de Founder
 Mode](https://claude.ai/code/artifact/eca128b7-1e51-4b1f-8f59-59117f587fc2)**.
 
-Todo corre con SVG inline + CSS — cero dependencias nuevas, compatible con
-Safari 9. Orden de trabajo:
+Todo corre con SVG inline + CSS, sin dependencias nuevas. Orden de trabajo:
 
 1. **Ahora**: tira de eras con ícono propio y glow en la activa (`#era`);
    elenco con silueta por rol y marco de color por postura (ayuda/bloquea)

@@ -1,4 +1,4 @@
-/* Interfaz del modo carrera. ES5 estricto para Safari 9.
+/* Interfaz del modo carrera. Sin build ni dependencias.
    Un solo manejador de clicks delegado. Motor/Carrera/Mundo nunca tocan el DOM. */
 (function () {
   'use strict';
@@ -872,7 +872,8 @@
         icpTxt += ' <span class="mut">· ' + resto.join(' · ') + '</span>';
       }
     }
-    h += '<div class="caja2" style="margin-top:10px">' +
+    h += '<div class="seccion-tit">La empresa, hoy</div>';
+    h += '<div class="caja2">' +
       '<div class="rot" style="margin-bottom:4px">A qué se dedica ' + esc(J.empresa) + '</div>' +
       '<div class="pq">' + (emp2 ? esc(emp2.pitch) + ' ' : '') + (sec2 ? esc(sec2.desc) : '') + '</div>' +
       '<div class="rot" style="margin:10px 0 4px 0">A quién le vende hoy</div>' +
@@ -891,6 +892,7 @@
     var i, k, nec;
     h += '<div class="dosc" style="display:-webkit-flex;display:flex;margin-top:8px">';
     h += '<div class="colx" style="width:470px;padding-right:26px">';
+    h += '<div class="seccion-tit">Qué importa esta etapa</div>';
     h += '<div class="rot" style="margin-bottom:6px">Apuestas que cuentan doble para tu mandato</div><div>';
     for (i = 0; i < J.prima.length; i++) {
       nec = null;
@@ -958,7 +960,8 @@
          '<div class="pq caso-linea" style="border-top:none;margin-top:0;padding-top:0">' + caso + '</div></div>';
     h += '</div>';
 
-    h += '<div class="colx" style="width:400px"><div class="rot" style="margin-bottom:4px">Con quiénes vas a trabajar</div>' +
+    h += '<div class="colx" style="width:400px"><div class="seccion-tit">Tu equipo</div>' +
+      '<div class="rot" style="margin-bottom:4px">Con quiénes vas a trabajar</div>' +
       '<div class="pq mut" style="margin-bottom:10px">Pueden ayudarte a aterrizar las apuestas ▲ de arriba — o bloquearlas.</div>';
     var elencoKeys = ['ceo','cto','ventas','estrella'];
     for (i = 0; i < elencoKeys.length; i++) {

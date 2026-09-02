@@ -1,5 +1,5 @@
 /* Contenido del juego: necesidades, segmentos, ideas, backlog y dilemas.
-   ES5 estricto (Safari 9). */
+   Sin build ni dependencias. */
 
 /* Las necesidades son el "trabajo por hacer" del cliente. Cada apuesta del
    backlog cubre una. Cada segmento exige un subconjunto distinto: ahí

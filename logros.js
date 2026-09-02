@@ -1,5 +1,5 @@
 /* Logros y salón de récords. Persisten entre carreras en localStorage.
-   ES5 estricto (Safari 9). */
+   Sin build ni dependencias. */
 
 var Logros = (function () {
   'use strict';

@@ -1,6 +1,6 @@
 /* Motor de simulación para un solo puesto. Un turno = un mes.
    Las leyes de los libros están integradas como física del mundo, no como texto.
-   ES5 estricto (Safari 9). Sin dependencias, nunca toca el DOM. */
+   Sin dependencias, nunca toca el DOM. */
 
 var Motor = (function () {
   'use strict';

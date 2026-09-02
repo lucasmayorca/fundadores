@@ -1,7 +1,7 @@
 /* Cliente del ranking público: identidad anónima (un token en localStorage),
    envío de carreras, las tablas del Salón de la Fama, el rival fantasma y la
    semilla semanal. Mejor esfuerzo por diseño: en la LAN o sin conexión cada
-   llamada falla en silencio y el juego nunca se bloquea. ES5 estricto (Safari 9). */
+   llamada falla en silencio y el juego nunca se bloquea. Sin build ni dependencias. */
 
 var Ranking = (function () {
   'use strict';

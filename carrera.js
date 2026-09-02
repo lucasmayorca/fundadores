@@ -1,5 +1,5 @@
 /* La carrera: ofertas, mandatos, ascensos, habilidades y equity con vesting.
-   Cada empresa es un puesto de 12 a 18 meses. ES5 estricto (Safari 9). */
+   Cada empresa es un puesto de 12 a 18 meses. Sin build ni dependencias. */
 
 var Carrera = (function () {
   'use strict';

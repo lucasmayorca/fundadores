@@ -1,4 +1,4 @@
-/* Sectores, empresas, escalafón profesional y mandatos. ES5 estricto (Safari 9).
+/* Sectores, empresas, escalafón profesional y mandatos. Sin build ni dependencias.
    Un sector define la física del mercado; una empresa define la etapa y la
    cultura; el escalafón define qué palancas llegas a tocar. */
 

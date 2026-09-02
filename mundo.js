@@ -1,6 +1,6 @@
 /* El mundo vivo: eras, ciclos por sector, noticias, el rival y el elenco.
    Age of Empires aporta las eras; NFS el rival; GTA el ticker y la gente.
-   ES5 estricto (Safari 9). */
+   Sin build ni dependencias. */
 
 var Mundo = (function () {
   'use strict';
