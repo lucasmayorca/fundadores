@@ -67,6 +67,9 @@ html, body {
 .pill.hot { color:#e8a33d; border-color:#4a3a1c; }
 .pill.frio { color:#5aa9f0; border-color:#1c2f44; }
 .pill.rojo { color:#e2564a; border-color:#442222; }
+.pill.nueva { color:#35c46a; border-color:#1c3a26; background:#0f1d14; text-transform:uppercase; letter-spacing:.5px; }
+.masdet { color:#5aa9f0; cursor:pointer; font-size:10.5px; margin-left:4px; }
+.masdet:active { opacity:.6; }
 
 /* ---------- INICIO / FINAL ---------- */
 #p-final, #p-cierre, #p-ofertas { padding:36px 48px; }

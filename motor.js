@@ -56,7 +56,7 @@ var Motor = (function () {
       evidencia:18 + (et.arq * 0.15), calidadDesc:0.7, sesgo:0.4,
       moral:72, foco:52, politico:clamp(50 + carrera.reputacion / 4, 20, 85),
 
-      cobertura:{}, impactos:{}, ruidos:{}, hechas:{}, enVuelo:{}, backlog:[],
+      cobertura:{}, impactos:{}, ruidos:{}, hechas:{}, enVuelo:{}, backlog:[], backlogNuevo:{},
       retos:[], fichasCap:0, historialImpacto:[],
       usuarios:{}, tam:{},
       competidor:{ fuerza:sec.competidor, atencion:0.05 + et.arq * 0.002 },
@@ -218,9 +218,43 @@ var Motor = (function () {
     while (e.backlog.length < 8 && pool.length) {
       var k = (i2++ < propias && propias > 0) ? 0 : Math.floor(Math.random() * pool.length);
       e.backlog.push(pool[k]);
+      if (!e.backlogNuevo) e.backlogNuevo = {};
+      e.backlogNuevo[pool[k]] = e.mesPuesto;
       pool.splice(k, 1);
       if (k === 0) propias--;
     }
+  }
+
+  /* Cada 2 meses, aunque nadie haya entregado nada, una apuesta libre (todavía
+     no empezada) del backlog se cambia por otra del pool: el mercado no
+     espera a que termines algo para moverse. */
+  function refrescarBacklogPeriodico(e) {
+    if (e.mesPuesto % 2 !== 0) return null;
+    var libres = [], i, id;
+    for (i = 0; i < e.backlog.length; i++) {
+      id = e.backlog[i];
+      if (!e.enVuelo || e.enVuelo[id] === undefined) libres.push(id);
+    }
+    if (!libres.length) return null;
+    var sec = sectorPorId(e.sectorId), pool = [], propias = 0;
+    for (i = 0; i < sec.apuestas.length; i++) {
+      id = sec.apuestas[i];
+      if (!e.hechas[id] && !e.enVuelo[id] && e.backlog.indexOf(id) < 0) { pool.push(id); propias++; }
+    }
+    for (i = 0; i < APUESTAS.length; i++) {
+      id = APUESTAS[i].id;
+      if (sec.apuestas.indexOf(id) >= 0) continue;
+      if (esDeOtroSector(id, sec)) continue;
+      if (!e.hechas[id] && !e.enVuelo[id] && e.backlog.indexOf(id) < 0) pool.push(id);
+    }
+    if (!pool.length) return null;
+    var saliente = libres[Math.floor(Math.random() * libres.length)];
+    var entrante = pool[propias > 0 ? 0 : Math.floor(Math.random() * pool.length)];
+    e.backlog.splice(e.backlog.indexOf(saliente), 1, entrante);
+    if (!e.backlogNuevo) e.backlogNuevo = {};
+    e.backlogNuevo[entrante] = e.mesPuesto;
+    delete e.backlogNuevo[saliente];
+    return { saliente:apuesta(saliente), entrante:apuesta(entrante) };
   }
 
   /* Challenges: objetivos secundarios y opcionales dentro del puesto. Reusan
@@ -262,6 +296,19 @@ var Motor = (function () {
     var t = 0;
     for (var i = 0; i < SEGMENTOS.length; i++) t += e.usuarios[SEGMENTOS[i].id] || 0;
     return Math.round(t);
+  }
+
+  /* tu ICP real hoy: qué % de la base actual es de cada segmento de Moore
+     (innovadores/visionarios/mayoría temprana/tardía), de mayor a menor */
+  function mixSegmentos(e) {
+    var tot = usuarios(e), out = [], i;
+    if (tot <= 0) return out;
+    for (i = 0; i < SEGMENTOS.length; i++) {
+      var v = e.usuarios[SEGMENTOS[i].id] || 0;
+      if (v > 0) out.push({ seg:SEGMENTOS[i], pct:v / tot });
+    }
+    out.sort(function (a, b) { return b.pct - a.pct; });
+    return out;
   }
 
   function nomina(e) { return e.ing * SAL_ING + e.prod * SAL_PROD + e.gtm * SAL_GTM; }
@@ -513,7 +560,7 @@ var Motor = (function () {
       e.ruidos[a.id] = rnd(-1, 1);
       delete e.hechas[a.id];
     }
-    e.backlog = []; e.enVuelo = {}; rellenarBacklog(e);
+    e.backlog = []; e.enVuelo = {}; e.backlogNuevo = {}; rellenarBacklog(e);
     e.moral -= 8;
     e.pivoteHecho = true;
     e.usuarios.visio = Math.round((e.usuarios.visio || 0) * 0.5);
@@ -830,6 +877,11 @@ var Motor = (function () {
       log.push({ tipo:'neutro', texto:'Trimestre nuevo: el presupuesto de error vuelve a 100.', libro:'sre' });
     }
     rellenarBacklog(e);
+    var refresco = refrescarBacklogPeriodico(e);
+    if (refresco) {
+      log.push({ tipo:'neutro', texto:'Nuevo en el backlog: "' + refresco.entrante.n +
+        '" — "' + refresco.saliente.n + '" perdió vigencia y salió de la lista.' });
+    }
 
     /* 11b. capacidades de la empresa: lo que la org acaba de construir solo se
        vuelve capacidad duradera cuando hay capital levantado financiándolo
@@ -979,7 +1031,7 @@ var Motor = (function () {
   return {
     nuevoPuesto:nuevoPuesto, simular:simular,
     capacidad:capacidad, capacidadPropia:capacidadPropia, desgloseCapacidad:desgloseCapacidad,
-    usuarios:usuarios, fit:fit, fitMax:fitMax, retencion:retencion, retencionMedia:retencionMedia,
+    usuarios:usuarios, mixSegmentos:mixSegmentos, fit:fit, fitMax:fitMax, retencion:retencion, retencionMedia:retencionMedia,
     carga:carga, capacidadSistema:capacidadSistema, burnMensual:burnMensual, runwayMeses:runwayMeses,
     nomina:nomina, infra:infra, calcularMrr:calcularMrr,
     estimacion:estimacion, estimacionDetalle:estimacionDetalle, costoDe:costoDe, comprometido:comprometido, confianza:confianza, requisitosGate:requisitosGate, compuerta:compuerta,

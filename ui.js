@@ -8,7 +8,7 @@
   var M = null;        /* mundo */
   var J = null;        /* puesto actual */
   var R = Logros.cargar();
-  var plan = null, evActual = null, notasEvento = [], ofertaSel = -1;
+  var plan = null, evActual = null, notasEvento = [], ofertaSel = -1, detalleAbierto = {};
   var hudPrev = {};
   var rankingVolver = 'p-inicio';
 
@@ -611,6 +611,22 @@
       '</b>: ' + mil(Motor.usuarios(J)) + ' usuarios, un equipo de ' + (J.ing + J.prod + J.gtm) + ', parado en ' + calorSit +
       ' durante ' + esc(era.nombre) + '. Tienes <b>' + J.meses + ' meses</b> en el reloj. ' + esc(m2.txt) + '</div>';
 
+    var sec2 = sectorPorId(J.sectorId), emp2 = empresaPorId(J.empresaId);
+    var mix = Motor.mixSegmentos(J), icpTxt = 'Todavía sin usuarios propios.';
+    if (mix.length) {
+      icpTxt = '<b>' + Math.round(mix[0].pct * 100) + '% ' + esc(mix[0].seg.nombre) + '</b> — “' + esc(mix[0].seg.desc) + '”';
+      if (mix.length > 1) {
+        var resto = [];
+        for (var mi = 1; mi < mix.length; mi++) resto.push(Math.round(mix[mi].pct * 100) + '% ' + esc(mix[mi].seg.nombre));
+        icpTxt += ' <span class="mut">· ' + resto.join(' · ') + '</span>';
+      }
+    }
+    h += '<div class="caja2" style="margin-top:10px">' +
+      '<div class="rot" style="margin-bottom:4px">A qué se dedica ' + esc(J.empresa) + '</div>' +
+      '<div class="pq">' + (emp2 ? esc(emp2.pitch) + ' ' : '') + (sec2 ? esc(sec2.desc) : '') + '</div>' +
+      '<div class="rot" style="margin:10px 0 4px 0">A quién le vende hoy</div>' +
+      '<div class="pq">' + icpTxt + '</div></div>';
+
     h += '<div class="fasebox"><span class="fasechip ' + fclase + '">' + svgIc(faseIcono(J.faseCorta)) + esc(J.faseCorta) + '</span>' +
          '<div class="faseobj">' + esc(J.objetivo) + '</div></div>';
 
@@ -1004,9 +1020,14 @@
       var obj = J.prima.indexOf(a.nec) >= 0 ? '<span class="tagobj mini">▲</span>' :
                 J.castiga.indexOf(a.nec) >= 0 ? '<span class="tagobj down mini">▽</span>' : '';
       var metaMet = MET_MANDATO[J.mandatoId] || null;
+      var esNueva = J.backlogNuevo && J.backlogNuevo[id] === J.mesPuesto;
+      var abierta = !!detalleAbierto[id];
       h += '<div class="ap' + (cabe ? '' : ' nocabe') + '" data-ap="' + id + '">' +
-        '<div class="t"><div class="n2">' + esc(a.n) + '<span class="pill">' + esc(nec.corto) + '</span>' + obj + '</div>' +
-        '<div class="d2" style="margin-top:2px">' + esc(a.d) + '</div>' +
+        '<div class="t"><div class="n2">' + esc(a.n) + '<span class="pill">' + esc(nec.corto) + '</span>' + obj +
+          (esNueva ? '<span class="pill nueva">nuevo</span>' : '') + '</div>' +
+        '<div class="d2" style="margin-top:2px">' + esc(a.d) + ' ' +
+          '<span class="masdet" data-detalle="' + id + '">' + (abierta ? 'ocultar detalle' : 'más detalle') + '</span></div>' +
+        (abierta && a.d2 ? '<div class="d2 mut" style="margin-top:4px;line-height:1.4">' + esc(a.d2) + '</div>' : '') +
         '<div class="viz">' +
           '<span class="vlbl">' + tip('prob','prob') + '</span>' + dots(d.prob) +
           '<span class="vlbl">' + tip('vec','esperado') + '</span>' + chipsVec(d.vec, metaMet) +
@@ -1837,6 +1858,13 @@
       var qi = plan.orden.indexOf(v);
       if (qi >= 0) { plan.orden.splice(qi, 1); delete plan.asig[v]; }
       renderAsignacion(); renderBacklog(); renderBarra();
+      return;
+    }
+
+    v = attr(t, 'data-detalle');
+    if (v !== null && J) {
+      detalleAbierto[v] = !detalleAbierto[v];
+      renderBacklog();
       return;
     }
 
