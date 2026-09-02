@@ -18,7 +18,12 @@ var Carrera = (function () {
     renov:['abismo','ingresos','descubrir'],
     devtools:['ingresos','activacion','retencion'],
     apuestas:['crecer','ingresos','retencion'],
-    saludgold:['retencion','ingresos','abismo']
+    saludgold:['retencion','ingresos','abismo'],
+    ia:['descubrir','ingresos','abismo'],
+    chips:['abismo','estabilidad','ingresos'],
+    ciber:['abismo','estabilidad','retencion'],
+    market:['crecer','ingresos','retencion'],
+    strea:['retencion','crecer','activacion']
   };
   var MANDATO_ETAPA = {
     semilla:['descubrir','retencion','crecer'],
@@ -91,7 +96,7 @@ var Carrera = (function () {
     var niv = nivelPorN(rolN);
 
     /* dinero: la etapa tardía paga más por el mismo título */
-    var factorEtapa = { semilla:0.72, serieA:0.9, serieB:1.12 }[emp.etapa];
+    var factorEtapa = { semilla:0.72, serieA:0.9, serieB:1.12, serieC:1.32 }[emp.etapa] || 1;
     var sueldo = Math.round(niv.sueldo * factorEtapa * (calor > 0 ? 1.18 : calor < 0 ? 0.92 : 1) / 1000) * 1000;
 
     var eq = rnd(et.equity[0], et.equity[1]) * (1 + rolN * 0.14) * (2 - capitalEra) ;

@@ -184,7 +184,61 @@ var APUESTAS_SECTOR = [
   { id:'vipapp',    nec:'flujo',  costo:14, imp:28, n:'App para miembros',              d:'Resultados, citas e historial sin llamar a nadie.',
     d2:'Autogestión completa desde el teléfono: agendar, ver resultados, historial — sin pasar por una llamada.' },
   { id:'redmedica', nec:'integra',costo:18, imp:30, n:'Red de especialistas',           d:'El mejor cardiólogo de la ciudad, con cita mañana.',
-    d2:'Acceso curado a especialistas de primer nivel con turnos rápidos — la razón real por la que alguien paga la membresía.' }
+    d2:'Acceso curado a especialistas de primer nivel con turnos rápidos — la razón real por la que alguien paga la membresía.' },
+
+  /* --- inteligencia artificial aplicada --- */
+  { id:'evals',     nec:'datos',  costo:16, imp:32, n:'Suite de evaluaciones',            d:'Saber si el modelo mejoró o solo cambió.',
+    d2:'Un banco de pruebas fijo contra el que medís cada versión. Sin esto, "está mejor" es una opinión con dos ejemplos.' },
+  { id:'finetune',  nec:'core',   costo:22, imp:36, n:'Modelo afinado con datos propios', d:'La ventaja que no se copia con una llave de API.',
+    d2:'Especializar el modelo con datos que solo vos tenés — lo único que un competidor no consigue comprando la misma API.' },
+  { id:'guardrails',nec:'segur',  costo:18, imp:32, n:'Barandas y trazabilidad',          d:'Para que la respuesta inventada no llegue al cliente.',
+    d2:'Filtros de salida, citas verificables y registro de cada respuesta — lo que te permite explicar qué dijo el modelo y por qué.' },
+  { id:'inferencia',nec:'escala', costo:20, imp:30, n:'Inferencia barata',                d:'Cada respuesta cuesta plata. Ahí vive tu margen.',
+    d2:'Caché, modelos chicos para lo fácil y lotes para lo pesado: la diferencia entre un negocio y una demo subsidiada.' },
+  { id:'agentes',   nec:'core',   costo:24, imp:38, n:'Agentes autónomos de punta a punta',d:'El video del anuncio es espectacular.', senuelo:true,
+    d2:'Un agente que hace todo el trabajo solo. En el video, dos minutos. En producción, un humano revisando cada paso.' },
+
+  /* --- silicio y semiconductores --- */
+  { id:'tapeout',   nec:'core',   costo:30, imp:42, n:'Tape-out del primer silicio',      d:'Un solo tiro. Si sale mal, seis meses.',
+    d2:'Congelar el diseño y mandarlo a fabricar. A partir de ahí no hay parche: hay respin, y el respin se mide en semestres.' },
+  { id:'sdk',       nec:'integra',costo:20, imp:34, n:'SDK y compilador propios',         d:'El chip sin software es un pisapapeles caro.',
+    d2:'Las herramientas con las que el cliente programa tu chip. El hardware gana la evaluación; el software gana la cuenta.' },
+  { id:'yield',     nec:'escala', costo:24, imp:32, n:'Rendimiento de obleas',            d:'Cada punto de yield es margen puro.',
+    d2:'Cuántos chips buenos salen de cada oblea. Subirlo no se ve en ninguna demo y decide si el negocio existe.' },
+  { id:'fundicion', nec:'soporte',costo:22, imp:30, n:'Cupo en la fundición',             d:'No fabricas: te dan turno.',
+    d2:'Asegurar capacidad de fabricación con meses de anticipación. Sin cupo, tu mejor diseño espera en la fila.' },
+
+  /* --- ciberseguridad empresarial --- */
+  { id:'edr',       nec:'core',   costo:20, imp:36, n:'Agente en el endpoint',            d:'Vive dentro de la máquina del cliente. Si se cuelga, se cuelga todo.',
+    d2:'Detección en el propio equipo, con permisos de núcleo. Máxima visibilidad y máximo poder de romperle el lunes a un país.' },
+  { id:'soc',       nec:'soporte',costo:18, imp:32, n:'Centro de operaciones 24/7',       d:'Alguien mira las alertas a las 4 AM.',
+    d2:'Analistas de guardia todo el año. Es el servicio que el cliente cree que está comprando cuando compra el software.' },
+  { id:'certifica', nec:'segur',  costo:22, imp:38, n:'Certificaciones y cumplimiento',   d:'Papel caro que abre las puertas caras.',
+    d2:'SOC 2, ISO, el pliego del sector público. Meses de auditoría que no agregan una función y desbloquean el contrato grande.' },
+  { id:'cazador',   nec:'datos',  costo:16, imp:28, n:'Caza proactiva de amenazas',       d:'Buscar al que ya está adentro.',
+    d2:'Salir a buscar señales de intrusión en vez de esperar la alerta. Lo que separa un producto de un tablero de colores.' },
+
+  /* --- marketplace y última milla --- */
+  { id:'densidad',  nec:'escala', costo:22, imp:36, n:'Densidad por zona',                d:'Un repartidor con tres pedidos gana; con uno, pierde.',
+    d2:'Concentrar demanda en pocas zonas antes de abrir la siguiente. La geografía es la unidad económica de este negocio.' },
+  { id:'vendedores',nec:'core',   costo:18, imp:32, n:'Herramientas para vendedores',     d:'El otro lado del mercado también es un producto.',
+    d2:'Inventario, precios y cobros para quien vende. Sin oferta no hay demanda, y la oferta se va con el que la trate mejor.' },
+  { id:'logistica', nec:'integra',costo:24, imp:34, n:'Logística propia',                 d:'Dejar de depender del correo.',
+    d2:'Depósitos y flota propios: carísimo, lento de montar, y lo único que te deja prometer una fecha y cumplirla.' },
+  { id:'reputacion',nec:'soporte',costo:14, imp:28, n:'Reseñas y garantía de compra',     d:'La confianza es el inventario del marketplace.',
+    d2:'Calificaciones creíbles y devolución del dinero si algo sale mal — lo que permite comprarle a un desconocido.' },
+
+  /* --- streaming y creadores --- */
+  { id:'original',  nec:'core',   costo:26, imp:38, n:'Producción original',              d:'Carísimo, y es lo único que no te pueden quitar.',
+    d2:'Contenido propio: no vence, no se lo lleva el competidor cuando termina la licencia, y define de qué te acusan en Twitter.' },
+  { id:'recomendador',nec:'datos',costo:18, imp:34, n:'Motor de recomendación',           d:'El menú importa más que la comida.',
+    d2:'Qué se muestra primero decide qué se consume. En catálogos grandes, la portada vale más que la mitad del catálogo.' },
+  { id:'creadores', nec:'flujo',  costo:16, imp:30, n:'Programa de creadores',            d:'Que el catálogo lo haga otro y cobre por vista.',
+    d2:'Herramientas y reparto de ingresos para que la gente produzca lo que vos vendés. Margen inmejorable, control ninguno.' },
+  { id:'offline',   nec:'escala', costo:14, imp:24, n:'Descargas y modo sin conexión',    d:'Para el subte, el avión y el pueblo sin señal.',
+    d2:'Reproducir sin red. Invisible en la demo de la oficina, decisivo en la mitad de los mercados donde querés crecer.' },
+  { id:'interactivo',nec:'core',  costo:22, imp:36, n:'Experiencias interactivas',        d:'La prensa lo va a amar.', senuelo:true,
+    d2:'El capítulo donde el espectador elige. Sale en todas las notas del lanzamiento y en ninguna métrica de retención.' }
 ];
 
 for (var _i = 0; _i < APUESTAS_SECTOR.length; _i++) APUESTAS.push(APUESTAS_SECTOR[_i]);
@@ -957,7 +1011,7 @@ var EVENTOS = [
         nota(log,'malo','Lanzaste la respuesta de ellos a tu pregunta. Ahora tu producto discute consigo mismo.','dunford'); } }
   ]},
 
-{ id:'coldstart2', libro:'coldstart', prio:64, quien:'ventas', sectores:['banco','apuestas','devtools','datapol'],
+{ id:'coldstart2', libro:'coldstart', prio:64, quien:'ventas', sectores:['banco','apuestas','devtools','datapol','market','strea','ia'],
   cuando:function(e){ return e.mesPuesto > 4 && Motor.usuarios(e) < e.tam.visio * 0.5; },
   titulo:'Salas vacías',
   texto:'"Las funciones de red son pueblos fantasma. Cada usuario nuevo entra a una sala vacía, se encoge de hombros y se va. Growth quiere bombardearla con anuncios."',
@@ -1170,7 +1224,7 @@ var EVENTOS = [
           nota(log,'malo','Tu post-mortem tenía opiniones donde debía haber datos. El directorio lo olió. Ahora quieren dos nombres.','sre'); } } }
   ]},
 
-{ id:'padrino', libro:'hard', prio:76, quien:'ventas', sectores:['banco','apuestas','biogen','saludgold'],
+{ id:'padrino', libro:'hard', prio:76, quien:'ventas', sectores:['banco','apuestas','biogen','saludgold','ia','chips','ciber'],
   cuando:function(e){ return e.mesPuesto > 4 && Motor.compuerta(e,'pragm') < 0.6; },
   titulo:'El hombre que conoce a todos',
   texto:'"Tu expediente de licencia lleva meses \'en revisión\', ¿no? Yo conozco a la gente que lo revisa. Una consultoría con mi firma — $60.000 — y las revisiones tienen una manera de... concluir."',
@@ -1284,7 +1338,7 @@ var EVENTOS = [
         nota(log,'neutro','Su CTO te debe una y lo sabe. En alguna negociación futura, esa llamada está esperando.','48laws'); } }
   ]},
 
-{ id:'favores', libro:'hard', prio:70, quien:'ventas', sectores:['datapol','banco','renov','apuestas'],
+{ id:'favores', libro:'hard', prio:70, quien:'ventas', sectores:['datapol','banco','renov','apuestas','market','chips'],
   cuando:function(e){ return e.mesPuesto > 5 && Motor.compuerta(e,'pragm') < 0.8; },
   titulo:'El fondo comunitario',
   texto:'"Al subsecretario le encantó la demo. Le encantó. También mencionó — dos veces — que el fondo de deportes juveniles del distrito anda corto este año. Dijo que ustedes se entenderían."',
@@ -1415,7 +1469,7 @@ var EVENTOS = [
         nota(log,'neutro','La empresa ahora tiene una línea de ingresos que nadie puede explicarle al directorio. Lupa +10.','hard'); } }
   ]},
 
-{ id:'wolf', libro:'analytics', prio:90, quien:'ventas', sectores:['banco','apuestas','devtools','datapol'],
+{ id:'wolf', libro:'analytics', prio:90, quien:'ventas', sectores:['banco','apuestas','devtools','datapol','market','strea','ia'],
   cuando:function(e){ return e.mesPuesto > 5 && e.mandatoId === 'crecer' && Motor.progresoMandato(e) < 0.6; },
   titulo:'Usuarios lobo',
   texto:'"Conozco una granja de instalaciones. Diez mil usuarios en dos semanas. El directorio mira el total; no mira de dónde salió."',

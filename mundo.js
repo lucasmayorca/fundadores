@@ -28,28 +28,36 @@ var Mundo = (function () {
   var ERAS = [
     { id:'longevidad', nombre:'El boom de la longevidad',
       desc:'Vivir más se puso de moda entre quienes pueden pagarlo. La biotecnología y la salud premium levantan lo que pidan.',
-      calientes:['biogen','saludgold'], frios:['devtools'],
+      calientes:['biogen','saludgold','ia'], frios:['devtools','market'],
       capital:1.25, dura:[10,16] },
     { id:'invierno', nombre:'El invierno del capital',
       desc:'Subieron las tasas y los cheques se achicaron. Sobrevivir es la estrategia.',
-      calientes:[], frios:['banco','devtools','biogen'],
+      calientes:[], frios:['banco','devtools','biogen','ia','market','strea'],
       capital:0.55, dura:[8,14] },
     { id:'electoral', nombre:'El año electoral',
       desc:'Todos quieren saber qué piensa la gente, y pagan por saberlo primero.',
-      calientes:['datapol'], frios:['renov'],
+      calientes:['datapol','strea'], frios:['renov','chips'],
       capital:0.95, dura:[8,12] },
     { id:'transicion', nombre:'La transición energética',
       desc:'Subsidios frescos, instalaciones récord y cada techo es una oportunidad.',
-      calientes:['renov','devtools'], frios:['datapol'],
+      calientes:['renov','devtools','chips'], frios:['datapol','strea'],
       capital:1.1, dura:[9,15] },
     { id:'fiebre', nombre:'La fiebre de las apuestas',
       desc:'Se legalizaron las apuestas en tres mercados grandes. Todos quieren su propio casino, nadie quiere las consecuencias.',
-      calientes:['apuestas'], frios:['saludgold'],
+      calientes:['apuestas','strea'], frios:['saludgold','biogen'],
       capital:1.15, dura:[8,13] },
     { id:'regulacion', nombre:'El año de los reguladores',
       desc:'Después de dos escándalos, el cumplimiento dejó de ser opcional.',
-      calientes:[], frios:['banco','datapol','biogen','apuestas'],
-      capital:0.8, dura:[8,13] }
+      calientes:['ciber'], frios:['banco','datapol','biogen','apuestas','ia','market'],
+      capital:0.8, dura:[8,13] },
+    { id:'burbujaIA', nombre:'La burbuja de la IA',
+      desc:'Cualquier cosa con dos letras en el nombre levanta a valuaciones absurdas. Las tarjetas gráficas se venden antes de fabricarse.',
+      calientes:['ia','chips'], frios:['saludgold','renov'],
+      capital:1.45, dura:[8,14] },
+    { id:'brechas', nombre:'El año de las brechas',
+      desc:'Tres filtraciones enormes en seis meses. Ningún comité aprueba nada sin el cuestionario de seguridad completo.',
+      calientes:['ciber'], frios:['market','strea','datapol'],
+      capital:0.9, dura:[8,12] }
   ];
 
   /* ---------------- NOTICIAS ---------------- */
@@ -69,6 +77,14 @@ var Mundo = (function () {
     fiebre:['Un casino en línea patrocina a los tres equipos más grandes del país. Todos a la vez.',
             'Récord de apuestas en vivo durante el clásico. Récord de autoexclusiones el lunes.',
             'Un influencer de 19 años promociona una casa de apuestas sin licencia. Nadie lo frena.'],
+    burbujaIA:['Una empresa de seis personas levantó a mil millones. El producto es una demo grabada.',
+               'Se agotaron las tarjetas del próximo año. El año que viene también.',
+               'Un fondo escribió en su tesis: "no invertimos en nada que no diga IA". Lo escribieron en serio.',
+               'Tres empresas de software cambiaron el nombre esta semana. Todas agregaron dos letras.'],
+    brechas:['Filtraron los datos de un país entero. El proveedor era la empresa que vendía la protección.',
+             'Ninguna compra grande se firma sin el cuestionario de seguridad. Tiene 340 preguntas.',
+             'Un ataque paró la logística de tres cadenas a la vez. El seguro dice que fue guerra.',
+             'El regulador ahora exige avisar cualquier incidente en 72 horas. Nadie llega a 72 horas.'],
     regulacion:['Multa histórica para un banco digital: los controles de fraude eran una hoja de cálculo.',
                 'Dos consultoras de datos políticos allanadas la misma mañana. Hubo arrestos.',
                 'El regulador ahora exige trazabilidad total para cualquier uso político de datos.',
@@ -83,15 +99,25 @@ var Mundo = (function () {
 
   function nombrePersona() { return el(NOMBRES) + ' ' + el(APELLIDOS); }
 
-  /* El elenco de una empresa: quiénes te hablan en los dilemas. */
-  function elenco() {
-    return {
-      ceo:    { nombre:nombrePersona(), cargo:'CEO' },
-      cto:    { nombre:nombrePersona(), cargo:'CTO' },
-      ventas: { nombre:nombrePersona(), cargo:'VP de Ventas' },
-      estrella:{ nombre:nombrePersona(), cargo:'Staff Engineer' },
-      board:  { nombre:nombrePersona(), cargo:'Board' }
-    };
+  /* El elenco de una empresa: quiénes te hablan en los dilemas.
+     Cada empresa de EMPRESAS trae su propio elenco fijo (nombres que suenan a
+     los ejecutivos reales de su sector, sin serlo). Si no lo trae — el caso de
+     tu propia empresa cuando fundas — se sortea uno. */
+  var CARGOS = { ceo:'CEO', cto:'CTO', ventas:'VP de Ventas',
+                 estrella:'Staff Engineer', board:'Board' };
+
+  function elenco(empresaId) {
+    var emp = (typeof empresaPorId === 'function' && empresaId) ? empresaPorId(empresaId) : null;
+    var fijo = emp && emp.elenco ? emp.elenco : null;
+    var out = {}, k;
+    for (k in CARGOS) {
+      if (!CARGOS.hasOwnProperty(k)) continue;
+      var f = fijo ? fijo[k] : null;
+      if (typeof f === 'string') out[k] = { nombre:f, cargo:CARGOS[k] };
+      else if (f && f.nombre) out[k] = { nombre:f.nombre, cargo:f.cargo || CARGOS[k] };
+      else out[k] = { nombre:nombrePersona(), cargo:CARGOS[k] };
+    }
+    return out;
   }
 
   /* ---------------- RIVAL (NFS) ----------------

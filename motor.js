@@ -92,11 +92,11 @@ var Motor = (function () {
       incidentesPuesto:0, apuestasCompletadas:0, gastoPropio:{},
       acum:{ desc:0, cons:0, plat:0, fiab:0, crec:0 },
       eventosVistos:{}, hist:[], vivo:true, final:null,
-      elenco:Mundo.elenco(), calor:mundo ? Mundo.calorSector(mundo, sec.id) : 0,
+      elenco:Mundo.elenco(oferta.empresaId), calor:mundo ? Mundo.calorSector(mundo, sec.id) : 0,
       eraId:mundo ? mundo.eraId : '', rivalNombre:mundo ? mundo.rival.nombre : ''
     };
 
-    var LUPA_BASE = { apuestas:15, datapol:10, banco:8, biogen:6, saludgold:5 };
+    var LUPA_BASE = { apuestas:15, datapol:10, banco:8, ia:8, biogen:6, market:6, saludgold:5, chips:5, ciber:4, strea:3 };
     e.lupaBase = LUPA_BASE[sec.id] || 0;
     e.lupa = e.lupaBase;
 
@@ -999,6 +999,38 @@ var Motor = (function () {
       e.cobertura.segur = Math.max(0, e.cobertura.segur - 15);
       e.capacidadReservada = 2;
       log.push({ tipo:'malo', texto:'Evento adverso con un paciente: revisión regulatoria y todo lo demás en pausa.', libro:'sre' });
+    } else if (t === 'alucina') {
+      e.evidencia = clamp(e.evidencia - 12, 0, 100);
+      e.marca = clamp(e.marca - 14, 0, 100);
+      e.fiabPercibida = clamp(e.fiabPercibida - 14, 0, 100);
+      e.lupa = clamp(e.lupa + 6, 0, 100);
+      log.push({ tipo:'malo', texto:'El modelo inventó un dato en la pantalla de un cliente y el cliente lo mandó a producción. ' +
+        'La captura ya circula.', libro:'sre' });
+    } else if (t === 'respin') {
+      var respin = Math.max(120000, (e.capex || 0) * 1.4);
+      e.caja -= respin;
+      e.capacidadReservada = 2;
+      e.cobertura.escala = Math.max(0, e.cobertura.escala - 10);
+      log.push({ tipo:'malo', texto:'Un error en el silicio: respin. ' + Math.round(respin / 1000) +
+        'k y dos meses del equipo que no vuelven.', libro:'ddia' });
+    } else if (t === 'brecha') {
+      e.marca = clamp(e.marca - 30, 0, 100);
+      e.fiabPercibida = clamp(e.fiabPercibida - 22, 0, 100);
+      e.cobertura.segur = Math.max(0, e.cobertura.segur - 14);
+      for (i = 0; i < SEGMENTOS.length; i++) e.usuarios[SEGMENTOS[i].id] *= 0.86;
+      log.push({ tipo:'malo', texto:'Le entraron a la empresa de seguridad. Cada cliente está releyendo su contrato ahora mismo.', libro:'sre' });
+    } else if (t === 'pico') {
+      var gmv = Math.max(40000, e.mrr * 1.1);
+      e.caja -= gmv;
+      e.marca = clamp(e.marca - 10, 0, 100);
+      e.fiabPercibida = clamp(e.fiabPercibida - 16, 0, 100);
+      log.push({ tipo:'malo', texto:'El día de mayor demanda del año, el checkout se cayó 40 minutos. ' +
+        Math.round(gmv / 1000) + 'k de pedidos que no existieron.', libro:'sre' });
+    } else if (t === 'derechos') {
+      e.marca = clamp(e.marca - 12, 0, 100);
+      for (i = 0; i < SEGMENTOS.length; i++) e.usuarios[SEGMENTOS[i].id] *= 0.91;
+      log.push({ tipo:'malo', texto:'Se venció una licencia clave y el catálogo perdió lo único que la gente venía a ver. ' +
+        'Las cancelaciones llegaron el mismo día.', libro:'sre' });
     } else {
       e.fiabPercibida = clamp(e.fiabPercibida - 20, 0, 100);
       for (i = 0; i < SEGMENTOS.length; i++) e.usuarios[SEGMENTOS[i].id] *= 0.95;
