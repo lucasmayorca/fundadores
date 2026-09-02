@@ -138,7 +138,7 @@ alineadas paga ×1.3 y el de las desalineadas ×0.5:
 Escalar demasiado pronto — la causa número uno de muerte según Startup
 Genome — ahora es un error que el juego te cobra.
 
-## Teoría aplicada al caso (en tres lugares)
+## Teoría aplicada al caso (en cuatro lugares)
 
 1. **Tarjeta de libro**: además de la idea y de cómo la modela el juego, un
    bloque **"En tu partida, hoy"** calculado en vivo con tus números
@@ -148,6 +148,13 @@ Genome — ahora es un error que el juego te cobra.
    — el concepto completo del libro + la línea aplicada a tu empresa.
 3. **Briefing de etapa**: la teoría de la fase + el veredicto sobre esa
    empresa en concreto.
+4. **Barra de ritmo** (bajo la barra de mandato, en el mes a mes): cruza el
+   ritmo real de avance del mandato (tendencia de los últimos meses, o el
+   promedio desde el día uno si aún no hay historial) contra el runway —
+   "a este paso, ¿lo lográs antes de quedarte sin caja, y antes de que se
+   acabe el puesto?" — citando *Default Alive or Default Dead?* (Paul
+   Graham), el mismo libro que antes solo aparecía como evento aislado
+   cuando el runway bajaba de 7 meses.
 
 ## El sistema de carrera
 
