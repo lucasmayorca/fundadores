@@ -347,7 +347,7 @@
      un escritorio a una torre con tu propia bandera arriba. Cada edificio es
      un blanco táctil grande cableado al mismo data-rol que usan los chips de
      rol, así que elegir escalón y leer la historia son el mismo gesto. */
-  function skylineSvg(sel) {
+  function skylineSvg(sel, interactivo) {
     var n = ESCALAFON.length, vw = 600, vh = 160, baseY = 134, topPad = 34;
     var colW = vw / n, barW = 44, maxH = baseY - topPad, minH = 18, i;
     var svg = '<svg viewBox="0 0 ' + vw + ' ' + vh + '" class="skysvg" preserveAspectRatio="xMidYMax meet">' +
@@ -375,9 +375,11 @@
       var sel2 = (i === sel), fnd = (i === n - 1);
       var fill = sel2 ? '#182b46' : '#141922';
       var stroke = sel2 ? (fnd ? '#a98ff0' : '#3f82e6') : '#232a35';
-      svg += '<g class="skycol" data-rol="' + i + '">';
-      svg += '<rect x="' + x + '" y="' + topPad + '" width="' + barW + '" height="' + (baseY - topPad) +
-             '" fill="#000" opacity="0" pointer-events="all"></rect>';
+      svg += interactivo ? '<g class="skycol" data-rol="' + i + '">' : '<g>';
+      if (interactivo) {
+        svg += '<rect x="' + x + '" y="' + topPad + '" width="' + barW + '" height="' + (baseY - topPad) +
+               '" fill="#000" opacity="0" pointer-events="all"></rect>';
+      }
       svg += '<rect class="skybar" x="' + x + '" y="' + y + '" width="' + barW + '" height="' + h2 +
              '" rx="1.5" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (sel2 ? 1.6 : 1) + '"></rect>';
       var rows = Math.max(1, Math.floor((h2 - 8) / 11)), r;
@@ -417,6 +419,8 @@
       'producto ni quemar a tu equipo?</div>' +
       '<div class="pq mut" style="margin-top:8px;max-width:560px">Toma decisiones reales. Sobrevive a CEOs, crisis ' +
       'y competidores. Después mira cómo queda tu carrera contra todos los que jugaron.</div>';
+    h += '<div class="skycard" style="margin-top:18px">' + skylineSvg(ESCALAFON.length - 1, false) +
+      '<div class="skyhint">De analista a fundador — la escalera completa</div></div>';
     h += '<div style="margin-top:22px">' +
       '<span class="btn pri xl" data-act="ir-perfil">Empezar mi carrera</span>' +
       (hay ? ' <span class="btn" data-act="continuar">Continuar</span>' : '') + '</div>';
@@ -499,7 +503,7 @@
   function renderPerfil() {
     var h = '<div class="landhero"><div class="landcol">';
     h += '<div class="pq"><span class="linklike" data-act="volver-inicio">‹ Volver</span></div>';
-    h += '<div class="skycard" style="margin-top:10px">' + skylineSvg(inicioSel.nivel) +
+    h += '<div class="skycard" style="margin-top:10px">' + skylineSvg(inicioSel.nivel, true) +
       '<div class="skyhint">Toca un edificio para elegir tu escalón</div></div>';
     h += '<div class="rot" style="margin:16px 0 6px 0">Empieza como</div><div>' + rungChipsHtml() + '</div>';
     h += '<div class="pq mut" style="margin-top:8px" id="perfil-eco">' +
