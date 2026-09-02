@@ -450,6 +450,34 @@ var Motor = (function () {
     return t;
   }
 
+  /* Las tres dimensiones que NO viven en el vector AARRR pero SÍ son metas de
+     mandato y de reto. Sin esto, tres de los ocho mandatos (baja la deuda,
+     instala discovery, abre el gran mercado) no tenían ninguna apuesta que los
+     moviera a la vista: el jugador leía "baja la deuda técnica" y ninguna
+     tarjeta del backlog decía nada sobre deuda. Ahora todas lo dicen.
+       - deuda: construir SIEMPRE agrega deuda, proporcional a lo que cuesta.
+         Es un aporte negativo, y es la verdad del modelo (e.deuda += cons*0.15).
+       - evid:  las apuestas de datos dejan evidencia al entregarse.
+       - gate:  si la necesidad que cubre es uno de los requisitos de la
+         compuerta del sector, su impacto empuja ese requisito. */
+  function dimsExtra(e, id, impacto) {
+    asegurarCapacidades(e);
+    var a = apuesta(id), d = {};
+    if (!a) return d;
+    var fTec = Math.max(0.15, 1 - e.hab.tecnologia / 180 - e.capacidades.tecnologia / 260);
+    d.deuda = -(Math.round(costoDe(e, id) * 0.15 * fTec * 10) / 10);
+    if (a.nec === 'datos') d.evid = 4;
+    var gr = e.gateReqs || [], i;
+    for (i = 0; i < gr.length; i++) {
+      if (gr[i][0] === a.nec) {
+        var falta = Math.max(0, gr[i][1] - (e.cobertura[a.nec] || 0));
+        d.gate = Math.min(impacto, falta);
+        if (d.gate <= 0) d.gate = 0;
+      }
+    }
+    return d;
+  }
+
   /* Estimación desglosada para priorizar: probabilidad de que el número
      sea real (1-5), magnitud si aterriza (1-5) y esfuerzo (S/M/L/XL). */
   function estimacionDetalle(e, id) {
@@ -470,6 +498,8 @@ var Motor = (function () {
       if (vx === 0) { vecEsp[mk] = 0; continue; }
       vecEsp[mk] = Math.round((vx + (nv[mk] || 0) * 4 * incert) * 10) / 10;
     }
+    var dx = dimsExtra(e, id, est), dk;
+    for (dk in dx) if (dx.hasOwnProperty(dk)) vecEsp[dk] = dx[dk];
     return { est:est, prob:prob, mag:mag, esf:esf, tiempo:TIEMPO[esf] || '', costo:cst, vec:vecEsp };
   }
 
@@ -695,10 +725,15 @@ var Motor = (function () {
         e.hechas[id] = true;
         e.apuestasCompletadas++;
         var real = e.impactos[id];
+        /* las dimensiones extra se miden ANTES de mover la cobertura: cuánto
+           de este impacto se come lo que falta para la compuerta */
+        var dxr = dimsExtra(e, id, real), dxk;
         e.cobertura[a.nec] = (e.cobertura[a.nec] || 0) + real;
         var idx = e.backlog.indexOf(id); if (idx >= 0) e.backlog.splice(idx, 1);
         /* el proyecto entregado aplica su vector REAL de métricas a la empresa */
-        var vec3 = (e.vectores && e.vectores[id]) || {};
+        var vec3 = {}, vk3, vsrc = (e.vectores && e.vectores[id]) || {};
+        for (vk3 in vsrc) if (vsrc.hasOwnProperty(vk3)) vec3[vk3] = vsrc[vk3];
+        for (dxk in dxr) if (dxr.hasOwnProperty(dxk)) vec3[dxk] = dxr[dxk];
         if (!e.historialImpacto) e.historialImpacto = [];
         e.historialImpacto.unshift({ n:a.n, real:real, esperado:esperado, vec:vec3, mes:e.mesPuesto });
         e.historialImpacto = e.historialImpacto.slice(0, 6);
