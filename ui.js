@@ -434,7 +434,20 @@
     h += '</div>'; /* landleft */
 
     h += '<div class="landright"><div class="skycard">' + skylineSvg(inicioSel.nivel) +
-      '<div class="skyhint">Toca un edificio para elegir tu escalón</div></div></div>';
+      '<div class="skyhint">Toca un edificio para elegir tu escalón</div></div>';
+    h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:5px">¿Quién eres? ' +
+      '<span class="mut" style="text-transform:none;letter-spacing:0">(opcional)</span></div>' +
+      '<input type="text" id="perfil-in" placeholder="Pega tu URL de LinkedIn o tu cargo actual..." ' +
+      'value="' + esc(inicioSel.texto || '') + '">' +
+      '<div class="rot" style="margin:9px 0 4px 0">¿De dónde vienes?</div><div>' + (function () {
+        var BGS = [['product','Producto'],['design','Diseño'],['eng','Ingeniería'],['biz','Negocio'],['data','Datos']];
+        var hb = '';
+        for (var bi = 0; bi < BGS.length; bi++) {
+          hb += '<span class="rolchip' + ((inicioSel.bg || 'product') === BGS[bi][0] ? ' sel' : '') + '" data-bg="' + BGS[bi][0] + '">' + BGS[bi][1] + '</span>';
+        }
+        return hb;
+      })() + '</div></div>';
+    h += '</div>'; /* landright */
     h += '</div></div>'; /* landtop, landhero */
 
     /* ---- todo lo demás: profundidad, personalización, el salón de la fama. hace scroll por su cuenta ---- */
@@ -460,19 +473,10 @@
       LIBROS.length + ' libros reales de producto alimentan las reglas. Cada error se cobra primero — ' +
       'y después se abre la tarjeta exacta que lo predijo.');
 
-    h += '<div class="caja2" style="margin-top:14px"><div class="rot" style="margin-bottom:5px">¿Quién eres? <span class="mut" style="text-transform:none;letter-spacing:0">(opcional — siempre puedes empezar de cero)</span></div>' +
-      '<input type="text" id="perfil-in" placeholder="Pega tu URL de LinkedIn o tu cargo actual..." ' +
-      'value="' + esc(inicioSel.texto || '') + '">' +
-      '<input type="text" id="nombre-in" placeholder="Tu nombre (o lo tomamos de la URL)" ' +
-      'style="margin-top:7px" value="' + esc(inicioSel.nombreManual ? (inicioSel.nombre || '') : '') + '">' +
-      '<div class="rot" style="margin:9px 0 4px 0">¿De dónde vienes?</div><div>' + (function () {
-        var BGS = [['product','Producto'],['design','Diseño'],['eng','Ingeniería'],['biz','Negocio'],['data','Datos']];
-        var hb = '';
-        for (var bi = 0; bi < BGS.length; bi++) {
-          hb += '<span class="rolchip' + ((inicioSel.bg || 'product') === BGS[bi][0] ? ' sel' : '') + '" data-bg="' + BGS[bi][0] + '">' + BGS[bi][1] + '</span>';
-        }
-        return hb;
-      })() + '</div></div>';
+    h += '<div class="caja2" style="margin-top:14px"><div class="rot" style="margin-bottom:5px">¿Cómo te llamamos? ' +
+      '<span class="mut" style="text-transform:none;letter-spacing:0">(opcional — lo tomamos de LinkedIn si no lo dices)</span></div>' +
+      '<input type="text" id="nombre-in" placeholder="Tu nombre" ' +
+      'value="' + esc(inicioSel.nombreManual ? (inicioSel.nombre || '') : '') + '"></div>';
 
     var fac = Ranking.faccion();
     h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:5px">Elige un bando</div>' +
@@ -483,7 +487,8 @@
 
     h += '<div class="pq mut" style="margin-top:10px;max-width:540px">Desafío semanal: todos juegan el mismo ' +
       'mundo esta semana (' + esc(Ranking.semana()) + ') — mismas eras, mismas tormentas, mismo timing del rival. Una tabla ' +
-      'pública, siete días, sin más ventaja que tus decisiones.</div>';
+      'pública, siete días, sin más ventaja que tus decisiones. Y la semana deja huella: los 8 primeros ' +
+      'puntúan (10-8-6-5-4-3-2-1) para la <b>tabla histórica</b>, y el campeón queda en el palmarés para siempre.</div>';
     h += '</div>'; /* lcL */
 
     h += '<div class="lcR">';
@@ -1669,6 +1674,7 @@
       }
       var t = 'Salón de la Fama público: eres <b class="verde">#' + r.pos + '</b> de ' + r.total + ' jugadores por patrimonio.';
       if (r.posSemanal) t += ' Esta semana: <b class="verde">#' + r.posSemanal + '</b> de ' + r.totalSemanal + '.';
+      if (r.posHistorica) t += ' Tabla histórica: <b class="lila">#' + r.posHistorica + '</b> con ' + r.puntosHistoricos + ' puntos de campeonato.';
       if (r.destronaste) {
         t += ' <span class="lila">Destronaste a ' + esc(r.destronaste) + ' del #1.</span>';
         var g = Logros.dar(R, 'regicidio');

@@ -161,6 +161,48 @@ function posDe(arr, token) {
   return null;
 }
 
+/* La competencia semanal deja HISTORIA: cada semana reparte puntos de
+   campeonato (10-8-6-5-4-3-2-1 a los 8 primeros por patrimonio) que se
+   acumulan en una tabla de todos los tiempos, y el ganador queda en el
+   palmarés. La semana es la cancha justa; la tabla histórica es la guerra. */
+var PUNTOS_SEMANA = [10, 8, 6, 5, 4, 3, 2, 1];
+function armarHistorico() {
+  var porSemana = {}, i, e;
+  for (i = 0; i < DB.carreras.length; i++) {
+    e = DB.carreras[i];
+    if (!e.semana) continue;
+    (porSemana[e.semana] = porSemana[e.semana] || []).push(e);
+  }
+  var semanas = Object.keys(porSemana).sort();
+  var actual = semanaISO(new Date());
+  var palmares = [];
+  var acum = {};
+  for (i = 0; i < semanas.length; i++) {
+    var w = semanas[i];
+    var top = mejores(porSemana[w], 'patrimonio');
+    if (!top.length) continue;
+    palmares.push({ semana: w, nombre: top[0].nombre, patrimonio: top[0].patrimonio,
+                    jugadores: top.length, enCurso: w === actual });
+    for (var j = 0; j < Math.min(PUNTOS_SEMANA.length, top.length); j++) {
+      var t = top[j];
+      var a = acum[t.token];
+      if (!a) a = acum[t.token] = { token: t.token, nombre: t.nombre, faccion: t.faccion,
+                                    puntos: 0, semanas: 0, victorias: 0 };
+      a.puntos += PUNTOS_SEMANA[j];
+      a.semanas++;
+      if (j === 0) a.victorias++;
+      a.nombre = t.nombre; a.faccion = t.faccion;
+    }
+  }
+  palmares.reverse();
+  var tabla = [];
+  for (var k in acum) if (acum.hasOwnProperty(k)) tabla.push(acum[k]);
+  tabla.sort(function (a2, b2) {
+    return b2.puntos - a2.puntos || b2.victorias - a2.victorias || b2.semanas - a2.semanas;
+  });
+  return { palmares: palmares, tabla: tabla };
+}
+
 function armarTablas(miToken) {
   var semana = semanaISO(new Date());
   var patTop = mejores(DB.carreras, 'patrimonio');
@@ -198,6 +240,19 @@ function armarTablas(miToken) {
       semanal: filas(semTop, 300, miToken)
     },
     semanaPasada: pasadaTop.length ? { semana: semanaAnterior(), nombre: pasadaTop[0].nombre, patrimonio: pasadaTop[0].patrimonio } : null,
+    historico: (function () {
+      var hz = armarHistorico();
+      var filasH = [], i2;
+      for (i2 = 0; i2 < Math.min(300, hz.tabla.length); i2++) {
+        var t2 = hz.tabla[i2];
+        var f2 = { nombre: t2.nombre, faccion: t2.faccion, puntos: t2.puntos,
+                   semanas: t2.semanas, victorias: t2.victorias };
+        if (miToken && t2.token === miToken) f2.vos = true;
+        filasH.push(f2);
+      }
+      return { sistema: '10-8-6-5-4-3-2-1 a los 8 primeros de cada semana',
+               tabla: filasH, palmares: hz.palmares.slice(0, 26) };
+    })(),
     facciones: fac,
     bounty: patTop.length ? { nombre: patTop[0].nombre, patrimonio: patTop[0].patrimonio } : null
   };
@@ -205,6 +260,13 @@ function armarTablas(miToken) {
     r.tu = { pos: posDe(patTop, miToken), total: patTop.length };
     var ps = posDe(semTop, miToken);
     if (ps) { r.tu.posSemanal = ps; r.tu.totalSemanal = semTop.length; }
+    for (i = 0; i < r.historico.tabla.length; i++) {
+      if (r.historico.tabla[i].vos) {
+        r.tu.posHistorica = i + 1;
+        r.tu.puntosHistoricos = r.historico.tabla[i].puntos;
+        break;
+      }
+    }
   }
   return r;
 }
@@ -325,6 +387,21 @@ function paginaRanking() {
   h += '<div class="cols">';
   h += tablaHtml('Ranking mundial · patrimonio · los ' + d.jugadores + ' jugadores', d.tablas.patrimonio, function (e) { return dinero(e.patrimonio); });
   h += tablaHtml('Esta semana · ' + escHtml(d.semana), d.tablas.semanal, function (e) { return dinero(e.patrimonio); });
+  if (d.historico && d.historico.tabla.length) {
+    h += tablaHtml('Tabla histórica · puntos de campeonato (' + escHtml(d.historico.sistema) + ')',
+      d.historico.tabla, function (e) {
+        return e.puntos + ' pts · ' + e.victorias + '🏆 · ' + e.semanas + ' semanas';
+      });
+  }
+  if (d.historico && d.historico.palmares.length) {
+    h += '<h2>Palmarés semanal</h2><table><tr><th>Semana</th><th>Campeón</th><th>Patrimonio</th><th>Jugadores</th></tr>';
+    for (var pi = 0; pi < d.historico.palmares.length; pi++) {
+      var pw = d.historico.palmares[pi];
+      h += '<tr><td>' + escHtml(pw.semana) + (pw.enCurso ? ' <span class="mut">(en curso)</span>' : '') + '</td>' +
+           '<td>' + escHtml(pw.nombre) + '</td><td>' + dinero(pw.patrimonio) + '</td><td>' + pw.jugadores + '</td></tr>';
+    }
+    h += '</table>';
+  }
   h += '</div><div class="cols">';
   h += tablaHtml('Rol más alto', d.tablas.nivel, function (e) { return escHtml(ROLES[e.nivel] || ''); });
   h += tablaHtml('Racha de mandatos', d.tablas.racha, function (e) { return e.racha + ' seguidos'; });
