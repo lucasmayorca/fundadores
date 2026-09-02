@@ -598,13 +598,26 @@ var Motor = (function () {
     e.acum.plat += e.gastoPropio.plat; e.acum.fiab += e.gastoPropio.fiab;
     e.acum.crec += e.gastoPropio.crec;
 
+    /* El resto de la organización NO es un piloto automático competente: es
+       inercia. Suelta, una empresa manda casi todo a construir features —
+       nadie pelea por plataforma ni por discovery si no hay alguien haciéndolo.
+       Tu `mando` es el grado en que la org te SIGUE: define la dirección con tu
+       propio reparto y la organización se alinea en proporción a tu autoridad.
+       Lo que no te sigue cae en el default inercial. Por eso subir en el
+       escalafón no te da solo más puntos: hace que tus decisiones pesen. */
+    var INERCIA = { desc:0.02, cons:0.82, plat:0.04, fiab:0.04, crec:0.08 };
     var resto = Math.max(0, capTotal - mio);
     if (resto > 0) {
-      p.desc += Math.round(resto * 0.10);
-      p.cons += Math.round(resto * 0.50);
-      p.plat += Math.round(resto * 0.14);
-      p.fiab += Math.round(resto * 0.10);
-      p.crec += Math.round(resto * 0.16);
+      var sigue = resto * e.mando, propio = resto - sigue, k;
+      /* la parte que te sigue copia TU proporción de este mes */
+      if (sigue > 0 && mioUsado > 0) {
+        p.desc += Math.round(sigue * (e.gastoPropio.desc / mioUsado));
+        p.cons += Math.round(sigue * (e.gastoPropio.cons / mioUsado));
+        p.plat += Math.round(sigue * (e.gastoPropio.plat / mioUsado));
+        p.fiab += Math.round(sigue * (e.gastoPropio.fiab / mioUsado));
+        p.crec += Math.round(sigue * (e.gastoPropio.crec / mioUsado));
+      } else propio += sigue; /* si no diste dirección, no hay nada que seguir */
+      for (k in INERCIA) if (INERCIA.hasOwnProperty(k)) p[k] += Math.round(propio * INERCIA[k]);
     }
 
     if (e.refactorFijo) { var mv = Math.round(capTotal * 0.2); p.cons = Math.max(0, p.cons - mv); p.plat += mv; }
