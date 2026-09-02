@@ -884,9 +884,12 @@
   function barraEstado(lbl, v, invertido, libro, icono) {
     var x = invertido ? 100 - v : v;
     var cls = x >= 62 ? 'v' : x >= 38 ? 'a' : 'r';
-    return '<div class="est">' + (icono ? '<span class="esti ' + cls + '">' + svgIc(icono) + '</span>' : '') +
-      '<span class="elbl">' + lbl + (libro ? chip(libro) : '') + '</span>' +
-      '<span class="etrk"><span class="track"><i class="' + cls + '" style="width:' + Math.round(Math.max(4, Math.min(100, v))) + '%"></i></span></span></div>';
+    return '<div class="est">' +
+      '<div class="estl">' + (icono ? '<span class="esti ' + cls + '">' + svgIc(icono) + '</span>' : '') +
+      '<span class="elbl">' + lbl + '</span></div>' +
+      (libro ? '<div class="estchip">' + chip(libro) + '</div>' : '') +
+      '<div class="etrk"><span class="track"><i class="' + cls + '" style="width:' + Math.round(Math.max(4, Math.min(100, v))) + '%"></i></span></div>' +
+      '</div>';
   }
 
   function renderPanel() {
