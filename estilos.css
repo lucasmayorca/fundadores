@@ -86,6 +86,7 @@ html, body {
 .skycol { cursor:pointer; }
 .skybar { -webkit-transition:fill .15s ease, stroke .15s ease; transition:fill .15s ease, stroke .15s ease; }
 .skyhint { margin-top:7px; font-size:11px; color:#5b6472; text-align:center; }
+.skyform { margin-top:14px; padding-top:14px; border-top:1px solid #1c2740; }
 .hook { font-size:20px; font-weight:500; line-height:1.32; color:#dbe4f0; }
 .linklike { color:#7fa8d8; cursor:pointer; padding:4px 2px; }
 .linklike:active { opacity:0.6; }

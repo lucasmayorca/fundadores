@@ -434,8 +434,8 @@
     h += '</div>'; /* landleft */
 
     h += '<div class="landright"><div class="skycard">' + skylineSvg(inicioSel.nivel) +
-      '<div class="skyhint">Toca un edificio para elegir tu escalón</div></div>';
-    h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:5px">¿Quién eres? ' +
+      '<div class="skyhint">Toca un edificio para elegir tu escalón</div>';
+    h += '<div class="skyform"><div class="rot" style="margin-bottom:5px">¿Quién eres? ' +
       '<span class="mut" style="text-transform:none;letter-spacing:0">(opcional)</span></div>' +
       '<input type="text" id="perfil-in" placeholder="Pega tu URL de LinkedIn o tu cargo actual..." ' +
       'value="' + esc(inicioSel.texto || '') + '">' +
@@ -447,7 +447,7 @@
         }
         return hb;
       })() + '</div></div>';
-    h += '</div>'; /* landright */
+    h += '</div></div>'; /* skycard, landright */
     h += '</div></div>'; /* landtop, landhero */
 
     /* ---- todo lo demás: profundidad, personalización, el salón de la fama. hace scroll por su cuenta ---- */
