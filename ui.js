@@ -11,6 +11,9 @@
   var plan = null, evActual = null, notasEvento = [], ofertaSel = -1, detalleAbierto = {};
   var hudPrev = {};
   var rankingVolver = 'p-inicio';
+  /* Salon de la Fama: pestana activa y ultima carga traida, para que cambiar
+     de tabla no vuelva a pedir el ranking al servidor */
+  var rkTab = 'patrimonio', rkDatos = null;
 
   function $(id) { return document.getElementById(id); }
   function esc(s) {
@@ -189,6 +192,7 @@
     runway:'Meses de caja que quedan al ritmo de gasto actual. Bajo 4, todo lo demás deja de importar.',
     mrr:'Ingreso recurrente mensual. Lo que los clientes pagan de verdad, cada mes.',
     pol:'Tu crédito con la organización. Gastar tus puntos fuera del mandato lo drena - incluso cuando tienes razón. En cero, estás fuera.',
+    edad:'Tu Edad es el escalón del ESCALAFON en el que estás: ocho en total, y cada uno desbloquea una palanca nueva del mes. Los pips llenos son los que ya subiste.',
     heat:'Atención del regulador. Los atajos sucios la suben. Desde 40: inspecciones sorpresa y multas. En 85: llegan con una orden judicial.',
     compro:'Slots de proyecto: cuántas construcciones puede mantener abiertas esta empresa a la vez. Entrega una para liberar su slot.',
     prob:'Cuánto confiar en la estimación. Se llena al hablar con usuarios; baja en empresas difíciles de estimar.',
@@ -334,6 +338,49 @@
       '<div class="tx"><b>' + tit + '.</b> ' + txt + '</div></div>';
   }
 
+  /* La escalera de la portada: los 8 niveles del ESCALAFON como barras
+     clicables. La altura de cada barra ES el mando real del puesto (12% a
+     100%), asi que la silueta cuenta la carrera antes de leer una etiqueta.
+     Toca el mismo data-rol que los chips del perfil. */
+  function escaleraHtml() {
+    var h = '<div class="rot" style="margin-bottom:12px">La escalera — ' + ESCALAFON.length +
+            ' niveles, tu mando real</div><div class="escalera">';
+    var i, lv;
+    for (i = 0; i < ESCALAFON.length; i++) {
+      lv = ESCALAFON[i];
+      h += '<div class="escalon' + (i === inicioSel.nivel ? ' sel' : i < inicioSel.nivel ? ' pasado' : '') +
+           '" data-rol="' + i + '">' +
+           '<div class="ebarra" style="height:' + Math.round(18 + lv.mando * 84) + 'px"></div>' +
+           '<div class="elabel">' + esc(lv.corto) + '</div></div>';
+    }
+    h += '</div>';
+    var sel = nivelPorN(inicioSel.nivel);
+    h += '<div class="escalondet"><div class="edcab">' +
+         '<div class="rot">' + esc(sel.rol) + '</div>' +
+         '<span class="tagout num">Mando ' + Math.round(sel.mando * 100) + '%</span></div>' +
+         '<div class="ednota">' + esc(sel.nota) + '</div></div>';
+    return h;
+  }
+
+  /* Los 9 pilares de la biblioteca con el conteo real de LIBROS: la
+     biblioteca deja de ser un boton al pie y pasa a ser una promesa medible. */
+  function pilaresHtml() {
+    var cuenta = {}, max = 1, i, c;
+    for (i = 0; i < LIBROS.length; i++) cuenta[LIBROS[i].pilar] = (cuenta[LIBROS[i].pilar] || 0) + 1;
+    for (i = 0; i < PILARES.length; i++) max = Math.max(max, cuenta[PILARES[i].id] || 0);
+    var h = '<div class="rot" style="margin-bottom:10px">Una biblioteca de ' + LIBROS.length +
+            ' tarjetas, ' + PILARES.length + ' pilares</div>' +
+      '<div class="pq mut" style="margin-bottom:14px">Cada dilema y cada libro trae “En tu partida, hoy”: ' +
+      'la teoría calculada en vivo con tus números, no una cita suelta.</div><div class="pilares">';
+    for (i = 0; i < PILARES.length; i++) {
+      c = cuenta[PILARES[i].id] || 0;
+      h += '<div class="pilfila" data-act="biblio"><div class="pilnom">' + esc(PILARES[i].nombre) + '</div>' +
+           '<div class="pilpozo"><i style="width:' + Math.round(c / max * 100) + '%"></i></div>' +
+           '<div class="pilnum num">' + c + '</div></div>';
+    }
+    return h + '</div>';
+  }
+
   function rungChipsHtml() {
     var h = '', ti;
     for (ti = 0; ti < ESCALAFON.length; ti++) {
@@ -404,7 +451,7 @@
           lit = r > (viva ? 0.36 : 0.54);
           op = lit ? (0.5 + r * 0.5) : 0.42;
           out += '<rect x="' + wx.toFixed(1) + '" y="' + wy.toFixed(1) + '" width="' + vw2 + '" height="' + vh2 +
-                 '" fill="' + (lit ? (viva ? '#ffd27a' : '#e8bb6a') : '#1e2736') +
+                 '" fill="' + (lit ? (viva ? '#ffd27a' : '#e8bb6a') : '#2f3040') +
                  '" opacity="' + op.toFixed(2) + '">';
           /* un puñado de ventanas parpadea: alguien todavía trabajando */
           if (lit && animar && r > 0.962) {
@@ -473,21 +520,21 @@
 
     s += '<defs>' +
       '<linearGradient id="' + u + 'cielo" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0" stop-color="#05080f"></stop>' +
-        '<stop offset="0.5" stop-color="#0a1120"></stop>' +
-        '<stop offset="1" stop-color="#141d33"></stop></linearGradient>' +
+        '<stop offset="0" stop-color="#101220"></stop>' +
+        '<stop offset="0.5" stop-color="#181a2c"></stop>' +
+        '<stop offset="1" stop-color="#232541"></stop></linearGradient>' +
       '<radialGradient id="' + u + 'brillo" cx="0.5" cy="1" r="0.85">' +
         '<stop offset="0" stop-color="#9a742a" stop-opacity="0.40"></stop>' +
         '<stop offset="0.45" stop-color="#5a4418" stop-opacity="0.15"></stop>' +
         '<stop offset="1" stop-color="#5a4418" stop-opacity="0"></stop></radialGradient>' +
       '<radialGradient id="' + u + 'halo" cx="0.5" cy="0.5" r="0.5">' +
-        '<stop offset="0" stop-color="#cfe0ff" stop-opacity="0.22"></stop>' +
-        '<stop offset="1" stop-color="#cfe0ff" stop-opacity="0"></stop></radialGradient>' +
+        '<stop offset="0" stop-color="#e7e5fe" stop-opacity="0.22"></stop>' +
+        '<stop offset="1" stop-color="#e7e5fe" stop-opacity="0"></stop></radialGradient>' +
       '<linearGradient id="' + u + 'bordes" x1="0" y1="0" x2="1" y2="0">' +
-        '<stop offset="0" stop-color="#080c15" stop-opacity="0.85"></stop>' +
-        '<stop offset="0.055" stop-color="#080c15" stop-opacity="0"></stop>' +
-        '<stop offset="0.945" stop-color="#080c15" stop-opacity="0"></stop>' +
-        '<stop offset="1" stop-color="#080c15" stop-opacity="0.85"></stop></linearGradient>' +
+        '<stop offset="0" stop-color="#141527" stop-opacity="0.85"></stop>' +
+        '<stop offset="0.055" stop-color="#141527" stop-opacity="0"></stop>' +
+        '<stop offset="0.945" stop-color="#141527" stop-opacity="0"></stop>' +
+        '<stop offset="1" stop-color="#141527" stop-opacity="0.85"></stop></linearGradient>' +
       '<clipPath id="' + u + 'suelo"><rect x="0" y="0" width="' + vw + '" height="' + baseY + '"></rect></clipPath>' +
       '</defs>';
 
@@ -496,15 +543,15 @@
     s += '<rect x="0" y="0" width="' + vw + '" height="' + vh + '" fill="url(#' + u + 'brillo)"></rect>';
     /* luna creciente: disco claro y encima otro del color del cielo */
     s += '<circle cx="82" cy="34" r="27" fill="url(#' + u + 'halo)"></circle>' +
-         '<circle cx="82" cy="34" r="8.5" fill="#c9d6ef" opacity="0.82"></circle>' +
-         '<circle cx="87.5" cy="30.5" r="8.5" fill="#070c17"></circle>';
+         '<circle cx="82" cy="34" r="8.5" fill="#cfd3e5" opacity="0.82"></circle>' +
+         '<circle cx="87.5" cy="30.5" r="8.5" fill="#141527"></circle>';
 
     /* estrellas: unas cuantas titilan */
     for (i = 0; i < 22; i++) {
       var ex = ruido(i, 1) * vw, ey = 8 + ruido(i, 2) * 78, er = 0.6 + ruido(i, 5) * 0.7;
       var eo = 0.25 + ruido(i, 8) * 0.5;
       s += '<circle cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="' + er.toFixed(1) +
-           '" fill="#9fb4d8" opacity="' + eo.toFixed(2) + '">';
+           '" fill="#b2b6ca" opacity="' + eo.toFixed(2) + '">';
       if (animar && i % 6 === 0) {
         s += '<animate attributeName="opacity" values="' + eo.toFixed(2) + ';0.08;' + eo.toFixed(2) +
              '" dur="' + (2.8 + ruido(i, 9) * 2.6).toFixed(1) + 's" repeatCount="indefinite"></animate>';
@@ -517,13 +564,13 @@
       var fx = ruido(i, 3) * (vw + 30) - 15;
       var fh = 18 + ruido(i, 7) * 52, fw = 15 + ruido(i, 11) * 24;
       s += '<rect x="' + fx.toFixed(1) + '" y="' + (baseY - fh).toFixed(1) + '" width="' + fw.toFixed(1) +
-           '" height="' + fh.toFixed(1) + '" fill="#0c1220"></rect>';
+           '" height="' + fh.toFixed(1) + '" fill="#181a2c"></rect>';
     }
     for (i = 0; i < 12; i++) {
       var mx = ruido(i, 17) * (vw + 20) - 10;
       var mh = 14 + ruido(i, 19) * 34, mw = 18 + ruido(i, 23) * 20;
       s += '<rect x="' + mx.toFixed(1) + '" y="' + (baseY - mh).toFixed(1) + '" width="' + mw.toFixed(1) +
-           '" height="' + mh.toFixed(1) + '" fill="#111827"></rect>';
+           '" height="' + mh.toFixed(1) + '" fill="#1d1f33"></rect>';
     }
 
     /* ---- las ocho torres, recortadas por el horizonte para que emerjan ---- */
@@ -531,8 +578,8 @@
     for (i = 0; i < n; i++) {
       var g = geo(i), esSel = (i === sel), esFnd = (i === n - 1);
       var col = esSel
-        ? { cuerpo:'#1a2942', borde:(esFnd ? '#a98ff0' : '#3f82e6'), techo:'#243758', acento:(esFnd ? '#a98ff0' : '#5aa9f0') }
-        : { cuerpo:'#141c2b', borde:'#232e40', techo:'#1b2536', acento:'#5aa9f0' };
+        ? { cuerpo:'#2b2741', borde:(esFnd ? '#b5abfc' : '#796cbf'), techo:'#423a6a', acento:(esFnd ? '#b5abfc' : '#9184d9') }
+        : { cuerpo:'#20223a', borde:'#353749', techo:'#292b31', acento:'#9184d9' };
 
       /* el transform base los deja hundidos: sin él, SMIL los muestra en su
          sitio final hasta que arranca su turno y ahí saltan hacia abajo */
@@ -583,7 +630,7 @@
       ax = gt.x + gt.w; ay = gt.y;
     }
     largo = Math.ceil(largo) + 2;
-    s += '<path d="' + d + '" fill="none" stroke="#5aa9f0" stroke-width="1.4" ' +
+    s += '<path d="' + d + '" fill="none" stroke="#9184d9" stroke-width="1.4" ' +
          'opacity="0.62" stroke-linejoin="round" stroke-linecap="round"' +
          (animar ? ' stroke-dasharray="' + largo + '" stroke-dashoffset="' + largo + '"' : '') + '>';
     if (animar) {
@@ -595,7 +642,7 @@
     for (i = 0; i < n; i++) {
       var gp = geo(i), ult = (i === n - 1);
       s += '<circle cx="' + gp.x.toFixed(1) + '" cy="' + gp.y.toFixed(1) + '" r="' +
-           (ult ? 2.8 : 1.9) + '" fill="' + (ult ? '#a98ff0' : '#5aa9f0') + '" opacity="' +
+           (ult ? 2.8 : 1.9) + '" fill="' + (ult ? '#b5abfc' : '#9184d9') + '" opacity="' +
            (ult ? '1' : '0.75') + '"></circle>';
     }
 
@@ -609,16 +656,16 @@
       s += '<text x="' + (fnd2 ? (gs.cx - 11).toFixed(1) : gs.cx.toFixed(1)) +
            '" y="' + (fnd2 ? (gs.y - 19).toFixed(1) : (gs.y - alto - 9).toFixed(1)) +
            '" text-anchor="' + (fnd2 ? 'end' : 'middle') +
-           '" font-size="11" font-weight="700" letter-spacing="0.8" fill="' +
-           (fnd2 ? '#c3b0ff' : '#8fc0f0') + '">' + lab + '</text>';
+           '" font-size="11" font-weight="500" letter-spacing="0.8" fill="' +
+           (fnd2 ? '#e7e5fe' : '#d2cefd') + '">' + lab + '</text>';
     }
     s += '</g>';
 
     /* suelo, neblina cálida y desvanecido en los bordes. Todo esto va encima
        de las torres, así que no puede robarles el toque: pointer-events none. */
     s += '<g pointer-events="none">';
-    s += '<rect x="0" y="' + baseY + '" width="' + vw + '" height="' + (vh - baseY) + '" fill="#070b13"></rect>';
-    s += '<line x1="0" y1="' + baseY + '" x2="' + vw + '" y2="' + baseY + '" stroke="#22304a" stroke-width="1"></line>';
+    s += '<rect x="0" y="' + baseY + '" width="' + vw + '" height="' + (vh - baseY) + '" fill="#101220"></rect>';
+    s += '<line x1="0" y1="' + baseY + '" x2="' + vw + '" y2="' + baseY + '" stroke="#3f424d" stroke-width="1"></line>';
     for (i = 0; i < 16; i++) {
       var lx = 12 + ruido(i, 29) * (vw - 24);
       s += '<circle cx="' + lx.toFixed(1) + '" cy="' + (baseY + 5 + ruido(i, 31) * 14).toFixed(1) +
@@ -637,23 +684,29 @@
     try { hay = !!localStorage.getItem(CLAVE); } catch (e) {}
 
     /* ---- héroe: el gancho y un solo camino hacia adelante. nunca hace scroll ---- */
-    var h = '<div class="landhero"><div class="landcol">';
-    h += '<div class="h1">Founder Mode</div>' +
-      '<div class="hook" style="margin-top:10px;max-width:560px">¿Puedes llegar a CPO sin romper el ' +
+    var sel0 = nivelPorN(inicioSel.nivel);
+    var h = '<div class="landhero"><div class="landcol" style="max-width:912px">';
+    h += '<div class="rot">Founder Mode</div>' +
+      '<div class="h1" style="margin-top:8px;max-width:660px">¿Puedes llegar a CPO sin romper el ' +
       'producto ni quemar a tu equipo?</div>' +
-      '<div class="pq mut" style="margin-top:8px;max-width:560px">Toma decisiones reales. Sobrevive a CEOs, crisis ' +
-      'y competidores. Después mira cómo queda tu carrera contra todos los que jugaron.</div>';
-    h += '<div class="skycard" style="margin-top:18px">' + skylineSvg(ESCALAFON.length - 1, false) +
-      '<div class="skyhint">De analista a fundador — la escalera completa</div></div>';
-    h += '<div style="margin-top:22px">' +
-      '<span class="btn pri xl" data-act="ir-perfil">Empezar mi carrera</span>' +
+      '<div class="hook" style="margin-top:8px;max-width:600px">Ocho puestos, de Analista de Producto a ' +
+      'Fundador/a. Cada decisión mueve tu mando real, y cada error tiene un libro que ya lo explicó.</div>';
+    /* dos columnas: la escalera manda, la biblioteca acompaña */
+    h += '<div class="dosc" style="display:-webkit-flex;display:flex;margin-top:22px">' +
+      '<div class="colx" style="width:520px;padding-right:36px">' + escaleraHtml() + '</div>' +
+      '<div class="colx" style="-webkit-flex:1;flex:1;min-width:0">' + pilaresHtml() + '</div>' +
+      '</div>';
+    h += '<div style="margin-top:20px">' +
+      '<span class="btn pri xl" data-act="nueva">Empezar como ' + esc(sel0.corto) + '</span> ' +
+      '<span class="btn sec" data-act="ir-perfil">o pega tu LinkedIn</span>' +
       (hay ? ' <span class="btn" data-act="continuar">Continuar</span>' : '') + '</div>';
-    h += '<div class="pq mut" style="margin-top:10px"><span class="linklike" data-act="biblio">Biblioteca</span></div>';
     h += '</div></div>'; /* landcol, landhero */
 
     /* ---- todo lo demás: profundidad, el salón de la fama. hace scroll por su cuenta ---- */
     h += '<div class="landmore scroll"><div class="landchevron">⌄</div>';
-    h += '<div class="landcol">';
+    /* mismo ancho que el heroe: si el "mas" se centra en 640 y el heroe mide
+       912, las dos mitades de la portada arrancan en columnas distintas */
+    h += '<div class="landcol" style="max-width:912px">';
 
     h += '<div class="h2">Cómo funciona</div>' +
       '<div class="pq mut" style="margin-bottom:6px">Cinco cosas pasando a la vez, cada mes.</div>';
@@ -786,7 +839,7 @@
 
     h += '<div class="era-banner"><span class="nombre-era">' + esc(era.nombre) + '</span>' +
          '<div class="pq mut">' + esc(era.desc) + '</div>' +
-         (M.noticias.length ? '<div class="pq" style="margin-top:5px;color:#767f8d">◈ ' + esc(M.noticias[0].txt) + '</div>' : '') +
+         (M.noticias.length ? '<div class="pq" style="margin-top:5px;color:var(--color-neutral-600)">◈ ' + esc(M.noticias[0].txt) + '</div>' : '') +
          '</div>';
 
     /* Age track: la progresión del jugador (ESCALAFON/C.nivel), separada de
@@ -808,7 +861,10 @@
         '<h3>' + esc(o.nombre) + '</h3>' +
         '<div class="rolof">' + esc(o.rol) + ' · control ' + Math.round(o.mando * 100) + '%</div>' +
         '<div class="desc">' + esc(o.pitch) + '<br><br><i>' + esc(o.eje) + '</i></div>' +
-        '<div class="mandato"><div class="rot">Contrato · ' + o.meses + ' meses</div><span class="mut">El mandato se revela el día uno — el trabajo real nunca te lo dicen en la entrevista.</span></div>' +
+        '<div class="mandato"><div class="rot" style="margin-bottom:3px">Mandato · se revela al aceptar</div>' +
+        '<div style="font-size:15px;letter-spacing:2px" class="mut">???</div>' +
+        '<div class="pq mut" style="font-size:11px;margin-top:4px">Contrato de ' + o.meses +
+        ' meses. El trabajo real nunca te lo dicen en la entrevista.</div></div>' +
         '<div class="fila">Sueldo <b>' + money(o.sueldo) + '/año</b> · Equity <b>' +
           (o.fundar ? 'tuyo' : o.equity + '%') + '</b></div>' +
         '<div class="fila">Riesgo <b>' + esc(o.riesgoTxt) + '</b> · Slots de proyecto <b>' + (o.slots || 3) + '</b></div>' +
@@ -832,6 +888,38 @@
   }
   function faseIcono(fc) {
     return fc === 'PRE-PMF' ? 'validating' : fc === 'VALIDANDO PMF' ? 'pmf' : 'scaling';
+  }
+
+  /* El libro que la situacion de hoy dispara. Usa los mismos gatillos
+     `cuando` de libros.js que abren fichas durante el mes, pero en modo
+     lectura: no marca el codex — el briefing muestra la teoria, no la
+     desbloquea. Si nada dispara, cae al libro canonico de la etapa. */
+  var LIBRO_ETAPA = { 'PRE-PMF':'lean', 'VALIDANDO PMF':'hooked' };
+  function libroDelDia(e, c) {
+    var i, l, ok;
+    for (i = 0; i < LIBROS.length; i++) {
+      l = LIBROS[i];
+      if (!l.cuando) continue;
+      ok = false;
+      try { ok = l.cuando(e, c); } catch (err) { ok = false; }
+      if (ok) return l;
+    }
+    return libroPorId(LIBRO_ETAPA[e.faseCorta] || 'chasm');
+  }
+
+  function libroHoyHtml(e, c) {
+    var l = libroDelDia(e, c);
+    if (!l) return '';
+    var pil = pilarDe(l.pilar);
+    var ap = aplicarLibro(l.id, e);
+    return '<div class="seccion-tit">Libro disparado hoy</div>' +
+      '<div class="libhoy" data-lib="' + esc(l.id) + '" style="cursor:pointer">' +
+      '<div class="rot">' + esc(pil.nombre) + '</div>' +
+      '<div class="lhtit">' + esc(l.titulo) + ' — ' + esc(l.autor) + '</div>' +
+      (l.concepto ? '<div class="pq" style="color:var(--color-accent-300);margin-bottom:5px">' +
+        esc(l.concepto) + '</div>' : '') +
+      '<div class="lhtx">' + esc(ap || primeraOracion(l.idea)) + '</div>' +
+      '<div class="pq" style="margin-top:7px"><span class="linklike">Abrir la tarjeta →</span></div></div>';
   }
 
   function indBarra(nombre, valor, objetivo, mayorMejor) {
@@ -969,6 +1057,7 @@
       h += '<div class="quien" style="margin:4px 0"><div class="avatar">' + esc(per.nombre.charAt(0)) + '</div>' +
            '<div><div class="qn">' + esc(per.nombre) + '</div><div class="qc">' + esc(per.cargo) + '</div></div></div>';
     }
+    h += libroHoyHtml(J, C);
     h += '</div></div>';
 
     h += '<div style="margin-top:16px"><span class="btn pri" data-act="empezar-puesto">' + (J.briefVisto ? 'Volver al mes' : 'Empezar el mes 1') + '</span>' +
@@ -1020,8 +1109,22 @@
     } else if (run < 5) {
       h += '<div class="hudi"><div class="k">&nbsp;</div><div class="v rojo" style="font-size:13px">En los pasillos se habla de la caja</div></div>';
     }
-    h += '<div class="hudi der"><span class="btn chico" data-act="biblio">Biblioteca ' + Object.keys(C.codex).length + '/' + LIBROS.length + '</span></div>';
+    h += '<div class="hudi der">' + lupaHtml() +
+         '<span class="btn chico" data-act="biblio">Biblioteca ' + Object.keys(C.codex).length + '/' + LIBROS.length + '</span></div>';
     $('hud').innerHTML = h;
+  }
+
+  /* La Lupa del regulador como fila de iconos que se llenan, estilo wanted
+     level: cinco calaveras, una por cada 20 puntos. Es el unico medidor del
+     HUD que no es un numero — se lee de reojo, que es exactamente lo que hace
+     falta cuando esta subiendo. */
+  function lupaHtml() {
+    var lupa = Math.max(0, Math.min(100, Math.round(J.lupa || 0)));
+    var enc = Math.ceil(lupa / 20), i;
+    var h = '<span class="lupa' + (lupa >= 60 ? ' alta' : '') + '" data-tip="heat">' +
+            '<span class="lupak">Lupa</span>';
+    for (i = 0; i < 5; i++) h += svgIc('skull', i < enc ? 'on' : '');
+    return h + '</span>';
   }
 
   function renderMandato() {
@@ -1030,13 +1133,10 @@
     var esperado = (J.mesPuesto + 1) / J.meses;
     var cls = prog >= 1 ? 'v' : prog >= esperado ? 'a' : 'r';
     var pol = Math.round(J.politico);
-    var lupa = Math.round(J.lupa || 0);
-    var lupaCls = lupa >= 60 ? 'rojo' : 'ambar';
     var h = '<span class="fasechip mini ' + faseClase(J.faseCorta) + '" data-act="ver-objetivo">' + svgIc(faseIcono(J.faseCorta)) + esc(J.faseCorta) + '</span>' +
       '<span class="mut">Mandato:</span>&nbsp;<b>' + esc(m.txt) + '</b>' +
       '<div class="track"><i class="' + cls + '" style="width:' + Math.round(Math.min(1, prog) * 100) + '%"></i></div>' +
-      '<span class="num ' + (pol < 25 ? 'rojo' : pol < 45 ? 'ambar' : 'mut') + '">' + tip('pol','Capital político ' + pol) + '</span>' +
-      (lupa >= 25 ? '<span class="num ' + lupaCls + '" style="margin-left:14px">◉ Te están mirando</span>' : '');
+      '<span class="num ' + (pol < 25 ? 'rojo' : pol < 45 ? 'ambar' : 'mut') + '">' + tip('pol','Capital político ' + pol) + '</span>';
     var sig = siguienteDesbloqueo(C.nivel);
     h += '<span class="mut" style="margin-left:14px">Edad: <b>' + esc(ESCALAFON[C.nivel].corto) + '</b>' +
       (sig ? ' → la siguiente desbloquea ' + esc(NOMBRE_PALANCA[sig.palanca] || sig.palanca) : '') + '</span>';
@@ -1076,8 +1176,16 @@
     var not = M.noticias.length ? M.noticias[0].txt : '';
     var calor = J.calor > 0 ? ' <span class="pill hot">tu sector está caliente</span>' :
                 J.calor < 0 ? ' <span class="pill frio">tu sector está frío</span>' : '';
+    /* pips de Edad estilo Age of Empires: en que escalon del ESCALAFON estas,
+       pegado al ticker del mundo. Uno es la Era (exogena, el nombre de la
+       izquierda); el otro es tu Edad (C.nivel), lo unico que controlas. */
+    var pips = '', i;
+    for (i = 0; i < ESCALAFON.length; i++) {
+      pips += '<i class="' + (i < C.nivel ? 'on' : i === C.nivel ? 'on hoy' : '') + '"></i>';
+    }
     $('era').innerHTML = '<span class="nombre-era">' + esc(era.nombre) + '</span>' + calor +
-      (not ? '<span class="noticia" style="margin-left:14px">◈ ' + esc(not) + '</span>' : '');
+      (not ? '<span class="noticia" style="margin-left:14px">◈ ' + esc(not) + '</span>' : '') +
+      '<span class="erapips" data-tip="edad" title="Edad ' + esc(ESCALAFON[C.nivel].corto) + '">' + pips + '</span>';
   }
 
   /* Age track: el ESCALAFON de carrera (8 niveles, cada uno desbloquea una
@@ -1117,13 +1225,13 @@
      tú los estacionas. Lo que no estaciones va a CONSTRUIR y empuja tus
      proyectos elegidos. Cada punto es visible y está contado. */
   var ESTACIONES = [
-    { k:'desc', n:'Descubrir', svg:'discover', col:'#5aa9f0', req:'desc', lib:'torres', tipk:'st_desc',
+    { k:'desc', n:'Descubrir', svg:'discover', col:'var(--color-accent-400)', req:'desc', lib:'torres', tipk:'st_desc',
       rinde:function (v) { return '+' + Math.round(v * 1.1 * J.calidadDesc * (1 + J.hab.producto / 200)) + ' evid'; } },
-    { k:'plat', n:'Plataforma', svg:'platform', col:'#35c46a', req:'plat', lib:'fowler', tipk:'st_plat',
+    { k:'plat', n:'Plataforma', svg:'platform', col:'var(--color-accent-500)', req:'plat', lib:'fowler', tipk:'st_plat',
       rinde:function (v) { return '−' + Math.round(v * 0.55 * (1 + J.hab.tecnologia / 150)) + ' deuda'; } },
-    { k:'fiab', n:'Fiabilidad', svg:'reliability', col:'#4ecdc4', req:'fiab', lib:'sre', tipk:'st_fiab',
+    { k:'fiab', n:'Fiabilidad', svg:'reliability', col:'var(--color-accent-600)', req:'fiab', lib:'sre', tipk:'st_fiab',
       rinde:function (v) { return '+' + Math.round(v * 0.45) + ' uptime'; } },
-    { k:'crec', n:'Crecimiento', svg:'growth', col:'#e86ba3', req:'crec', lib:'chasm', tipk:'st_crec',
+    { k:'crec', n:'Crecimiento', svg:'growth', col:'var(--color-accent-700)', req:'crec', lib:'chasm', tipk:'st_crec',
       rinde:function (v) { return '+alcance · $' + Math.round(v * 0.9) + 'k'; } }
   ];
 
@@ -1155,7 +1263,7 @@
       if (v > 0) h += '<i style="width:' + (v / mio * 100) + '%;background:' + ESTACIONES[i].col + '"></i>';
     }
     if (enProyectos() > 0) h += '<i style="width:' + (enProyectos() / mio * 100) + '%;background:#e8a33d"></i>';
-    if (ocio > 0) h += '<i style="width:' + (ocio / mio * 100) + '%;background:#20242e"></i>';
+    if (ocio > 0) h += '<i style="width:' + (ocio / mio * 100) + '%;background:var(--color-neutral-800)"></i>';
     h += '</div>';
 
     h += '<div class="estaciones">';
@@ -1173,7 +1281,8 @@
       var pctFill = mio > 0 ? Math.round(vv / mio * 100) : 0;
       h += '<div class="stcard' + (vv > 0 ? ' viva' : '') + '">' +
         '<div class="stfill" style="height:' + pctFill + '%;background:' + st.col + '"></div>' +
-        '<div class="sticon" style="' + (vv > 0 ? 'background:' + st.col + '26;color:' + st.col : '') + '">' + svgIc(st.svg) + '</div>' +
+        '<div class="sticon" style="' + (vv > 0 ? 'background:color-mix(in srgb, ' + st.col +
+          ' 15%, transparent);color:' + st.col : '') + '">' + svgIc(st.svg) + '</div>' +
         '<div class="stn">' + tip(st.tipk, st.n) + '</div>' +
         '<div class="ctrl">' +
         '<div class="b' + (vv <= 0 ? ' off' : '') + '" data-menos="' + st.k + '">−</div>' +
@@ -1183,7 +1292,7 @@
         '<div class="strinde">' + (vv > 0 ? st.rinde(vv) : '—') + '</div></div>';
     }
     h += '<div class="stcard viva build">' +
-      '<div class="sticon" style="background:#e8a33d26;color:#e8a33d">' + svgIc('build') + '</div>' +
+      '<div class="sticon" style="background:color-mix(in srgb, #e8a33d 15%, transparent);color:#e8a33d">' + svgIc('build') + '</div>' +
       '<div class="stn">' + tip('st_build', '⚒ En proyectos') + '</div>' +
       '<div class="n num" style="font-size:19px;margin-top:1px">' + enProyectos() + '</div>' +
       '<div class="strinde">' + (ocio > 0 ? '<span class="ambar">' + ocio + ' ociosos</span>' : 'todos ocupados') + '</div></div>';
@@ -1540,6 +1649,35 @@
     mostrarResultado(todo, 'Mes ' + J.mesPuesto + ' en ' + esc(J.empresa), false);
   }
 
+  /* La jugada del mes: elige el titular entre lo que paso. Prioriza la
+     entrega que mas se paso de lo esperado; si no hubo entregas, el mandato
+     cumplido; y si tampoco, el mejor evento del mes. */
+  function jugadaDelMes(mandatoItem, ships, eventos) {
+    var mejor = null, i, s2, sobre;
+    for (i = 0; i < ships.length; i++) {
+      s2 = ships[i].ship;
+      sobre = s2.esperado > 0 ? (s2.real / s2.esperado) : 1;
+      if (!mejor || sobre > mejor.sobre) mejor = { s:s2, sobre:sobre };
+    }
+    if (mejor && mejor.sobre >= 1) {
+      return 'Jugada del mes: <b>' + esc(mejor.s.n) + '</b> salió con impacto ' + mejor.s.real +
+             ' — ' + (mejor.sobre >= 1.25 ? 'un ' + Math.round((mejor.sobre - 1) * 100) + '% por encima de lo que estimabas.'
+                                          : 'justo lo que habías estimado.');
+    }
+    if (mandatoItem && mandatoItem.tipo === 'bueno') {
+      return 'Jugada del mes: moviste tu mandato de <b>' + esc(mandatoItem.mandato.antes) + '</b> a <b>' +
+             esc(mandatoItem.mandato.despues) + '</b> sin entregar nada — el equipo estacionado hizo el trabajo.';
+    }
+    for (i = 0; i < eventos.length; i++) {
+      if (eventos[i].tipo === 'bueno') return 'Jugada del mes: ' + esc(primeraOracion(eventos[i].texto));
+    }
+    if (mejor) {
+      return 'Jugada del mes: ninguna. <b>' + esc(mejor.s.n) + '</b> rindió ' + mejor.s.real +
+             ' contra los ' + mejor.s.esperado + ' que esperabas — un mes que se paga en aprendizaje.';
+    }
+    return null;
+  }
+
   function mostrarResultado(log, titulo, esDecision, libroTeoria, decisionTxt) {
     var h = '<div class="rot">' + titulo + '</div><h2>' +
             (esDecision ? 'Decidido' : 'Qué pasó') + '</h2><div class="cuerpo2 scroll">';
@@ -1564,6 +1702,14 @@
         (pct !== null ? '<div class="mand-bar"><div class="mand-fill" style="width:' + pct + '%"></div></div>' +
           '<div class="mut num" style="margin-top:3px;font-size:11px">' + pct + '% del camino a la meta</div>' : '') +
         '</div>';
+    }
+
+    /* Jugada del mes: un solo renglon con lo que de verdad movio la aguja —
+       la entrega que mas rindio, y si no hubo entregas, el mejor evento. Sale
+       antes de la lista para que el mes tenga titular, no solo inventario. */
+    var jug = jugadaDelMes(mandatoItem, ships, eventos);
+    if (jug) {
+      h += '<div class="jugada">' + svgIc('trophy') + '<div class="jtx">' + jug + '</div></div>';
     }
 
     if (ships.length) {
@@ -1598,7 +1744,14 @@
       }
     }
 
-    if (esDecision && libroTeoria) {
+    /* la teoria del mes: en una decision es el libro del dilema; en un mes
+       normal, el libro que la situacion dispara hoy. Antes solo aparecia al
+       decidir — y el mes corriente es justo cuando hace falta el porque. */
+    if (!esDecision && !libroTeoria && J) {
+      var lm = libroDelDia(J, C);
+      if (lm) libroTeoria = lm.id;
+    }
+    if (libroTeoria) {
       var lt = libroPorId(libroTeoria);
       var ap2 = J ? aplicarLibro(libroTeoria, J) : null;
       if (lt) {
@@ -1690,7 +1843,7 @@
     }
     h += '<div class="pq mut" style="margin-top:4px">Cada una acelera la capacidad gemela en tu próxima empresa — Producto, Tecnología, GTM y Org crecen más rápido donde tu propia habilidad es más alta.</div>';
     for (i = 0; i < nuevos.length; i++) {
-      h += '<div class="logro"><div class="med">★</div><div><div class="ln">' + esc(nuevos[i].n) + '</div>' +
+      h += '<div class="logro"><div class="med">' + svgIc('trophy') + '</div><div><div class="ln">' + esc(nuevos[i].n) + '</div>' +
            '<div class="ld">' + esc(nuevos[i].d) + '</div></div></div>';
     }
     h += '</div></div>';
@@ -1703,6 +1856,53 @@
   }
 
   /* ================= fin de la carrera ================= */
+
+  /* Radar de 5 ejes — producto / tecnologia / GTM / gente / capital: el
+     perfil con el que cerraste la carrera. Los cuatro primeros son tus
+     habilidades (C.hab); capital es el patrimonio en escala logaritmica,
+     porque la diferencia entre $10k y $1M importa mas que entre $80M y $90M.
+     SVG inline, sin dependencias. */
+  function radarHtml(ejes, ancho) {
+    var w = ancho || 240, hgt = 220, cx = w / 2, cy = 108, r = 78, N = ejes.length, i;
+    function pt(k, f) {
+      var a = -Math.PI / 2 + k * 2 * Math.PI / N;
+      return [ (cx + Math.cos(a) * r * f), (cy + Math.sin(a) * r * f) ];
+    }
+    function poly(f) {
+      var out = [], k, q;
+      for (k = 0; k < N; k++) { q = pt(k, f); out.push(q[0].toFixed(1) + ',' + q[1].toFixed(1)); }
+      return out.join(' ');
+    }
+    var h = '<svg class="radar" width="' + w + '" height="' + hgt + '" viewBox="0 0 ' + w + ' ' + hgt + '">';
+    h += '<polygon class="rgrid" points="' + poly(1) + '"/>';
+    h += '<polygon class="rgrid" points="' + poly(0.66) + '"/>';
+    h += '<polygon class="rgrid" points="' + poly(0.33) + '"/>';
+    for (i = 0; i < N; i++) {
+      var ej = pt(i, 1);
+      h += '<line class="reje" x1="' + cx + '" y1="' + cy + '" x2="' + ej[0].toFixed(1) + '" y2="' + ej[1].toFixed(1) + '"/>';
+    }
+    var pts = [];
+    for (i = 0; i < N; i++) {
+      var q2 = pt(i, Math.max(0.05, Math.min(1, ejes[i].v / 100)));
+      pts.push(q2[0].toFixed(1) + ',' + q2[1].toFixed(1));
+    }
+    h += '<polygon class="rarea" points="' + pts.join(' ') + '"/>';
+    for (i = 0; i < N; i++) {
+      var lp = pt(i, 1.2), dx = lp[0] - cx;
+      var anc = Math.abs(dx) < 6 ? 'middle' : dx > 0 ? 'start' : 'end';
+      h += '<text class="rlbl" x="' + lp[0].toFixed(1) + '" y="' + (lp[1] + 3).toFixed(1) +
+           '" text-anchor="' + anc + '">' + esc(ejes[i].k) + '</text>';
+      h += '<text class="rval" x="' + lp[0].toFixed(1) + '" y="' + (lp[1] + 15).toFixed(1) +
+           '" text-anchor="' + anc + '">' + Math.round(ejes[i].v) + '</text>';
+    }
+    return h + '</svg>';
+  }
+
+  /* el eje de capital: $10k = 0, $1M = 50, $100M = 100 */
+  function ejeCapital(pat) {
+    if (!pat || pat <= 10000) return 0;
+    return Math.max(0, Math.min(100, Math.round(Math.log(pat / 10000) / Math.log(10) / 4 * 100)));
+  }
 
   function mostrarFinal() {
     var b = Carrera.boletin(C);
@@ -1731,6 +1931,16 @@
 
     h += '<div class="dosc" style="display:-webkit-flex;display:flex">';
     h += '<div class="colx" style="width:460px;padding-right:26px">';
+    h += '<div class="rot" style="margin-bottom:6px">Perfil final</div>';
+    h += radarHtml([
+      { k:'Producto',   v:C.hab.producto },
+      { k:'Tecnología', v:C.hab.tecnologia },
+      { k:'GTM',        v:C.hab.negocio },
+      { k:'Gente',      v:C.hab.liderazgo },
+      { k:'Capital',    v:ejeCapital(b.patrimonio) }
+    ], 300);
+    h += '<div class="pq mut" style="margin-bottom:14px">Las cuatro habilidades son las que te llevaste de cada ' +
+         'puesto; capital es tu patrimonio en escala logarítmica — $1M es la mitad del eje, $100M lo llena.</div>';
     h += '<div class="rot" style="margin-bottom:5px">El equity, al final</div>';
     if (!b.detalleEquity.length) h += '<div class="pq mut">No consolidaste equity en ninguna parte.</div>';
     for (i = 0; i < b.detalleEquity.length; i++) {
@@ -1740,13 +1950,6 @@
     }
     h += '<div class="pq mut" style="margin-top:8px">La mayoría del equity muere en cero. El equity que paga cubre todo lo demás. ' +
          'Por eso importa la salud de la empresa cuando te vas — y los términos que firmó antes de que llegaras.</div>';
-    h += '<div class="rot" style="margin:14px 0 5px 0">Habilidades finales</div>';
-    var HH = [['producto','Producto'],['tecnologia','Tecnología'],['negocio','Negocio'],['liderazgo','Liderazgo']];
-    for (i = 0; i < HH.length; i++) {
-      var v = Math.round(C.hab[HH[i][0]]);
-      h += '<div class="hab"><div class="hk">' + HH[i][1] + '<b class="num">' + v + '</b></div>' +
-           '<div class="track"><i class="l" style="width:' + v + '%"></i></div></div>';
-    }
     h += '</div>';
 
     h += '<div class="colx" style="width:420px"><div class="rot" style="margin-bottom:5px">Puesto por puesto</div>';
@@ -1755,9 +1958,20 @@
       h += '<div class="req">' + (p.cumplido ? '<span class="verde">✓</span>' : p.despido ? '<span class="rojo">✕</span>' : '<span class="mut">○</span>') +
            ' <b>' + esc(p.rol) + '</b> <span class="mut">en ' + esc(p.empresa) + ' — ' + esc(p.mandato) + '</span></div>';
     }
-    for (i = 0; i < nuevos.length; i++) {
-      h += '<div class="logro"><div class="med">★</div><div><div class="ln">' + esc(nuevos[i].n) + '</div>' +
-           '<div class="ld">' + esc(nuevos[i].d) + '</div></div></div>';
+    /* Vitrina en vez de lista: todos los logros desbloqueados, y los que se
+       abrieron justo ahora marcados — antes los nuevos se repetian abajo. */
+    var desbl = [], dk, esNuevo = {};
+    for (dk = 0; dk < nuevos.length; dk++) esNuevo[nuevos[dk].id] = true;
+    for (dk = 0; dk < Logros.DEFS.length; dk++) if (R.logros[Logros.DEFS[dk].id]) desbl.push(Logros.DEFS[dk]);
+    if (desbl.length) {
+      h += '<div class="rot" style="margin:16px 0 8px 0">Logros desbloqueados · ' + desbl.length +
+           ' de ' + Logros.DEFS.length + '</div><div class="logrosgrid">';
+      for (dk = 0; dk < desbl.length; dk++) {
+        h += '<div class="logrotile' + (esNuevo[desbl[dk].id] ? ' nuevo' : '') + '">' + svgIc('trophy') +
+             '<div class="ltn">' + esc(desbl[dk].n) + '</div>' +
+             (esNuevo[desbl[dk].id] ? '<div class="ltnuevo">recién</div>' : '') + '</div>';
+      }
+      h += '</div>';
     }
     h += '<div class="pq mut" style="margin-top:8px">Abriste ' + Object.keys(C.codex).length + ' de ' + LIBROS.length + ' tarjetas.</div>';
     h += '</div></div>';
@@ -1951,49 +2165,73 @@
     return h;
   }
 
+  /* Las cuatro tablas historicas viven en pestanas, no apiladas: una tabla
+     a la vez se lee de arriba abajo; cuatro columnas solo se hojean. La
+     semanal y la guerra de facciones se quedan siempre a la vista — son el
+     estado del mundo, no una tabla mas. */
+  var RK_TABS = [
+    { id:'patrimonio', lbl:'Patrimonio', tit:'Ranking mundial · patrimonio',
+      val:function (e) { return money(e.patrimonio); } },
+    { id:'nivel', lbl:'Rol más alto', tit:'Rol más alto alcanzado',
+      val:function (e) { return esc(nivelPorN(e.nivel).corto); } },
+    { id:'racha', lbl:'Racha', tit:'Racha de mandatos cumplidos',
+      val:function (e) { return e.racha + ' seguidos'; } },
+    { id:'logros', lbl:'Logros', tit:'Logros desbloqueados',
+      val:function (e) { return e.logros + ' de ' + Logros.DEFS.length; } }
+  ];
+  function rkTabDef(id) {
+    for (var i = 0; i < RK_TABS.length; i++) if (RK_TABS[i].id === id) return RK_TABS[i];
+    return RK_TABS[0];
+  }
+
   function renderRanking(d, cargando) {
-    var h = '<div class="rot">Ranking público · todos los que alguna vez terminaron una carrera</div>' +
-            '<div class="h1">Salón de la Fama</div>';
+    if (!cargando) rkDatos = d;
+    var h = '<div class="rot">Salón de la Fama</div>' +
+            '<div class="h1" style="margin-top:2px">Ranking público</div>';
     if (cargando) {
       h += '<div class="pq mut" style="margin-top:14px">Buscando el Salón de la Fama…</div>';
     } else if (!d || !d.ok) {
       h += '<div class="pq mut" style="margin-top:14px">El Salón de la Fama está fuera de alcance ahora mismo. Vive en internet — intenta de nuevo en un rato.</div>';
     } else {
-      h += '<div class="pq mut" style="margin-top:4px">' + d.jugadores + ' jugadores · ' + d.carreras + ' carreras terminadas' +
+      h += '<div class="pq mut" style="margin-top:4px">Desafío semanal ' + esc(d.semana) +
+           ' — todos enfrentan la misma secuencia de eras. ' +
+           d.jugadores + ' jugadores · ' + d.carreras + ' carreras terminadas' +
            (d.tu && d.tu.pos ? ' · eres <b class="verde">#' + d.tu.pos + '</b> por patrimonio' : '') + '</div>';
       if (d.bounty) {
-        h += '<div class="caja2" style="margin-top:12px;max-width:660px"><span class="lila">RECOMPENSA</span> · vence a <b>' +
+        h += '<div class="caja2" style="margin-top:12px;max-width:660px"><span class="rot">Recompensa</span> · vence a <b>' +
              esc(d.bounty.nombre) + '</b> (' + money(d.bounty.patrimonio) +
              ') y el logro <b>Regicidio</b> es tuyo.</div>';
       }
-      h += '<div class="rkcols dosc scroll" style="-webkit-flex:1;flex:1;min-height:0">';
-      h += '<div class="colx" style="width:330px;padding-right:26px">';
-      h += '<div class="rot" style="margin-bottom:6px">Ranking mundial · patrimonio · los ' + d.jugadores + ' jugadores</div>';
-      h += filasRk(d.tablas.patrimonio, function (e) { return money(e.patrimonio); });
+      var td = rkTabDef(rkTab), i;
+      h += '<div class="rktabs">';
+      for (i = 0; i < RK_TABS.length; i++) {
+        h += '<div class="rktab' + (RK_TABS[i].id === rkTab ? ' on' : '') + '" data-rktab="' +
+             RK_TABS[i].id + '">' + esc(RK_TABS[i].lbl) + '</div>';
+      }
       h += '</div>';
-      h += '<div class="colx" style="width:310px;padding-right:26px">';
-      h += '<div class="rot" style="margin-bottom:6px">Esta semana · ' + esc(d.semana) + '</div>';
+
+      h += '<div class="rkcols dosc scroll" style="-webkit-flex:1;flex:1;min-height:0">';
+      h += '<div class="colx" style="width:440px;padding-right:28px">';
+      h += '<div class="rot" style="margin-bottom:8px">' + esc(td.tit) + '</div>';
+      h += filasRk(d.tablas[td.id], td.val);
+      h += '</div>';
+
+      h += '<div class="colx" style="width:330px">';
+      h += '<div class="rot" style="margin-bottom:8px">Esta semana · ' + esc(d.semana) + '</div>';
       h += filasRk(d.tablas.semanal, function (e) { return money(e.patrimonio); });
       if (d.semanaPasada) {
-        h += '<div class="pq mut" style="margin-top:6px">La semana pasada: <b>' + esc(d.semanaPasada.nombre) +
-             '</b> ganó con ' + money(d.semanaPasada.patrimonio) + '.</div>';
+        h += '<div class="pq mut" style="margin-top:8px">' + svgIc('trophy', 'acento') +
+             ' Ganador de la semana pasada: <b>' + esc(d.semanaPasada.nombre) +
+             '</b> con ' + money(d.semanaPasada.patrimonio) + '.</div>';
       }
       var g2 = d.facciones.growth, c2 = d.facciones.craft;
       var totalC = g2.cumplidos + c2.cumplidos;
       var pg = totalC ? Math.round(g2.cumplidos / totalC * 100) : 50;
-      h += '<div class="rot" style="margin:14px 0 4px 0">Guerra de facciones · mandatos cumplidos</div>';
-      h += '<div class="facbar"><i style="width:' + pg + '%;background:#e8a33d"></i>' +
-           '<i style="width:' + (100 - pg) + '%;background:#5aa9f0"></i></div>';
-      h += '<div class="pq"><span style="color:#e8a33d"><b>Legión del Crecimiento</b> ' + g2.cumplidos + '</span> · ' +
-           '<span style="color:#5aa9f0"><b>Gremio del Oficio</b> ' + c2.cumplidos + '</span></div>';
-      h += '</div>';
-      h += '<div class="colx" style="width:260px">';
-      h += '<div class="rot" style="margin-bottom:6px">Rol más alto</div>';
-      h += filasRk(d.tablas.nivel, function (e) { return esc(nivelPorN(e.nivel).corto); });
-      h += '<div class="rot" style="margin:12px 0 6px 0">Racha de mandatos</div>';
-      h += filasRk(d.tablas.racha, function (e) { return e.racha + ' seguidos'; });
-      h += '<div class="rot" style="margin:12px 0 6px 0">Logros</div>';
-      h += filasRk(d.tablas.logros, function (e) { return e.logros + ' de ' + Logros.DEFS.length; });
+      h += '<div class="rot" style="margin:18px 0 6px 0">Guerra de facciones · mandatos cumplidos</div>';
+      h += '<div class="facbar"><i style="width:' + pg + '%;background:var(--color-accent)"></i>' +
+           '<i style="width:' + (100 - pg) + '%;background:var(--color-accent-800)"></i></div>';
+      h += '<div class="pq mut" style="margin-top:4px">Legión del Crecimiento ' + pg + '% · ' +
+           'Gremio del Oficio ' + (100 - pg) + '%</div>';
       h += '</div></div>';
     }
     h += '<div style="margin-top:14px"><span class="btn" data-act="cerrar-ranking">Volver</span></div>';
@@ -2068,7 +2306,10 @@
       var inp = $('perfil-in');
       if (inp) inicioSel.texto = inp.value;
       var inpN1 = $('nombre-in'); if (inpN1 && inpN1.value) { inicioSel.nombre = inpN1.value; inicioSel.nombreManual = true; }
-      renderPerfil();
+      /* la escalera vive en la portada y los chips en el perfil: repinta la
+         pantalla que esta a la vista, no siempre el perfil */
+      var pi = $('p-inicio');
+      if (pi && pi.className.indexOf('on') >= 0) renderInicio(); else renderPerfil();
       return;
     }
 
@@ -2081,6 +2322,9 @@
 
     v = attr(t, 'data-tab');
     if (v) { tabJuego = v; renderTabs(); if (tourActivo()) tourRender(); return; }
+
+    v = attr(t, 'data-rktab');
+    if (v) { rkTab = v; renderRanking(rkDatos, !rkDatos); return; }
 
     v = attr(t, 'data-tip');
     if (v) { mostrarTip(v); return; }

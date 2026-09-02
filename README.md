@@ -330,32 +330,63 @@ El almacén es un archivo JSON en un **volumen de Railway montado en
 ranking se resetea en cada deploy. En local cae a la carpeta del repo (o a
 `RANKING_DIR`).
 
-## Identidad visual (hoja de ruta)
+## Identidad visual — "Nocturne"
 
-El motor está completo; la expresión visual todavía es sobre todo tipografía.
-Diagnóstico y propuesta, comparando contra 100 juegos de habilidades y eras
-(Civilization, Age of Empires, Football Manager, Crusader Kings, Darkest
-Dungeon, Duolingo, GTA...): **[La Identidad Visual de Founder
+Diagnóstico y propuesta original, comparando contra 100 juegos de habilidades
+y eras (Civilization, Age of Empires, Football Manager, Crusader Kings,
+Darkest Dungeon, Duolingo, GTA...): **[La Identidad Visual de Founder
 Mode](https://claude.ai/code/artifact/eca128b7-1e51-4b1f-8f59-59117f587fc2)**.
 
-Todo corre con SVG inline + CSS, sin dependencias nuevas. Orden de trabajo:
+La dirección visual vigente es **Nocturne** (aplicada en septiembre de 2026).
+Sus tres reglas, en orden de importancia:
 
-1. **Ahora**: tira de eras con ícono propio y glow en la activa (`#era`);
-   elenco con silueta por rol y marco de color por postura (ayuda/bloquea)
-   en vez de una letra en un círculo.
-2. **Después**: radar de 5 ejes (producto/tecnología/GTM/gente/capital) con
-   el mes anterior como contorno fantasma; la Lupa del regulador como fila
-   de íconos que se llenan, estilo wanted level de GTA.
-3. **Más adelante**: las tres etapas de PMF como camino de nodos (no barras
-   sueltas); los 17 logros y las facciones del ranking como vitrina de
-   badges en vez de listas con candado.
+1. **Un solo acento.** Todo el azul, el lila y los colores por categoría que
+   había antes se fundieron en `--color-accent` (#9184d9). El acento es
+   línea, borde, glow y barra fina — **nunca un relleno grande**. Por eso el
+   botón principal (`.btn.pri`) es un contorno, no un bloque sólido.
+2. **Sombra, no borde.** Las tarjetas (`.oferta`, `.ap`, `.caja2`, `.nota`,
+   `.stcard`, `.lib`, `.tarj`) van sobre `--color-surface` con
+   `--shadow-sm`/`-md`. Los separadores usan `--color-divider`.
+3. **La jerarquía es tamaño y espacio, no negrita.** Ningún peso pasa de
+   500, ni en CSS ni en los SVG. Tipografía: Inter (con la pila Helvetica
+   Neue como reserva si el `<link>` de Google Fonts no carga).
+
+Los valores viven en el bloque `:root` arriba de `estilos.css` y son el
+contrato: **cualquier color nuevo sale de un token, no de un hex suelto**. Lo
+único que sigue en hex son los estados semánticos — verde/ámbar/rojo, la
+escala de esfuerzo — porque ahí el color *es* el dato.
+
+Lo que la dirección agregó, pantalla por pantalla:
+
+- **Inicio**: el escalafón de 8 niveles como barras clicables (la altura de
+  cada barra es el mando real del puesto) con su ficha de detalle y el CTA
+  "Empezar como {rol}"; al lado, los 9 pilares de la biblioteca con el
+  conteo real por pilar. Pegar el LinkedIn pasó a ser el camino secundario
+  (sigue en `#p-perfil`, donde vive la ciudad interactiva).
+- **Ofertas**: el mandato queda explícitamente en `???` hasta aceptar.
+- **Briefing**: bloque "Libro disparado hoy" al pie del elenco, con los
+  mismos gatillos `cuando` de `libros.js` pero en modo lectura (no
+  desbloquea la ficha).
+- **Juego**: la Lupa del regulador como fila de 5 calaveras estilo *wanted
+  level* en el HUD, y pips de Edad junto al ticker de era.
+- **Cierre del mes**: callout "Jugada del mes" (el titular de lo que de
+  verdad movió la aguja) y el bloque de teoría aplicada, que antes solo
+  aparecía al decidir un dilema.
+- **Final**: radar SVG de 5 ejes — producto/tecnología/GTM/gente/capital —
+  y los logros como vitrina en vez de lista.
+- **Ranking**: las 4 tablas históricas en pestañas en vez de apiladas.
+
+Pendiente de la hoja de ruta original: el contorno fantasma del mes anterior
+en el radar, las tres etapas de PMF como camino de nodos, y el elenco con
+silueta por rol en vez de una letra en un círculo.
 
 ## Archivos
 
 ```
 index.html     shell + metas de web app (sin ?v=N: el caché es del servidor)
-estilos.css    tema oscuro, flexbox con prefijos, animaciones -webkit-,
-               y al final el bloque `body.movil` con el layout de teléfono
+estilos.css    tokens de "Nocturne" en `:root`, tema oscuro, flexbox con
+               prefijos, y al final el bloque `body.movil` con el layout de
+               teléfono
 libros.js      100 tarjetas + gatillos contextuales + APLICAR (caso en vivo)
 sectores.js    sectores, empresas+perfil, escalera, etapas+fases, mandatos
 mundo.js       eras, noticias, rival, elenco

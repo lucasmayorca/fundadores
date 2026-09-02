@@ -18,6 +18,7 @@ var MIME = {
   '.png': 'image/png',
   '.ico': 'image/x-icon',
   '.svg': 'image/svg+xml',
+  '.woff2': 'font/woff2',
   '.txt': 'text/plain; charset=utf-8'
 };
 
@@ -574,7 +575,7 @@ http.createServer(function (req, res) {
     }
     var ext = path.extname(archivo).toLowerCase();
     var etag = '"' + st.size.toString(16) + '-' + st.mtime.getTime().toString(16) + '"';
-    var inmutable = ext === '.png' || ext === '.ico' || ext === '.svg';
+    var inmutable = ext === '.png' || ext === '.ico' || ext === '.svg' || ext === '.woff2';
     var cabeceras = {
       'Content-Type': MIME[ext] || 'application/octet-stream',
       'ETag': etag,
