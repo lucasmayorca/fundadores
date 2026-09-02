@@ -603,9 +603,10 @@ body.movil .hud {
 body.movil .hudi { margin:0 16px 2px 0; }
 body.movil .hudi .k { font-size:9px; letter-spacing:0.9px; }
 body.movil .hudi .v { font-size:16px; }
-/* sin margin-left:auto: en una fila que envuelve, ese auto deja media
-   pantalla en blanco y empuja el botón a un renglón propio */
-body.movil .hud .der { margin-left:0; }
+/* el hueco derecho del HUD hereda `width:388px` y `margin-left:auto` de la
+   columna del panel; en una fila que envuelve eso deja media pantalla en
+   blanco y manda el botón a un renglón propio */
+body.movil .hud .der { margin-left:0; width:auto; padding:0; text-align:left; }
 body.movil .hud .der .btn.chico { padding:5px 9px; min-height:0; font-size:11px; }
 
 body.movil .mandatobar {
@@ -614,31 +615,41 @@ body.movil .mandatobar {
 }
 body.movil .mandatobar .track { -webkit-flex:none; flex:none; width:100%; margin:5px 0 3px 0; }
 /* las sangrías de 14px del layout ancho dejan huecos raros al envolver */
-body.movil .mandatobar span[style] { margin-left:0 !important; }
+body.movil .mandatobar span[style] { margin-left:8px !important; }
 body.movil .mandatobar .fasechip.mini { margin-right:8px; }
 body.movil .ritmobar { padding:5px 12px; font-size:11.5px; }
 body.movil .era { height:29px; padding:0 12px; font-size:11.5px; }
 body.movil .retosbar { padding:5px 12px; font-size:11.5px; gap:10px; }
 
 /* ---------- pantalla de juego: dos pestañas en vez de dos columnas ---------- */
-body.movil .izq, body.movil .der { width:100%; border-right:none; }
-body.movil .izq { overflow-y:auto; -webkit-overflow-scrolling:touch; }
-body.movil .der { padding:10px 12px 16px 12px; }
-body.movil .cuerpo.t-empresa .izq { display:none; }
-body.movil .cuerpo.t-trabajo .der { display:none; }
+/* ojo: `.der` tambien es la clase del hueco derecho del HUD, asi que estas
+   reglas se anclan a `.cuerpo` para no estirar el boton de Biblioteca */
+body.movil .cuerpo > .izq, body.movil .cuerpo > .der { width:100%; border-right:none; }
+body.movil .cuerpo > .izq { overflow-y:auto; -webkit-overflow-scrolling:touch; }
+body.movil .cuerpo > .der { padding:10px 12px 16px 12px; }
+body.movil .cuerpo.t-empresa > .izq { display:none; }
+body.movil .cuerpo.t-trabajo > .der { display:none; }
 /* con .izq como único scroller, el backlog crece en vez de scrollear aparte */
 body.movil .bl { -webkit-flex:none; flex:none; overflow:visible; padding:0 12px 14px 12px; }
+/* .izq es un flex column: sin esto sus hijos se comprimen (la barra de era
+   colapsa a 0 y el bloque de estaciones se solapa) en vez de dejar scroll */
+body.movil .cuerpo > .izq > * { -webkit-flex-shrink:0; flex-shrink:0; }
 body.movil .bloque { padding:9px 12px 4px 12px; }
 
 /* estaciones: tres por fila */
 body.movil .estaciones { -webkit-flex-wrap:wrap; flex-wrap:wrap; }
 body.movil .stcard, body.movil .stcard.build {
-  width:31.6%; margin:0 2.6% 8px 0; height:92px;
+  width:31.6%; margin:0 2.6% 8px 0; height:104px;
 }
 body.movil .stcard:nth-child(3n) { margin-right:0; }
 body.movil .stcard .sticon { margin-top:8px; }
 body.movil .stcard .stn { font-size:10.5px; }
 body.movil .stcard .strinde { font-size:9px; }
+/* dedos, no cursor: los +/- de 24px son un blanco imposible en un teléfono */
+body.movil .stcard .ctrl .b { width:32px; height:32px; line-height:30px; font-size:17px; }
+body.movil .stcard .ctrl .n { width:26px; font-size:16px; }
+body.movil .ap.tuyo .ctrl .b { width:36px; height:36px; line-height:34px; font-size:18px; }
+body.movil .quitar { width:34px; height:34px; line-height:32px; }
 
 /* proyectos y backlog */
 body.movil .ap { padding:9px 10px; }
@@ -660,7 +671,6 @@ body.movil .barra .btn.pri { -webkit-flex:1; flex:1; }
 body.movil .tarj {
   width:100% !important; max-width:none; height:100%; max-height:none;
   border:none; border-radius:0; padding:16px 16px 0 16px;
-  padding-top:calc(16px + env(safe-area-inset-top));
 }
 body.movil .tarj h2 { font-size:20px; }
 body.movil .tarj .cuerpo2 { padding-bottom:14px; }
@@ -671,11 +681,31 @@ body.movil .libs .lib { width:100%; height:auto; min-height:78px; margin:0 0 8px
 body.movil .quien .avatar { width:34px; height:34px; line-height:34px; border-radius:17px; }
 
 /* ---------- tooltips y tour ---------- */
+/* por encima de la barra de acción (que en móvil mide ~83px), como el
+   bottom:86px del layout ancho hace sobre la barra de 70 */
 body.movil #tipbar {
-  left:8px; right:8px; width:auto; margin-left:0; bottom:12px;
-  bottom:calc(12px + env(safe-area-inset-bottom));
+  left:8px; right:8px; width:auto; margin-left:0; bottom:92px;
+  bottom:calc(92px + env(safe-area-inset-bottom));
 }
 body.movil #coach { max-width:none; }
 
 /* ---------- salón de la fama ---------- */
 body.movil .rkcols { display:block !important; }
+
+/* ---------- teléfono de lado: el ciclo mensual pide vertical ----------
+   Con ~390px de alto, las barras fijas (HUD, mandato, ritmo, era, retos,
+   pestañas, acción) se comen la pantalla y al mes le quedan ~90px. En vez de
+   servir algo inservible, se pide vertical — y solo en la pantalla de juego,
+   porque las demás scrollean bien de lado. Vive dentro de #p-juego, así que
+   se esconde solo cuando esa pantalla no está activa. */
+.girar { display:none; }
+body.movil.paisaje .girar {
+  display:-webkit-flex; display:flex; position:absolute; left:0; top:0; z-index:70;
+  width:100%; height:100%; padding:20px 30px; background:#06080c;
+  -webkit-align-items:center; align-items:center;
+  -webkit-justify-content:center; justify-content:center; text-align:center;
+}
+.girar-ic { width:82px; height:56px; fill:none; stroke:#3f82e6; stroke-width:2;
+  stroke-linecap:round; stroke-linejoin:round; }
+.girar-t { font-size:22px; font-weight:300; margin-top:14px; }
+.girar-s { font-size:13px; line-height:1.5; color:#8b93a1; margin:8px auto 0 auto; max-width:440px; }

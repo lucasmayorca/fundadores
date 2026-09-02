@@ -3,7 +3,8 @@
 **Juégalo aquí: https://fundadores-production.up.railway.app/**
 
 Juego de carrera para el navegador, construido originalmente para un iPad 3
-(iOS 9.3.5), y por eso corre en cualquier cosa. En casa lo sirve el servidor
+(iOS 9.3.5), y por eso corre en cualquier cosa — incluido el teléfono, que
+tiene su propio layout (ver *En el teléfono*). En casa lo sirve el servidor
 del panel (`localhost:8000/juego/`); en internet, Railway con el `server.js`
 de este repo (`npm start` para correrlo en local).
 
@@ -46,10 +47,45 @@ repo) — si algún día se conecta desde el dashboard de Railway, el
 ## Restricciones técnicas (las mismas del panel)
 
 iOS 9.3.5 / Safari 9: ES5 puro (nada de `let`/`const`, arrows, template
-literals, `class` ni `fetch`), flexbox con prefijos `-webkit-`, 1024×768
-fijo, sin build, sin dependencias. Todo el estado en `localStorage`.
+literals, `class` ni `fetch`), flexbox con prefijos `-webkit-`, sin build,
+sin dependencias. Todo el estado en `localStorage`.
 Los script tags llevan `?v=N` para reventar caché: **sube el número cada
 vez que toques cualquier archivo**.
+
+El lienzo sigue siendo de **1024×768**, escalado y centrado al viewport — en
+el iPad 3 la escala cae exacto en 1. Los teléfonos son la excepción: ahí el
+lienzo suelta el tamaño fijo (ver abajo).
+
+## En el teléfono
+
+Escalar el lienzo de 1024 a 390px de ancho deja el texto a ~0.38x: ilegible.
+Así que por debajo de **700px de lado corto** el juego entra en modo móvil:
+`ui.js` marca `movil` en `<body>` y el bloque de móvil de `estilos.css` toma
+el control. Sin esa clase esas reglas no existen — el iPad 3 ve exactamente
+lo de siempre, y al rotar o redimensionar se cruza de un modo al otro
+repintando la pantalla activa.
+
+Qué cambia:
+
+- **El lienzo se estira** al viewport (sin `transform: scale`), con las
+  `safe-area-inset-*` del notch como padding.
+- **La pantalla de juego se parte en dos pestañas**: *Tu mes* (estaciones +
+  proyectos, un solo scroll) y *La empresa* (los signos vitales que en ancho
+  viven en la columna derecha). El paso del tour que ilumina el panel cambia
+  de pestaña solo.
+- **Ritmo, era y retos se mudan adentro del scroll** de la columna izquierda:
+  son contexto que se lee al empezar el mes, no cosas que necesites clavadas
+  mientras mueves puntos. Quedan fijos el HUD, el mandato, las pestañas y el
+  cierre del mes — de 407px de cromo fijo a 284px, que en un iPhone SE es la
+  diferencia entre 160 y 285px para jugar.
+- **Todo lo que era una fila de columnas de ancho fijo se apila** (portada,
+  ofertas, briefing, cierre, final, Salón de la Fama). En el HTML esas
+  columnas van marcadas con `.dosc` / `.colx`; las estaciones pasan a tres
+  por fila y las tarjetas de oferta a una por fila.
+- **Los overlays son hojas a pantalla completa** (dilemas, resumen del mes,
+  biblioteca, tarjetas de libro), con el botón de cerrar clavado abajo.
+- **De lado se pide vertical**, y solo en la pantalla de juego: con ~390px de
+  alto el mes no cabe. El resto del juego funciona igual en cualquier sentido.
 
 ## Inicio personalizado (LinkedIn)
 
@@ -293,7 +329,8 @@ Safari 9. Orden de trabajo:
 
 ```
 index.html     shell + metas de web app (script tags con ?v=N)
-estilos.css    tema oscuro, flexbox con prefijos, animaciones -webkit-
+estilos.css    tema oscuro, flexbox con prefijos, animaciones -webkit-,
+               y al final el bloque `body.movil` con el layout de teléfono
 libros.js      100 tarjetas + gatillos contextuales + APLICAR (caso en vivo)
 sectores.js    sectores, empresas+perfil, escalera, etapas+fases, mandatos
 mundo.js       eras, noticias, rival, elenco
@@ -321,7 +358,12 @@ del desarrollo).
 - El premio gordo (~$80-120M) existe: funda, deja que te compren, sobrevive
   la cascada de liquidación.
 
-## En el iPad
+## En el iPad y en el teléfono
 
 Igual que el panel: Safari → `http://MacBook-Air-de-Lucas.local:8000/juego/`
 → Compartir → Añadir a pantalla de inicio. Se recomienda Acceso Guiado.
+
+En el teléfono es lo mismo, pero con el link público
+(https://fundadores-production.up.railway.app/) para no depender de la LAN.
+Añadido a la pantalla de inicio abre a pantalla completa, sin barras de
+Safari — que es donde el modo móvil se ve mejor.

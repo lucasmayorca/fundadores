@@ -49,9 +49,30 @@
 
   function modoMovil(w, h2) { return Math.min(w, h2) < 700; }
 
+  /* En un teléfono las barras fijas se comen la pantalla: con HUD, mandato,
+     ritmo, era, retos, pestañas y barra de acción clavados, a un iPhone SE le
+     quedan ~160px para el mes. Ritmo, era y retos son contexto que se lee una
+     vez al empezar el mes, no cosas que necesites a la vista mientras mueves
+     puntos — así que en móvil se mudan adentro del scroll de la columna
+     izquierda, arriba de las estaciones. Quedan clavados el HUD, el mandato,
+     las pestañas y el cierre del mes. */
+  function acomodarBarras() {
+    var pj = $('p-juego'), tb = $('tabsm'), capa = $('capa');
+    var izq = pj ? pj.getElementsByClassName('izq')[0] : null;
+    if (!pj || !izq || !capa || !tb) return;
+    var ids = ['ritmo', 'era', 'retos'], i, el, destino, ancla;
+    destino = esMovil ? izq : pj;
+    ancla = esMovil ? capa : tb;
+    for (i = 0; i < ids.length; i++) {
+      el = $(ids[i]);
+      if (el && el.parentNode !== destino) destino.insertBefore(el, ancla);
+    }
+  }
+
   function renderTabs() {
     var tb = $('tabsm'), cu = $('cuerpo');
     if (!tb || !cu) return;
+    acomodarBarras();
     if (!esMovil) { tb.innerHTML = ''; cu.className = 'cuerpo'; return; }
     tb.innerHTML =
       '<div class="tabm' + (tabJuego === 'trabajo' ? ' on' : '') + '" data-tab="trabajo">Tu mes</div>' +
@@ -850,8 +871,12 @@
 
   function renderAsignacion() {
     var mio = Motor.capacidadPropia(J), ocio = sinUsar();
-    var h = '<div class="rot" style="margin-bottom:6px">1 · Coloca los ' +
-            '<b class="num">' + mio + ' puntos</b> de tu equipo · primero estaciones, el resto va a los proyectos de abajo</div>';
+    /* el rótulo largo se come tres renglones en un teléfono */
+    var h = esMovil ?
+      ('<div class="rot" style="margin-bottom:6px">1 · Coloca tus <b class="num">' + mio +
+       ' puntos</b> · lo que no estaciones va a los proyectos</div>') :
+      ('<div class="rot" style="margin-bottom:6px">1 · Coloca los ' +
+       '<b class="num">' + mio + ' puntos</b> de tu equipo · primero estaciones, el resto va a los proyectos de abajo</div>');
 
     h += '<div class="ebar">';
     var i;
@@ -937,7 +962,8 @@
   function renderBacklog() {
     var usados = slotsUsados(), i2, cajas = '';
     for (i2 = 0; i2 < J.slots; i2++) cajas += '<span class="slot' + (i2 < usados ? ' lleno' : '') + '"></span>';
-    var h = '<div class="rot" style="margin:8px 0 7px 0">2 · Pon puntos en tus proyectos · slots ' + cajas +
+    var h = '<div class="rot" style="margin:8px 0 7px 0">2 · ' +
+      (esMovil ? 'Tus proyectos' : 'Pon puntos en tus proyectos') + ' · slots ' + cajas +
       ' <span class="pill libro" data-lib="momtest">confianza ' + Motor.confianza(J) + '</span></div>';
 
     var id, i, a, d;
@@ -1914,7 +1940,9 @@
     var w = window.innerWidth || 1024, h2 = window.innerHeight || 768;
     var mov = modoMovil(w, h2), cambio = (mov !== esMovil);
     esMovil = mov;
-    document.body.className = mov ? 'movil' : '';
+    /* teléfono de lado: la pantalla de juego pide vertical (ver estilos.css) */
+    var paisaje = mov && w > h2 && h2 < 500;
+    document.body.className = mov ? (paisaje ? 'movil paisaje' : 'movil') : '';
 
     if (mov) {
       escalaActual = 1;
