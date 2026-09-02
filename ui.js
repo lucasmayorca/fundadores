@@ -343,69 +343,293 @@
     return h;
   }
 
-  /* El visual héroe: un skyline que crece con la escalera, de un garaje con
-     un escritorio a una torre con tu propia bandera arriba. Cada edificio es
-     un blanco táctil grande cableado al mismo data-rol que usan los chips de
-     rol, así que elegir escalón y leer la historia son el mismo gesto. */
-  function skylineSvg(sel, interactivo) {
-    var n = ESCALAFON.length, vw = 600, vh = 160, baseY = 134, topPad = 34;
-    var colW = vw / n, barW = 44, maxH = baseY - topPad, minH = 18, i;
-    var svg = '<svg viewBox="0 0 ' + vw + ' ' + vh + '" class="skysvg" preserveAspectRatio="xMidYMax meet">' +
-      '<defs><linearGradient id="skysky" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0" stop-color="#0a0f1c"></stop><stop offset="1" stop-color="#131b2c"></stop>' +
-      '</linearGradient><radialGradient id="skyglow" cx="0.5" cy="1" r="0.75">' +
-      '<stop offset="0" stop-color="#3a2e12" stop-opacity="0.55"></stop>' +
-      '<stop offset="1" stop-color="#3a2e12" stop-opacity="0"></stop></radialGradient></defs>' +
-      '<rect x="0" y="0" width="' + vw + '" height="' + vh + '" fill="url(#skysky)"></rect>' +
-      '<rect x="0" y="0" width="' + vw + '" height="' + vh + '" fill="url(#skyglow)"></rect>' +
-      '<circle cx="70" cy="26" r="7" fill="#232c40"></circle>' +
-      '<circle cx="75" cy="23" r="7" fill="#0a0f1c"></circle>' +
-      '<circle cx="30" cy="20" r="1.1" fill="#2a313d"></circle>' +
-      '<circle cx="140" cy="34" r="1" fill="#2a313d"></circle>' +
-      '<circle cx="230" cy="16" r="1.2" fill="#3a4456"></circle>' +
-      '<circle cx="320" cy="30" r="1" fill="#2a313d"></circle>' +
-      '<circle cx="400" cy="14" r="1" fill="#2a313d"></circle>' +
-      '<circle cx="470" cy="22" r="1.2" fill="#3a4456"></circle>' +
-      '<circle cx="550" cy="32" r="1" fill="#2a313d"></circle>' +
-      '<line x1="0" y1="' + baseY + '" x2="' + vw + '" y2="' + baseY + '" stroke="#1c2438"></line>';
+  /* ruido determinista: el mismo dibujo en cada render, sin Math.random */
+  function ruido(a, b) {
+    var s = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453;
+    return s - Math.floor(s);
+  }
 
-    for (i = 0; i < n; i++) {
-      var h2 = minH + (maxH - minH) * (i / (n - 1));
-      var cx = colW * i + colW / 2, x = cx - barW / 2, y = baseY - h2;
-      var sel2 = (i === sel), fnd = (i === n - 1);
-      var fill = sel2 ? '#182b46' : '#141922';
-      var stroke = sel2 ? (fnd ? '#a98ff0' : '#3f82e6') : '#232a35';
-      svg += interactivo ? '<g class="skycol" data-rol="' + i + '">' : '<g>';
-      if (interactivo) {
-        svg += '<rect x="' + x + '" y="' + topPad + '" width="' + barW + '" height="' + (baseY - topPad) +
-               '" fill="#000" opacity="0" pointer-events="all"></rect>';
-      }
-      svg += '<rect class="skybar" x="' + x + '" y="' + y + '" width="' + barW + '" height="' + h2 +
-             '" rx="1.5" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (sel2 ? 1.6 : 1) + '"></rect>';
-      var rows = Math.max(1, Math.floor((h2 - 8) / 11)), r;
-      for (r = 0; r < rows; r++) {
-        var wy = y + 6 + r * 11, wfill = sel2 ? '#ffd479' : '#2a313d', wop = sel2 ? 0.9 : 0.55;
-        svg += '<rect x="' + (x + 7) + '" y="' + wy + '" width="5" height="4.4" fill="' + wfill + '" opacity="' + wop + '"></rect>';
-        svg += '<rect x="' + (x + 19.5) + '" y="' + wy + '" width="5" height="4.4" fill="' + wfill + '" opacity="' + wop + '"></rect>';
-        svg += '<rect x="' + (x + 32) + '" y="' + wy + '" width="5" height="4.4" fill="' + wfill + '" opacity="' + wop + '"></rect>';
-      }
-      if (sel2) {
-        if (fnd) {
-          svg += '<line x1="' + cx + '" y1="' + (y - 2) + '" x2="' + cx + '" y2="' + (y - 18) + '" stroke="#a98ff0" stroke-width="1.8"></line>' +
-                 '<path d="M' + cx + ' ' + (y - 18) + ' l15 5 l-15 5 z" fill="#a98ff0"></path>';
-        } else {
-          svg += '<circle cx="' + cx + '" cy="' + (y - 10) + '" r="4.2" fill="#5aa9f0"></circle>' +
-                 '<line x1="' + cx + '" y1="' + (y - 6) + '" x2="' + cx + '" y2="' + (y - 1) + '" stroke="#5aa9f0" stroke-width="2"></line>';
-        }
-        svg += '<line x1="' + cx + '" y1="' + (y - 20) + '" x2="' + cx + '" y2="' + baseY + '" stroke="' +
-               (fnd ? '#a98ff0' : '#5aa9f0') + '" stroke-width="1" stroke-dasharray="2,2" opacity="0.35"></line>' +
-               '<text x="' + cx + '" y="' + (y - 24) + '" text-anchor="middle" font-size="11" font-weight="700" fill="' +
-               (fnd ? '#a98ff0' : '#7fa8d8') + '">' + esc(ESCALAFON[i].corto) + '</text>';
-      }
-      svg += '</g>';
+  /* ¿el visitante pidió menos movimiento? en Safari 9 matchMedia existe pero
+     no conoce la consulta y devuelve false — justo el valor correcto acá */
+  function reducirMovimiento() {
+    try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+    catch (e) { return false; }
+  }
+
+  /* El perfil de cada escalón: del galpón de una planta a la torre con aguja,
+     faro y bandera. Cada uno tiene su silueta — la carrera se lee de un
+     vistazo sin necesitar las etiquetas. */
+  var TORRES = [
+    { h:20,  w:48, remate:'techo' },    /* APM   — el galpón a dos aguas */
+    { h:34,  w:36, remate:'chimenea' }, /* PM    — la primera oficina */
+    { h:48,  w:38, remate:'parapeto' }, /* Sr PM — cornisa */
+    { h:62,  w:34, remate:'tanque' },   /* GPM   — tanque de agua */
+    { h:78,  w:40, remate:'escalon' },  /* Dir   — primer retranqueo */
+    { h:94,  w:36, remate:'antena' },   /* VP    — mástil */
+    { h:110, w:42, remate:'cupula' },   /* CPO   — la cúpula */
+    { h:128, w:48, remate:'aguja' }     /* Fndr  — aguja, faro, bandera */
+  ];
+
+  var skyId = 0, portadaAnimada = false;
+
+  /* El visual héroe: una ciudad que crece de izquierda a derecha, un edificio
+     por escalón, con la trayectoria de la carrera trazada sobre los techos.
+     En la portada es decorativa y entra animada (las torres emergen del suelo
+     recortadas por el horizonte, después se dibuja la trayectoria). En el
+     perfil es interactiva: cada torre es un blanco táctil grande cableado al
+     mismo data-rol que los chips de rol. */
+  function skylineSvg(sel, interactivo) {
+    var vw = 600, vh = 200, baseY = 168, n = ESCALAFON.length;
+    var margen = 16, span = (vw - margen * 2) / n;
+    var animar = !interactivo && !portadaAnimada && !reducirMovimiento();
+    var u = 'sk' + (++skyId);
+    var i, c, f, s = '';
+
+    function geo(k) {
+      var t = TORRES[k], cx = margen + span * k + span / 2;
+      return { cx:cx, x:cx - t.w / 2, w:t.w, h:t.h, y:baseY - t.h, t:t };
     }
-    svg += '</svg>';
-    return svg;
+
+    /* ventanas: retícula irregular, más vida a medida que subís de escalón */
+    function ventanas(g, k, viva) {
+      var paso = 11, vw2 = 6, vh2 = 4.6;
+      var cols = Math.max(2, Math.floor((g.w - 8) / paso));
+      var filas = Math.max(1, Math.floor((g.h - 11) / paso));
+      var ox = g.x + (g.w - (cols * vw2 + (cols - 1) * (paso - vw2))) / 2;
+      var out = '', r, wx, wy, lit, op;
+      for (f = 0; f < filas; f++) {
+        for (c = 0; c < cols; c++) {
+          wx = ox + c * paso; wy = g.y + 6.5 + f * paso;
+          r = ruido(k * 13 + c, f * 7 + 1);
+          lit = r > (viva ? 0.36 : 0.54);
+          op = lit ? (0.5 + r * 0.5) : 0.42;
+          out += '<rect x="' + wx.toFixed(1) + '" y="' + wy.toFixed(1) + '" width="' + vw2 + '" height="' + vh2 +
+                 '" fill="' + (lit ? (viva ? '#ffd27a' : '#e8bb6a') : '#1e2736') +
+                 '" opacity="' + op.toFixed(2) + '">';
+          /* un puñado de ventanas parpadea: alguien todavía trabajando */
+          if (lit && animar && r > 0.962) {
+            out += '<animate attributeName="opacity" values="' + op.toFixed(2) + ';0.15;' + op.toFixed(2) +
+                   ';' + op.toFixed(2) + '" dur="' + (3.4 + r * 3).toFixed(1) + 's" begin="' +
+                   (r * 4).toFixed(1) + 's" repeatCount="indefinite"></animate>';
+          }
+          out += '</rect>';
+        }
+      }
+      return out;
+    }
+
+    /* la coronación de cada torre: lo que la hace reconocible de lejos */
+    function remate(g, col, viva) {
+      var t = g.t, cx = g.cx, y = g.y, o = '';
+      if (t.remate === 'techo') {
+        o += '<path d="M' + (g.x - 2.5) + ' ' + y + ' L' + cx + ' ' + (y - 7) + ' L' + (g.x + g.w + 2.5) +
+             ' ' + y + ' Z" fill="' + col.techo + '"></path>';
+      } else if (t.remate === 'chimenea') {
+        o += '<rect x="' + (cx - 7) + '" y="' + (y - 6) + '" width="13" height="6" fill="' + col.techo + '"></rect>' +
+             '<rect x="' + (cx + 7.5) + '" y="' + (y - 10) + '" width="2.6" height="10" fill="' + col.techo + '"></rect>';
+      } else if (t.remate === 'parapeto') {
+        o += '<rect x="' + (g.x - 2.5) + '" y="' + (y - 3.5) + '" width="' + (g.w + 5) + '" height="3.5" fill="' + col.techo + '"></rect>';
+      } else if (t.remate === 'cupula') {
+        o += '<path d="M' + (cx - 11) + ' ' + y + ' Q' + cx + ' ' + (y - 25) + ' ' + (cx + 11) + ' ' + y +
+             ' Z" fill="' + col.cuerpo + '" stroke="' + col.borde + '" stroke-width="1"></path>' +
+             '<rect x="' + (cx - 1) + '" y="' + (y - 19) + '" width="2" height="8" fill="' + col.techo + '"></rect>' +
+             '<circle cx="' + cx + '" cy="' + (y - 20) + '" r="2" fill="' + col.acento + '" opacity="0.85"></circle>';
+      } else if (t.remate === 'tanque') {
+        o += '<rect x="' + (cx - 7) + '" y="' + (y - 10) + '" width="14" height="8" rx="1" fill="' + col.techo + '"></rect>' +
+             '<rect x="' + (cx - 5.5) + '" y="' + (y - 2) + '" width="1.6" height="2" fill="' + col.techo + '"></rect>' +
+             '<rect x="' + (cx + 4) + '" y="' + (y - 2) + '" width="1.6" height="2" fill="' + col.techo + '"></rect>';
+      } else if (t.remate === 'escalon') {
+        o += '<rect x="' + (cx - g.w / 4) + '" y="' + (y - 11) + '" width="' + (g.w / 2) + '" height="11" fill="' + col.cuerpo +
+             '" stroke="' + col.borde + '" stroke-width="1"></rect>' +
+             '<rect x="' + (cx - g.w / 8) + '" y="' + (y - 17) + '" width="' + (g.w / 4) + '" height="6" fill="' + col.cuerpo +
+             '" stroke="' + col.borde + '" stroke-width="1"></rect>';
+      } else if (t.remate === 'antena') {
+        o += '<line x1="' + cx + '" y1="' + y + '" x2="' + cx + '" y2="' + (y - 18) + '" stroke="' + col.techo + '" stroke-width="1.4"></line>' +
+             '<line x1="' + (cx - 4) + '" y1="' + (y - 12) + '" x2="' + (cx + 4) + '" y2="' + (y - 12) + '" stroke="' + col.techo + '" stroke-width="1"></line>' +
+             '<line x1="' + (cx - 2.5) + '" y1="' + (y - 16) + '" x2="' + (cx + 2.5) + '" y2="' + (y - 16) + '" stroke="' + col.techo + '" stroke-width="1"></line>';
+      } else if (t.remate === 'aguja') {
+        /* la torre del fundador: coronación, aguja, faro y bandera propia */
+        o += '<rect x="' + (cx - 9) + '" y="' + (y - 9) + '" width="18" height="9" fill="' + col.cuerpo +
+             '" stroke="' + col.borde + '" stroke-width="1"></rect>';
+        o += '<line x1="' + cx + '" y1="' + (y - 9) + '" x2="' + cx + '" y2="' + (y - 30) + '" stroke="' + col.acento + '" stroke-width="1.6"></line>';
+        /* bandera que ondea */
+        o += '<path d="M' + cx + ' ' + (y - 30) + ' q7 2 13 0 q-6 5 0 9 q-7 2 -13 0 Z" fill="' + col.acento + '" opacity="0.95">';
+        if (animar) {
+          o += '<animate attributeName="d" dur="3.2s" repeatCount="indefinite" values="' +
+               'M' + cx + ' ' + (y - 30) + ' q7 2 13 0 q-6 5 0 9 q-7 2 -13 0 Z;' +
+               'M' + cx + ' ' + (y - 30) + ' q7 -2 13 1 q-6 4 0 9 q-7 1 -13 -1 Z;' +
+               'M' + cx + ' ' + (y - 30) + ' q7 2 13 0 q-6 5 0 9 q-7 2 -13 0 Z"></animate>';
+        }
+        o += '</path>';
+        /* faro de aviación */
+        o += '<circle cx="' + cx + '" cy="' + (y - 32) + '" r="2.4" fill="#ff6b5e">';
+        if (animar) o += '<animate attributeName="opacity" values="1;0.15;1" dur="2.4s" repeatCount="indefinite"></animate>';
+        o += '</circle>';
+      }
+      return o;
+    }
+
+    s += '<svg viewBox="0 0 ' + vw + ' ' + vh + '" class="skysvg" preserveAspectRatio="xMidYMax meet">';
+
+    s += '<defs>' +
+      '<linearGradient id="' + u + 'cielo" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#05080f"></stop>' +
+        '<stop offset="0.5" stop-color="#0a1120"></stop>' +
+        '<stop offset="1" stop-color="#141d33"></stop></linearGradient>' +
+      '<radialGradient id="' + u + 'brillo" cx="0.5" cy="1" r="0.85">' +
+        '<stop offset="0" stop-color="#9a742a" stop-opacity="0.40"></stop>' +
+        '<stop offset="0.45" stop-color="#5a4418" stop-opacity="0.15"></stop>' +
+        '<stop offset="1" stop-color="#5a4418" stop-opacity="0"></stop></radialGradient>' +
+      '<radialGradient id="' + u + 'halo" cx="0.5" cy="0.5" r="0.5">' +
+        '<stop offset="0" stop-color="#cfe0ff" stop-opacity="0.22"></stop>' +
+        '<stop offset="1" stop-color="#cfe0ff" stop-opacity="0"></stop></radialGradient>' +
+      '<linearGradient id="' + u + 'bordes" x1="0" y1="0" x2="1" y2="0">' +
+        '<stop offset="0" stop-color="#080c15" stop-opacity="0.85"></stop>' +
+        '<stop offset="0.055" stop-color="#080c15" stop-opacity="0"></stop>' +
+        '<stop offset="0.945" stop-color="#080c15" stop-opacity="0"></stop>' +
+        '<stop offset="1" stop-color="#080c15" stop-opacity="0.85"></stop></linearGradient>' +
+      '<clipPath id="' + u + 'suelo"><rect x="0" y="0" width="' + vw + '" height="' + baseY + '"></rect></clipPath>' +
+      '</defs>';
+
+    /* cielo, resplandor del horizonte y luna */
+    s += '<rect x="0" y="0" width="' + vw + '" height="' + vh + '" fill="url(#' + u + 'cielo)"></rect>';
+    s += '<rect x="0" y="0" width="' + vw + '" height="' + vh + '" fill="url(#' + u + 'brillo)"></rect>';
+    /* luna creciente: disco claro y encima otro del color del cielo */
+    s += '<circle cx="82" cy="34" r="27" fill="url(#' + u + 'halo)"></circle>' +
+         '<circle cx="82" cy="34" r="8.5" fill="#c9d6ef" opacity="0.82"></circle>' +
+         '<circle cx="87.5" cy="30.5" r="8.5" fill="#070c17"></circle>';
+
+    /* estrellas: unas cuantas titilan */
+    for (i = 0; i < 22; i++) {
+      var ex = ruido(i, 1) * vw, ey = 8 + ruido(i, 2) * 78, er = 0.6 + ruido(i, 5) * 0.7;
+      var eo = 0.25 + ruido(i, 8) * 0.5;
+      s += '<circle cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="' + er.toFixed(1) +
+           '" fill="#9fb4d8" opacity="' + eo.toFixed(2) + '">';
+      if (animar && i % 6 === 0) {
+        s += '<animate attributeName="opacity" values="' + eo.toFixed(2) + ';0.08;' + eo.toFixed(2) +
+             '" dur="' + (2.8 + ruido(i, 9) * 2.6).toFixed(1) + 's" repeatCount="indefinite"></animate>';
+      }
+      s += '</circle>';
+    }
+
+    /* capa lejana: siluetas fuera de foco, la ciudad detrás de la ciudad */
+    for (i = 0; i < 20; i++) {
+      var fx = ruido(i, 3) * (vw + 30) - 15;
+      var fh = 18 + ruido(i, 7) * 52, fw = 15 + ruido(i, 11) * 24;
+      s += '<rect x="' + fx.toFixed(1) + '" y="' + (baseY - fh).toFixed(1) + '" width="' + fw.toFixed(1) +
+           '" height="' + fh.toFixed(1) + '" fill="#0c1220"></rect>';
+    }
+    for (i = 0; i < 12; i++) {
+      var mx = ruido(i, 17) * (vw + 20) - 10;
+      var mh = 14 + ruido(i, 19) * 34, mw = 18 + ruido(i, 23) * 20;
+      s += '<rect x="' + mx.toFixed(1) + '" y="' + (baseY - mh).toFixed(1) + '" width="' + mw.toFixed(1) +
+           '" height="' + mh.toFixed(1) + '" fill="#111827"></rect>';
+    }
+
+    /* ---- las ocho torres, recortadas por el horizonte para que emerjan ---- */
+    s += '<g clip-path="url(#' + u + 'suelo)">';
+    for (i = 0; i < n; i++) {
+      var g = geo(i), esSel = (i === sel), esFnd = (i === n - 1);
+      var col = esSel
+        ? { cuerpo:'#1a2942', borde:(esFnd ? '#a98ff0' : '#3f82e6'), techo:'#243758', acento:(esFnd ? '#a98ff0' : '#5aa9f0') }
+        : { cuerpo:'#141c2b', borde:'#232e40', techo:'#1b2536', acento:'#5aa9f0' };
+
+      /* el transform base los deja hundidos: sin él, SMIL los muestra en su
+         sitio final hasta que arranca su turno y ahí saltan hacia abajo */
+      var caida = (g.h + 34).toFixed(0);
+      s += interactivo ? '<g class="skycol" data-rol="' + i + '">'
+                       : (animar ? '<g transform="translate(0,' + caida + ')">' : '<g>');
+      if (animar) {
+        s += '<animateTransform attributeName="transform" type="translate" ' +
+             'values="0 ' + caida + ';0 0" keyTimes="0;1" calcMode="spline" ' +
+             'keySplines="0.16 0.84 0.24 1" dur="0.85s" begin="' + (0.05 + i * 0.075).toFixed(3) +
+             's" fill="freeze"></animateTransform>';
+      }
+      if (interactivo) {
+        s += '<rect x="' + g.x + '" y="' + (baseY - 132) + '" width="' + g.w + '" height="132" ' +
+             'fill="#000" opacity="0" pointer-events="all"></rect>';
+      }
+      s += '<rect class="skybar" x="' + g.x + '" y="' + g.y + '" width="' + g.w + '" height="' + g.h +
+           '" fill="' + col.cuerpo + '" stroke="' + col.borde + '" stroke-width="' + (esSel ? 1.5 : 1) + '"></rect>';
+      s += remate(g, col, esSel);
+      s += ventanas(g, i, esSel);
+      s += '</g>';
+    }
+    s += '</g>';
+
+    /* La trayectoria y las etiquetas van sobre las torres, fuera del recorte:
+       en la portada aparecen recién cuando la ciudad terminó de aterrizar,
+       si no quedarían flotando en el aire sobre un edificio que no llegó. */
+    s += animar ? '<g pointer-events="none" opacity="0"><animate attributeName="opacity" ' +
+                  'values="0;0;1;1" keyTimes="0;0.35;0.52;1" dur="2.6s" fill="freeze"></animate>'
+                : '<g pointer-events="none">';
+
+    /* La trayectoria es una escalera, no una curva: recorre el borde de cada
+       techo y sube por la pared del siguiente. Es la metáfora del juego
+       dibujada literal, y así nunca cruza por delante de una fachada.
+       El largo se calcula a mano para que el trazo se dibuje parejo. */
+    var d = '', largo = 0, g0 = geo(0), ax = g0.x, ay = g0.y;
+    d += 'M' + ax.toFixed(1) + ' ' + ay.toFixed(1);
+    for (i = 0; i < n; i++) {
+      var gt = geo(i);
+      if (i) {
+        /* llegar al pie de la torre y trepar por su pared hasta el techo */
+        d += ' L' + gt.x.toFixed(1) + ' ' + ay.toFixed(1) + ' L' + gt.x.toFixed(1) + ' ' + gt.y.toFixed(1);
+        largo += Math.abs(gt.x - ax) + Math.abs(gt.y - ay);
+        ax = gt.x; ay = gt.y;
+      }
+      d += ' L' + (gt.x + gt.w).toFixed(1) + ' ' + gt.y.toFixed(1);
+      largo += gt.w;
+      ax = gt.x + gt.w; ay = gt.y;
+    }
+    largo = Math.ceil(largo) + 2;
+    s += '<path d="' + d + '" fill="none" stroke="#5aa9f0" stroke-width="1.4" ' +
+         'opacity="0.62" stroke-linejoin="round" stroke-linecap="round"' +
+         (animar ? ' stroke-dasharray="' + largo + '" stroke-dashoffset="' + largo + '"' : '') + '>';
+    if (animar) {
+      s += '<animate attributeName="stroke-dashoffset" values="' + largo + ';' + largo + ';0" ' +
+           'keyTimes="0;0.3;1" dur="2.8s" fill="freeze"></animate>';
+    }
+    s += '</path>';
+    /* un pip por escalón, en el vértice donde la escalera alcanza cada techo */
+    for (i = 0; i < n; i++) {
+      var gp = geo(i), ult = (i === n - 1);
+      s += '<circle cx="' + gp.x.toFixed(1) + '" cy="' + gp.y.toFixed(1) + '" r="' +
+           (ult ? 2.8 : 1.9) + '" fill="' + (ult ? '#a98ff0' : '#5aa9f0') + '" opacity="' +
+           (ult ? '1' : '0.75') + '"></circle>';
+    }
+
+    /* etiqueta del escalón elegido: despejada por encima de su coronación.
+       La torre del fundador llega al techo del lienzo, así que ahí la
+       etiqueta va al costado de la aguja, del lado libre de la bandera. */
+    if (sel >= 0 && sel < n) {
+      var gs = geo(sel), lab = esc(ESCALAFON[sel].corto);
+      var ALTO = { techo:7, chimenea:10, parapeto:4, tanque:10, escalon:17, antena:18, cupula:22, aguja:35 };
+      var alto = ALTO[gs.t.remate] || 0, fnd2 = (gs.t.remate === 'aguja');
+      s += '<text x="' + (fnd2 ? (gs.cx - 11).toFixed(1) : gs.cx.toFixed(1)) +
+           '" y="' + (fnd2 ? (gs.y - 19).toFixed(1) : (gs.y - alto - 9).toFixed(1)) +
+           '" text-anchor="' + (fnd2 ? 'end' : 'middle') +
+           '" font-size="11" font-weight="700" letter-spacing="0.8" fill="' +
+           (fnd2 ? '#c3b0ff' : '#8fc0f0') + '">' + lab + '</text>';
+    }
+    s += '</g>';
+
+    /* suelo, neblina cálida y desvanecido en los bordes. Todo esto va encima
+       de las torres, así que no puede robarles el toque: pointer-events none. */
+    s += '<g pointer-events="none">';
+    s += '<rect x="0" y="' + baseY + '" width="' + vw + '" height="' + (vh - baseY) + '" fill="#070b13"></rect>';
+    s += '<line x1="0" y1="' + baseY + '" x2="' + vw + '" y2="' + baseY + '" stroke="#22304a" stroke-width="1"></line>';
+    for (i = 0; i < 16; i++) {
+      var lx = 12 + ruido(i, 29) * (vw - 24);
+      s += '<circle cx="' + lx.toFixed(1) + '" cy="' + (baseY + 5 + ruido(i, 31) * 14).toFixed(1) +
+           '" r="0.9" fill="#e8bb6a" opacity="' + (0.12 + ruido(i, 37) * 0.22).toFixed(2) + '"></circle>';
+    }
+    s += '<rect x="0" y="0" width="' + vw + '" height="' + vh + '" fill="url(#' + u + 'bordes)"></rect>';
+    s += '</g>';
+
+    s += '</svg>';
+    if (animar) portadaAnimada = true;
+    return s;
   }
 
   function renderInicio() {

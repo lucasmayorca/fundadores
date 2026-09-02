@@ -82,11 +82,15 @@ html, body {
 #p-perfil { padding:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 .landhero { -webkit-flex-shrink:0; flex-shrink:0; padding:30px 40px 16px 40px; }
 .landcol { max-width:640px; margin:0 auto; }
-.skycard { background:#0d1420; border:1px solid #1c2740; border-radius:12px; padding:14px 14px 10px 14px; }
+/* la ciudad va a sangre dentro de la tarjeta: es una imagen, no un gráfico
+   metido en una caja */
+.skycard { background:#080c15; border:1px solid #1b2740; border-radius:12px; overflow:hidden;
+  box-shadow:0 14px 40px -18px rgba(0,0,0,0.8), inset 0 1px 0 rgba(120,150,200,0.06); }
 .skysvg { width:100%; height:auto; display:block; }
 .skycol { cursor:pointer; }
 .skybar { -webkit-transition:fill .15s ease, stroke .15s ease; transition:fill .15s ease, stroke .15s ease; }
-.skyhint { margin-top:7px; font-size:11px; color:#5b6472; text-align:center; }
+.skyhint { padding:9px 12px 10px 12px; font-size:11px; letter-spacing:0.4px; color:#5f6b7e;
+  text-align:center; border-top:1px solid #131c2e; background:#070a11; }
 .hook { font-size:22px; font-weight:500; line-height:1.32; color:#dbe4f0; }
 .linklike { color:#7fa8d8; cursor:pointer; padding:4px 2px; }
 .linklike:active { opacity:0.6; }
