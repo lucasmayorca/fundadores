@@ -88,6 +88,7 @@
     if (viva === 'p-juego' && J && plan) { renderJuego(); return; }
     renderTabs();
     if (viva === 'p-inicio') renderInicio();
+    else if (viva === 'p-perfil') renderPerfil();
   }
 
   /* ================= PRIMER MES GUIADO =================
@@ -318,8 +319,8 @@
           inicioSel.deLinkedin = 'perfil encontrado';
         }
       }
-      var pantalla = document.getElementById('p-inicio');
-      if (pantalla && pantalla.className.indexOf('on') >= 0) renderInicio();
+      var pantalla = document.getElementById('p-perfil');
+      if (pantalla && pantalla.className.indexOf('on') >= 0) renderPerfil();
     };
     try { x.send(null); } catch (e2) { inicioSel.buscando = false; }
   }
@@ -347,8 +348,8 @@
      un blanco táctil grande cableado al mismo data-rol que usan los chips de
      rol, así que elegir escalón y leer la historia son el mismo gesto. */
   function skylineSvg(sel) {
-    var n = ESCALAFON.length, vw = 320, vh = 210, baseY = 178, topPad = 34;
-    var colW = vw / n, barW = 24, maxH = baseY - topPad, minH = 28, i;
+    var n = ESCALAFON.length, vw = 600, vh = 160, baseY = 134, topPad = 34;
+    var colW = vw / n, barW = 44, maxH = baseY - topPad, minH = 18, i;
     var svg = '<svg viewBox="0 0 ' + vw + ' ' + vh + '" class="skysvg" preserveAspectRatio="xMidYMax meet">' +
       '<defs><linearGradient id="skysky" x1="0" y1="0" x2="0" y2="1">' +
       '<stop offset="0" stop-color="#0a0f1c"></stop><stop offset="1" stop-color="#131b2c"></stop>' +
@@ -357,15 +358,15 @@
       '<stop offset="1" stop-color="#3a2e12" stop-opacity="0"></stop></radialGradient></defs>' +
       '<rect x="0" y="0" width="' + vw + '" height="' + vh + '" fill="url(#skysky)"></rect>' +
       '<rect x="0" y="0" width="' + vw + '" height="' + vh + '" fill="url(#skyglow)"></rect>' +
-      '<circle cx="44" cy="34" r="8" fill="#232c40"></circle>' +
-      '<circle cx="48" cy="31" r="8" fill="#0a0f1c"></circle>' +
-      '<circle cx="18" cy="52" r="1" fill="#2a313d"></circle>' +
-      '<circle cx="72" cy="46" r="1" fill="#2a313d"></circle>' +
-      '<circle cx="108" cy="26" r="1.1" fill="#3a4456"></circle>' +
-      '<circle cx="150" cy="42" r="1" fill="#2a313d"></circle>' +
-      '<circle cx="192" cy="18" r="1" fill="#2a313d"></circle>' +
-      '<circle cx="235" cy="20" r="1.2" fill="#3a4456"></circle>' +
-      '<circle cx="296" cy="34" r="1" fill="#2a313d"></circle>' +
+      '<circle cx="70" cy="26" r="7" fill="#232c40"></circle>' +
+      '<circle cx="75" cy="23" r="7" fill="#0a0f1c"></circle>' +
+      '<circle cx="30" cy="20" r="1.1" fill="#2a313d"></circle>' +
+      '<circle cx="140" cy="34" r="1" fill="#2a313d"></circle>' +
+      '<circle cx="230" cy="16" r="1.2" fill="#3a4456"></circle>' +
+      '<circle cx="320" cy="30" r="1" fill="#2a313d"></circle>' +
+      '<circle cx="400" cy="14" r="1" fill="#2a313d"></circle>' +
+      '<circle cx="470" cy="22" r="1.2" fill="#3a4456"></circle>' +
+      '<circle cx="550" cy="32" r="1" fill="#2a313d"></circle>' +
       '<line x1="0" y1="' + baseY + '" x2="' + vw + '" y2="' + baseY + '" stroke="#1c2438"></line>';
 
     for (i = 0; i < n; i++) {
@@ -382,20 +383,21 @@
       var rows = Math.max(1, Math.floor((h2 - 8) / 11)), r;
       for (r = 0; r < rows; r++) {
         var wy = y + 6 + r * 11, wfill = sel2 ? '#ffd479' : '#2a313d', wop = sel2 ? 0.9 : 0.55;
-        svg += '<rect x="' + (x + 4) + '" y="' + wy + '" width="3.4" height="4.2" fill="' + wfill + '" opacity="' + wop + '"></rect>';
-        svg += '<rect x="' + (x + barW - 7.4) + '" y="' + wy + '" width="3.4" height="4.2" fill="' + wfill + '" opacity="' + wop + '"></rect>';
+        svg += '<rect x="' + (x + 7) + '" y="' + wy + '" width="5" height="4.4" fill="' + wfill + '" opacity="' + wop + '"></rect>';
+        svg += '<rect x="' + (x + 19.5) + '" y="' + wy + '" width="5" height="4.4" fill="' + wfill + '" opacity="' + wop + '"></rect>';
+        svg += '<rect x="' + (x + 32) + '" y="' + wy + '" width="5" height="4.4" fill="' + wfill + '" opacity="' + wop + '"></rect>';
       }
       if (sel2) {
         if (fnd) {
-          svg += '<line x1="' + cx + '" y1="' + (y - 2) + '" x2="' + cx + '" y2="' + (y - 16) + '" stroke="#a98ff0" stroke-width="1.6"></line>' +
-                 '<path d="M' + cx + ' ' + (y - 16) + ' l11 4 l-11 4 z" fill="#a98ff0"></path>';
+          svg += '<line x1="' + cx + '" y1="' + (y - 2) + '" x2="' + cx + '" y2="' + (y - 18) + '" stroke="#a98ff0" stroke-width="1.8"></line>' +
+                 '<path d="M' + cx + ' ' + (y - 18) + ' l15 5 l-15 5 z" fill="#a98ff0"></path>';
         } else {
-          svg += '<circle cx="' + cx + '" cy="' + (y - 9) + '" r="3.6" fill="#5aa9f0"></circle>' +
-                 '<line x1="' + cx + '" y1="' + (y - 5.6) + '" x2="' + cx + '" y2="' + (y - 1) + '" stroke="#5aa9f0" stroke-width="1.8"></line>';
+          svg += '<circle cx="' + cx + '" cy="' + (y - 10) + '" r="4.2" fill="#5aa9f0"></circle>' +
+                 '<line x1="' + cx + '" y1="' + (y - 6) + '" x2="' + cx + '" y2="' + (y - 1) + '" stroke="#5aa9f0" stroke-width="2"></line>';
         }
-        svg += '<line x1="' + cx + '" y1="' + (y - 18) + '" x2="' + cx + '" y2="' + baseY + '" stroke="' +
+        svg += '<line x1="' + cx + '" y1="' + (y - 20) + '" x2="' + cx + '" y2="' + baseY + '" stroke="' +
                (fnd ? '#a98ff0' : '#5aa9f0') + '" stroke-width="1" stroke-dasharray="2,2" opacity="0.35"></line>' +
-               '<text x="' + cx + '" y="' + (y - 22) + '" text-anchor="middle" font-size="9" font-weight="700" fill="' +
+               '<text x="' + cx + '" y="' + (y - 24) + '" text-anchor="middle" font-size="11" font-weight="700" fill="' +
                (fnd ? '#a98ff0' : '#7fa8d8') + '">' + esc(ESCALAFON[i].corto) + '</text>';
       }
       svg += '</g>';
@@ -408,14 +410,97 @@
     var hay = false;
     try { hay = !!localStorage.getItem(CLAVE); } catch (e) {}
 
-    /* ---- héroe: título, skyline, elige escalón, arranca. siempre a la vista, nunca hace scroll ---- */
-    var h = '<div class="landhero"><div class="landtop">';
-    h += '<div class="landleft">';
+    /* ---- héroe: el gancho y un solo camino hacia adelante. nunca hace scroll ---- */
+    var h = '<div class="landhero"><div class="landcol">';
     h += '<div class="h1">Founder Mode</div>' +
-      '<div class="hook" style="margin-top:8px;max-width:520px">¿Puedes llegar a CPO sin romper el ' +
+      '<div class="hook" style="margin-top:10px;max-width:560px">¿Puedes llegar a CPO sin romper el ' +
       'producto ni quemar a tu equipo?</div>' +
-      '<div class="pq mut" style="margin-top:6px;max-width:500px">Toma decisiones reales. Sobrevive a CEOs, crisis ' +
+      '<div class="pq mut" style="margin-top:8px;max-width:560px">Toma decisiones reales. Sobrevive a CEOs, crisis ' +
       'y competidores. Después mira cómo queda tu carrera contra todos los que jugaron.</div>';
+    h += '<div style="margin-top:22px">' +
+      '<span class="btn pri xl" data-act="ir-perfil">Empezar mi carrera</span>' +
+      (hay ? ' <span class="btn" data-act="continuar">Continuar</span>' : '') + '</div>';
+    h += '<div class="pq mut" style="margin-top:10px"><span class="linklike" data-act="biblio">Biblioteca</span></div>';
+    h += '</div></div>'; /* landcol, landhero */
+
+    /* ---- todo lo demás: profundidad, el salón de la fama. hace scroll por su cuenta ---- */
+    h += '<div class="landmore scroll"><div class="landchevron">⌄</div>';
+    h += '<div class="landcol">';
+
+    h += '<div class="h2">Cómo funciona</div>' +
+      '<div class="pq mut" style="margin-bottom:6px">Cinco cosas pasando a la vez, cada mes.</div>';
+    h += pasoHtml(1, '#5aa9f0', 'El mes, tu turno',
+      'Coloca los puntos del equipo en estaciones — Descubrir, Plataforma, Fiabilidad, Crecimiento — o en ' +
+      'apuestas del backlog: probabilidad × impacto ÷ esfuerzo.');
+    h += pasoHtml(2, '#35c46a', 'El puesto, un mandato',
+      'Mueve un número antes de una fecha límite. La etapa — pre-PMF, validando, escalando — decide qué paga; ' +
+      'el capital político, qué tanto puedes salirte del guion.');
+    h += pasoHtml(3, '#e8a33d', 'La carrera, la escalera',
+      'Ocho escalones, de Analista de Producto a Fundador. Los escalones desbloquean palancas, la reputación abre mesas, y ' +
+      'el equity — que vale algo o nada — hace la fortuna.');
+    h += pasoHtml(4, '#a98ff0', 'El mundo, el tablero',
+      'Las eras reescriben las reglas sin aviso: burbujas, inviernos, reguladores. Los sectores se calientan y se congelan. ' +
+      'Un rival sube la misma escalera, con el mismo reloj.');
+    h += pasoHtml(5, '#7fa8d8', 'La biblioteca, los recibos',
+      LIBROS.length + ' libros reales de producto alimentan las reglas. Cada error se cobra primero — ' +
+      'y después se abre la tarjeta exacta que lo predijo.');
+
+    h += '<div class="pq mut" style="margin:16px 0;max-width:580px">Desafío semanal: todos juegan el mismo ' +
+      'mundo esta semana (' + esc(Ranking.semana()) + ') — mismas eras, mismas tormentas, mismo timing del rival. Una tabla ' +
+      'pública, siete días, sin más ventaja que tus decisiones. Y la semana deja huella: los 8 primeros ' +
+      'puntúan (10-8-6-5-4-3-2-1) para la <b>tabla histórica</b>, y el campeón queda en el palmarés para siempre.</div>';
+
+    h += '<div class="h2" style="margin-top:14px">Salón de la Fama</div>' +
+      '<div class="pq mut" style="margin-bottom:6px">Tus mejores partidas, los logros de todos, una tabla pública.</div>';
+
+    var fac = Ranking.faccion();
+    h += '<div class="caja2"><div class="rot" style="margin-bottom:5px">Bando ' +
+      '<span class="mut" style="text-transform:none;letter-spacing:0">(opcional, para el ranking público)</span></div>' +
+      '<div class="pq mut" style="margin-bottom:7px">No cambia cómo jugás: solo suma tus mandatos cumplidos al ' +
+      'marcador de tu bando en el Salón de la Fama.</div>' +
+      '<span class="rolchip' + (fac === 'growth' ? ' sel' : '') + '" data-fac="growth">Legión del Crecimiento</span>' +
+      '<span class="rolchip' + (fac === 'craft' ? ' sel' : '') + '" data-fac="craft">Gremio del Oficio</span></div>';
+
+    h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:6px">Tus récords</div>';
+    if (R.records.carreras > 0) {
+      h += '<div class="req"><span class="mut">Carreras jugadas</span> <b class="num"> ' + R.records.carreras + '</b></div>' +
+           '<div class="req"><span class="mut">Mejor patrimonio</span> <b class="num verde"> ' + money(R.records.patrimonio) + '</b></div>' +
+           '<div class="req"><span class="mut">Mejor rol alcanzado</span> <b> ' + esc(nivelPorN(R.records.nivel).rol) + '</b></div>';
+      var i;
+      for (i = 0; i < Math.min(3, R.historia.length); i++) {
+        var hh = R.historia[i];
+        h += '<div class="req mut" style="font-size:12px">· ' + esc(hh.nombre) + ' — ' + money(hh.patrimonio) +
+             ', ' + esc(hh.nivel) + ' · rival: ' + esc(hh.rival) + ' (nivel ' + hh.rivalNivel + ')</div>';
+      }
+    } else {
+      h += '<div class="pq mut">Nadie ha jugado todavía. Los récords viven aquí.</div>';
+    }
+    h += '<div class="pq" style="margin-top:8px"><span class="linklike" data-act="ranking">Ver el ranking público →</span></div>';
+    h += '</div>';
+
+    var items = '', k, n = 0;
+    for (k = 0; k < Logros.DEFS.length; k++) {
+      var d = Logros.DEFS[k], ok = !!R.logros[d.id];
+      if (ok) n++;
+      items += '<div class="req ' + (ok ? 'verde' : 'mut') + '" style="' + (ok ? '' : 'opacity:0.45') + '">' +
+           (ok ? '★ ' : '☆ ') + esc(d.n) + ' <span class="mut" style="font-size:11px">— ' + esc(d.d) + '</span></div>';
+    }
+    h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:6px">Logros · ' +
+      n + ' de ' + Logros.DEFS.length + '</div>' + items + '</div>';
+
+    h += '</div>'; /* landcol */
+    h += '</div>'; /* landmore */
+
+    $('p-inicio').innerHTML = h;
+  }
+
+  /* ================= PERFIL (elegí tu escalón y quién eres) ================= */
+
+  function renderPerfil() {
+    var h = '<div class="landhero"><div class="landcol">';
+    h += '<div class="pq"><span class="linklike" data-act="volver-inicio">‹ Volver</span></div>';
+    h += '<div class="skycard" style="margin-top:10px">' + skylineSvg(inicioSel.nivel) +
+      '<div class="skyhint">Toca un edificio para elegir tu escalón</div></div>';
     h += '<div class="rot" style="margin:16px 0 6px 0">Empieza como</div><div>' + rungChipsHtml() + '</div>';
     h += '<div class="pq mut" style="margin-top:8px" id="perfil-eco">' +
       (inicioSel.buscando ? '<span class="azul">Leyendo tu perfil de LinkedIn…</span> · ' : '') +
@@ -424,19 +509,12 @@
       'Empiezas la carrera como <b>' + esc(nivelPorN(inicioSel.nivel).rol) + '</b>' +
       (inicioSel.nivel > 0 ? ' — tu escalón real. O toca APM para correr toda la escalera.' : ' — la escalada completa, desde abajo.') +
       '</div>';
-    h += '<div style="margin-top:16px">' +
-      '<span class="btn pri xl" data-act="nueva">Nueva carrera</span>' +
-      (hay ? ' <span class="btn" data-act="continuar">Continuar</span>' : '') + '</div>';
-    h += '<div class="pq mut" style="margin-top:10px">' +
-      '<span class="linklike" data-act="semanal">Desafío semanal</span>' +
-      '<span class="mut"> · </span>' +
-      '<span class="linklike" data-act="biblio">Biblioteca</span></div>';
-    h += '</div>'; /* landleft */
+    h += '<div style="margin-top:16px"><span class="btn pri xl" data-act="nueva">Empezar mi carrera</span></div>';
+    h += '<div class="pq mut" style="margin-top:10px"><span class="linklike" data-act="semanal">Desafío semanal (' +
+      esc(Ranking.semana()) + ')</span></div>';
 
-    h += '<div class="landright"><div class="skycard">' + skylineSvg(inicioSel.nivel) +
-      '<div class="skyhint">Toca un edificio para elegir tu escalón</div>';
-    h += '<div class="skyform"><div class="rot" style="margin-bottom:5px">¿Quién eres? ' +
-      '<span class="mut" style="text-transform:none;letter-spacing:0">(opcional)</span></div>';
+    h += '<div class="caja2" style="margin-top:20px"><div class="rot" style="margin-bottom:5px">¿Quién eres? ' +
+      '<span class="mut" style="text-transform:none;letter-spacing:0">(opcional — siempre puedes empezar de cero)</span></div>';
     h += '<div style="margin-bottom:9px">' +
       '<span class="rolchip' + (inicioSel.modo !== 'linkedin' ? ' sel' : '') + '" data-modo="manual">Configurar manual</span>' +
       '<span class="rolchip' + (inicioSel.modo === 'linkedin' ? ' sel' : '') + '" data-modo="linkedin">Pegar mi LinkedIn</span></div>';
@@ -464,82 +542,9 @@
       })() + '</div>';
     }
     h += '</div>';
-    h += '</div></div>'; /* skycard, landright */
-    h += '</div></div>'; /* landtop, landhero */
 
-    /* ---- todo lo demás: profundidad, personalización, el salón de la fama. hace scroll por su cuenta ---- */
-    h += '<div class="landmore scroll"><div class="landchevron">⌄</div>';
-    h += '<div class="landcols">';
-
-    h += '<div class="lcL">';
-    h += '<div class="h2">Cómo funciona</div>' +
-      '<div class="pq mut" style="margin-bottom:6px">Cinco cosas pasando a la vez, cada mes.</div>';
-    h += pasoHtml(1, '#5aa9f0', 'El mes, tu turno',
-      'Coloca los puntos del equipo en estaciones — Descubrir, Plataforma, Fiabilidad, Crecimiento — o en ' +
-      'apuestas del backlog: probabilidad × impacto ÷ esfuerzo.');
-    h += pasoHtml(2, '#35c46a', 'El puesto, un mandato',
-      'Mueve un número antes de una fecha límite. La etapa — pre-PMF, validando, escalando — decide qué paga; ' +
-      'el capital político, qué tanto puedes salirte del guion.');
-    h += pasoHtml(3, '#e8a33d', 'La carrera, la escalera',
-      'Ocho escalones, de Analista de Producto a Fundador. Los escalones desbloquean palancas, la reputación abre mesas, y ' +
-      'el equity — que vale algo o nada — hace la fortuna.');
-    h += pasoHtml(4, '#a98ff0', 'El mundo, el tablero',
-      'Las eras reescriben las reglas sin aviso: burbujas, inviernos, reguladores. Los sectores se calientan y se congelan. ' +
-      'Un rival sube la misma escalera, con el mismo reloj.');
-    h += pasoHtml(5, '#7fa8d8', 'La biblioteca, los recibos',
-      LIBROS.length + ' libros reales de producto alimentan las reglas. Cada error se cobra primero — ' +
-      'y después se abre la tarjeta exacta que lo predijo.');
-
-    var fac = Ranking.faccion();
-    h += '<div class="caja2" style="margin-top:14px"><div class="rot" style="margin-bottom:5px">Bando ' +
-      '<span class="mut" style="text-transform:none;letter-spacing:0">(opcional, para el ranking público)</span></div>' +
-      '<div class="pq mut" style="margin-bottom:7px">No cambia cómo jugás: solo suma tus mandatos cumplidos al ' +
-      'marcador de tu bando en el Salón de la Fama.</div>' +
-      '<span class="rolchip' + (fac === 'growth' ? ' sel' : '') + '" data-fac="growth">Legión del Crecimiento</span>' +
-      '<span class="rolchip' + (fac === 'craft' ? ' sel' : '') + '" data-fac="craft">Gremio del Oficio</span></div>';
-
-    h += '<div class="pq mut" style="margin-top:10px;max-width:540px">Desafío semanal: todos juegan el mismo ' +
-      'mundo esta semana (' + esc(Ranking.semana()) + ') — mismas eras, mismas tormentas, mismo timing del rival. Una tabla ' +
-      'pública, siete días, sin más ventaja que tus decisiones. Y la semana deja huella: los 8 primeros ' +
-      'puntúan (10-8-6-5-4-3-2-1) para la <b>tabla histórica</b>, y el campeón queda en el palmarés para siempre.</div>';
-    h += '</div>'; /* lcL */
-
-    h += '<div class="lcR">';
-    h += '<div class="h2">Salón de la Fama</div>' +
-      '<div class="pq mut" style="margin-bottom:6px">Tus mejores partidas, los logros de todos, una tabla pública.</div>';
-
-    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Tus récords</div>';
-    if (R.records.carreras > 0) {
-      h += '<div class="req"><span class="mut">Carreras jugadas</span> <b class="num"> ' + R.records.carreras + '</b></div>' +
-           '<div class="req"><span class="mut">Mejor patrimonio</span> <b class="num verde"> ' + money(R.records.patrimonio) + '</b></div>' +
-           '<div class="req"><span class="mut">Mejor rol alcanzado</span> <b> ' + esc(nivelPorN(R.records.nivel).rol) + '</b></div>';
-      var i;
-      for (i = 0; i < Math.min(3, R.historia.length); i++) {
-        var hh = R.historia[i];
-        h += '<div class="req mut" style="font-size:12px">· ' + esc(hh.nombre) + ' — ' + money(hh.patrimonio) +
-             ', ' + esc(hh.nivel) + ' · rival: ' + esc(hh.rival) + ' (nivel ' + hh.rivalNivel + ')</div>';
-      }
-    } else {
-      h += '<div class="pq mut">Nadie ha jugado todavía. Los récords viven aquí.</div>';
-    }
-    h += '<div class="pq" style="margin-top:8px"><span class="linklike" data-act="ranking">Ver el ranking público →</span></div>';
-    h += '</div>';
-
-    var items = '', k, n = 0;
-    for (k = 0; k < Logros.DEFS.length; k++) {
-      var d = Logros.DEFS[k], ok = !!R.logros[d.id];
-      if (ok) n++;
-      items += '<div class="req ' + (ok ? 'verde' : 'mut') + '" style="' + (ok ? '' : 'opacity:0.45') + '">' +
-           (ok ? '★ ' : '☆ ') + esc(d.n) + ' <span class="mut" style="font-size:11px">— ' + esc(d.d) + '</span></div>';
-    }
-    h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:6px">Logros · ' +
-      n + ' de ' + Logros.DEFS.length + '</div>' + items + '</div>';
-    h += '</div>'; /* lcR */
-
-    h += '</div>'; /* landcols */
-    h += '</div>'; /* landmore */
-
-    $('p-inicio').innerHTML = h;
+    h += '</div></div>'; /* landcol, landhero */
+    $('p-perfil').innerHTML = h;
   }
 
   /* ================= OFERTAS ================= */
@@ -1801,7 +1806,7 @@
     if (p.nivel !== null) { inicioSel.nivel = p.nivel; inicioSel.rol = p.rol; }
     if (p.bg && !inicioSel.bgManual) inicioSel.bg = p.bg;
     if (/linkedin\.com\/in\//i.test(t.value)) consultarLinkedin(t.value);
-    renderInicio();
+    renderPerfil();
   }, false);
 
   document.addEventListener('click', function (ev) {
@@ -1812,7 +1817,7 @@
       var inpN3 = $('nombre-in'); if (inpN3 && inpN3.value) { inicioSel.nombre = inpN3.value; inicioSel.nombreManual = true; }
       var inpU3 = $('perfil-in'); if (inpU3) inicioSel.texto = inpU3.value;
       inicioSel.modo = v;
-      renderInicio();
+      renderPerfil();
       return;
     }
 
@@ -1821,7 +1826,7 @@
       inicioSel.bg = v; inicioSel.bgManual = true;
       var inpN0 = $('nombre-in'); if (inpN0 && inpN0.value) { inicioSel.nombre = inpN0.value; inicioSel.nombreManual = true; }
       var inpU0 = $('perfil-in'); if (inpU0) inicioSel.texto = inpU0.value;
-      renderInicio();
+      renderPerfil();
       return;
     }
 
@@ -1832,15 +1837,13 @@
       var inp = $('perfil-in');
       if (inp) inicioSel.texto = inp.value;
       var inpN1 = $('nombre-in'); if (inpN1 && inpN1.value) { inicioSel.nombre = inpN1.value; inicioSel.nombreManual = true; }
-      renderInicio();
+      renderPerfil();
       return;
     }
 
     v = attr(t, 'data-fac');
     if (v !== null) {
       Ranking.setFaccion(Ranking.faccion() === v ? null : v);
-      var inpF = $('perfil-in');
-      if (inpF) inicioSel.texto = inpF.value;
       renderInicio();
       return;
     }
@@ -1910,7 +1913,8 @@
     v = attr(t, 'data-act');
     if (!v) return;
 
-    if (v === 'nueva') { empezarCarrera(false); }
+    if (v === 'ir-perfil') { renderPerfil(); ir('p-perfil'); }
+    else if (v === 'nueva') { empezarCarrera(false); }
     else if (v === 'semanal') { empezarCarrera(true); }
     else if (v === 'ranking') { abrirRanking(); }
     else if (v === 'cerrar-ranking') { ir(rankingVolver); }

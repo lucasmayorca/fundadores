@@ -74,29 +74,25 @@ html, body {
 /* ---------- INICIO / FINAL ---------- */
 #p-final, #p-cierre, #p-ofertas { padding:36px 48px; }
 
-/* landing: a fixed hero (title, skyline, the New career button — always in
-   view, never behind a scroll) on top of a scrollable "more" section. */
+/* landing (p-inicio) y perfil (p-perfil): una sola columna centrada.
+   p-inicio: hero fijo (título, gancho, un solo CTA) sobre un "más" que
+   scrollea. p-perfil: todo en un bloque — el scroll es un resguardo, no
+   el diseño. */
 #p-inicio { padding:0; overflow:hidden; }
-.landhero { -webkit-flex-shrink:0; flex-shrink:0; padding:26px 40px 14px 40px; }
-.landtop { display:-webkit-flex; display:flex; -webkit-align-items:flex-start; align-items:flex-start; }
-.landleft { width:552px; padding-right:24px; }
-.landright { width:368px; }
-.skycard { background:#0d1420; border:1px solid #1c2740; border-radius:12px; padding:12px 12px 9px 12px; }
+#p-perfil { padding:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.landhero { -webkit-flex-shrink:0; flex-shrink:0; padding:30px 40px 16px 40px; }
+.landcol { max-width:640px; margin:0 auto; }
+.skycard { background:#0d1420; border:1px solid #1c2740; border-radius:12px; padding:14px 14px 10px 14px; }
 .skysvg { width:100%; height:auto; display:block; }
 .skycol { cursor:pointer; }
 .skybar { -webkit-transition:fill .15s ease, stroke .15s ease; transition:fill .15s ease, stroke .15s ease; }
 .skyhint { margin-top:7px; font-size:11px; color:#5b6472; text-align:center; }
-.skyform { margin-top:14px; padding-top:14px; border-top:1px solid #1c2740; }
-.hook { font-size:20px; font-weight:500; line-height:1.32; color:#dbe4f0; }
+.hook { font-size:22px; font-weight:500; line-height:1.32; color:#dbe4f0; }
 .linklike { color:#7fa8d8; cursor:pointer; padding:4px 2px; }
 .linklike:active { opacity:0.6; }
 .landmore { -webkit-flex:1; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
   padding:6px 40px 30px 40px; border-top:1px solid #171b23; position:relative; }
 .landchevron { text-align:center; color:#3c434f; font-size:15px; margin-bottom:6px; }
-.landcols { display:-webkit-flex; display:flex; }
-.landcols .lcL { width:552px; padding-right:24px; }
-.landcols .lcR { width:368px; }
-.landcols .h2 { margin-bottom:3px; }
 
 .tarjetas { display:-webkit-flex; display:flex; margin-top:20px; }
 .oferta {
@@ -571,22 +567,15 @@ body.movil .dosc { display:block !important; }
 body.movil .colx { width:100% !important; padding-right:0 !important; margin-top:16px; }
 body.movil .dosc > .colx:first-child { margin-top:0; }
 
-/* ---------- portada ---------- */
-body.movil #p-inicio { overflow-y:auto; -webkit-overflow-scrolling:touch; }
+/* ---------- portada y perfil ---------- */
+body.movil #p-inicio, body.movil #p-perfil { overflow-y:auto; -webkit-overflow-scrolling:touch; }
 body.movil .landhero { padding:16px 16px 10px 16px; }
-body.movil .landtop { -webkit-flex-direction:column; flex-direction:column; }
-body.movil .landleft, body.movil .landright { width:100%; padding-right:0; }
-body.movil .landright { margin-top:14px; }
 body.movil .landmore {
   -webkit-flex:none; flex:none; overflow:visible;
   padding:6px 16px 30px 16px;
 }
 body.movil .landchevron { display:none; }
-body.movil .landcols { display:block; }
-body.movil .landcols .lcL, body.movil .landcols .lcR { width:100%; padding-right:0; }
-body.movil .landcols .lcR { margin-top:22px; }
 body.movil .hook { font-size:17px; }
-body.movil .skysvg { max-height:190px; }
 body.movil .rolchip { padding:8px 12px; font-size:12.5px; }
 
 /* ---------- ofertas: una tarjeta por fila ---------- */
