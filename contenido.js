@@ -114,131 +114,135 @@ var APUESTAS = [
 ];
 
 /* Apuestas por sector. Se suman al backlog genérico según dónde trabajes:
-   en un neobanco la licencia es el producto; en silicio, el respin. */
+   en un neobanco la licencia es el producto; en silicio, el respin. Cada una
+   lleva `etapa`: es LA gran apuesta obvia de esa industria en ese momento
+   específico del ciclo de vida — no aparece en el backlog de una empresa que
+   está en otra etapa (ver `rellenarBacklog`/`refrescarBacklogPeriodico` en
+   motor.js, que filtran por `apuesta(id).etapa === e.etapa`). El `nec` de
+   cada una se eligió, siempre que la industria lo permitiera, para caer
+   dentro del `prima` de su propia etapa (ETAPAS en sectores.js) — así el
+   impacto oculto que calcula nuevoPuesto() ya viene coherente con el momento
+   de la empresa, no solo el copy. */
 var APUESTAS_SECTOR = [
-  /* --- datos y opinión pública --- */
-  { id:'padron',    nec:'integra',costo:16, imp:32, n:'Integración de datos públicos',  d:'Padrones, boletines, presupuestos: todo cruzado.',
-    d2:'Cruzar fuentes oficiales dispersas en un solo modelo de datos — el trabajo sucio que nadie más quiere hacer.' },
-  { id:'microseg',  nec:'core',   costo:18, imp:34, n:'Segmentación fina de audiencias',d:'El mensaje correcto al bloque correcto.',
-    d2:'Cortar el electorado o la audiencia en grupos accionables por comportamiento, no solo por edad y zona.' },
-  { id:'transparencia',nec:'segur',costo:14,imp:30, n:'Tablero público de transparencia',d:'Mostrar qué datos usas antes de que pregunten.',
-    d2:'Un panel abierto con qué información se recolecta y cómo se usa — te adelantás al escándalo antes de que exista.' },
-  { id:'simulador', nec:'datos',  costo:20, imp:36, n:'Simulador de escenarios',        d:'Qué pasa si los indecisos se parten 60/40.',
-    d2:'Corridas de "qué pasaría si" sobre los datos que ya tenés — convierte una corazonada en un número defendible.' },
+  /* --- datos y opinión pública (gate: segur/datos/soporte) --- */
+  { id:'microseg',  nec:'core', etapa:'semilla', costo:14, imp:26, n:'Segmentación fina de audiencias', d:'El mensaje correcto al bloque correcto, desde el día uno.',
+    d2:'Cortar el electorado o la audiencia en grupos accionables por comportamiento, no solo por edad y zona — sin esto no hay producto, solo una base de datos.' },
+  { id:'simulador', nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Simulador de escenarios', d:'Qué pasa si los indecisos se parten 60/40.',
+    d2:'Corridas de "qué pasaría si" sobre los datos que ya tenés — el motivo por el que un cliente vuelve a pagar cada mes en vez de comprar un informe una sola vez.' },
+  { id:'padron',    nec:'integra', etapa:'serieB', costo:22, imp:34, n:'Integración de datos públicos', d:'Padrones, boletines, presupuestos: todo cruzado, en cada ciudad nueva.',
+    d2:'Cruzar fuentes oficiales dispersas en un solo modelo de datos — el trabajo sucio que hay que repetir en cada mercado nuevo que abrís.' },
+  { id:'transparencia', nec:'segur', etapa:'serieC', costo:26, imp:38, n:'Tablero público de transparencia', d:'Mostrar qué datos usás antes de que un comité te lo pregunte.',
+    d2:'Un panel abierto con qué información se recolecta y cómo se usa — lo que un directorio pre-salida a bolsa exige antes de que exista el escándalo, no después.' },
 
-  /* --- biogenética --- */
-  { id:'plegado',   nec:'core',   costo:26, imp:40, n:'Modelo propio de plegado',       d:'Tu ventaja o tu ruina. Meses de cómputo.',
-    d2:'Un modelo propio de predicción de estructura de proteínas — si funciona, es tu foso; si no, es el dinero quemado.' },
-  { id:'sintesis',  nec:'escala', costo:22, imp:34, n:'Pipeline de síntesis',           d:'Del diseño in silico al tubo de ensayo sin fila.',
-    d2:'Automatizar el paso de la simulación por computadora al laboratorio real, sin esperar semanas de cola.' },
-  { id:'bioseg',    nec:'segur',  costo:18, imp:34, n:'Protocolos de bioseguridad',     d:'La pregunta uno de todo auditor.',
-    d2:'Contención y manejo seguro de material biológico, documentado — sin esto no entra ni el primer auditor regulatorio.' },
-  { id:'patentes',  nec:'soporte',costo:16, imp:28, n:'Portafolio de patentes',         d:'La única parte de tu ciencia que el inversionista entiende.',
-    d2:'Proteger legalmente el hallazgo científico — un activo que el inversionista puede tasar sin entender la química.' },
+  /* --- biogenética (gate: segur/datos/soporte) --- */
+  { id:'plegado',  nec:'core', etapa:'semilla', costo:16, imp:28, n:'Modelo propio de plegado', d:'Tu ventaja o tu ruina. Meses de cómputo, con la caja que tenés hoy.',
+    d2:'Un modelo propio de predicción de estructura de proteínas — si funciona, es tu foso; si no, es la ronda semilla entera quemada.' },
+  { id:'sintesis', nec:'flujo', etapa:'serieA', costo:18, imp:32, n:'Pipeline de síntesis', d:'Del diseño in silico al tubo de ensayo, sin fila y sin frenar.',
+    d2:'Automatizar el paso de la simulación al laboratorio real — la diferencia entre un hallazgo cada seis meses y uno cada seis semanas.' },
+  { id:'bioseg',   nec:'segur', etapa:'serieB', costo:24, imp:38, n:'Protocolos de bioseguridad', d:'La pregunta uno de todo auditor, multiplicada por cada línea nueva de investigación.',
+    d2:'Contención y manejo seguro de material biológico, documentado — con más proyectos corriendo en paralelo, un solo protocolo flojo cierra el laboratorio entero.' },
+  { id:'patentes', nec:'soporte', etapa:'serieC', costo:28, imp:42, n:'Portafolio de patentes', d:'La única parte de tu ciencia que un comité de inversión puede tasar sin entender la química.',
+    d2:'Proteger legalmente cada hallazgo antes de la ronda que valúa la empresa por su propiedad intelectual, no por su promesa.' },
 
-  /* --- banco digital --- */
-  { id:'licencia',  nec:'segur',  costo:28, imp:40, n:'Licencia y cumplimiento',        d:'Sin esto no hay mercado grande.',
-    d2:'El permiso regulatorio para operar como entidad financiera — lento y caro, pero sin él el mercado grande ni te mira.' },
-  { id:'antifraude',nec:'segur',  costo:18, imp:30, n:'Motor antifraude',               d:'Cada punto de fraude sale de tu margen.',
-    d2:'Detección automática de transacciones sospechosas antes de que se conviertan en pérdida contable.' },
-  { id:'adelanto',  nec:'core',   costo:20, imp:34, n:'Crédito y adelantos',            d:'Lo que de verdad los trae.',
-    d2:'Adelantos de dinero contra ingresos futuros — el producto que la gente realmente busca detrás de la app bonita.' },
-  { id:'conciliar', nec:'datos',  costo:14, imp:26, n:'Conciliación automática',        d:'La tarea que odian todos los meses.',
-    d2:'Cruzar movimientos y cuadrar los libros solo, en vez de que un contador lo haga a mano cada cierre de mes.' },
+  /* --- banco digital (gate: segur/soporte/datos) --- */
+  { id:'adelanto',   nec:'core', etapa:'semilla', costo:14, imp:26, n:'Crédito y adelantos', d:'Lo que de verdad los trae, más allá de la tarjeta bonita.',
+    d2:'Adelantos de dinero contra ingresos futuros — el producto que la gente realmente busca detrás de la app, desde la primera versión.' },
+  { id:'conciliar',  nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Conciliación automática', d:'La tarea que odian todos los meses, ahora sin un humano a mano.',
+    d2:'Cruzar movimientos y cuadrar los libros solo — la prueba de que el negocio no depende de que un contador no se equivoque.' },
+  { id:'antifraude', nec:'segur', etapa:'serieB', costo:24, imp:36, n:'Motor antifraude', d:'Cada punto de fraude sale de tu margen, y el margen se nota más con volumen.',
+    d2:'Detección automática de transacciones sospechosas antes de que se conviertan en pérdida contable — indispensable en cuanto el volumen deja de ser chico.' },
+  { id:'licencia',   nec:'segur', etapa:'serieC', costo:30, imp:42, n:'Licencia bancaria plena', d:'Sin esto no hay mercado grande, ni salida a bolsa que lo firme.',
+    d2:'El permiso regulatorio para operar como entidad financiera completa — lento y carísimo, pero sin él el prospecto de la oferta pública ni se imprime.' },
 
-  /* --- energía renovable --- */
-  { id:'sensor',    nec:'core',   costo:18, imp:30, n:'Medidor de bajo costo',          d:'Si el hardware sale caro, no hay negocio.',
-    d2:'Hardware de medición barato de fabricar — el margen de todo el negocio depende de bajar este costo unitario.' },
-  { id:'verificacion',nec:'datos',costo:20, imp:36, n:'Verificación de ahorro',         d:'La prueba que convierte una lectura en factura.',
-    d2:'Confirmar de forma auditable cuánta energía se ahorró de verdad — sin esa prueba, nadie te paga por el ahorro.' },
-  { id:'despacho',  nec:'escala', costo:22, imp:30, n:'Despacho automático de energía', d:'Vender el excedente en la hora cara.',
-    d2:'Decidir solo, en tiempo real, cuándo inyectar el excedente a la red para venderlo en el momento más caro.' },
-  { id:'tarifas',   nec:'integra',costo:12, imp:24, n:'Motor de tarifas',               d:'Cada distribuidora factura distinto.',
-    d2:'Un motor que traduce las reglas de facturación de cada distribuidora, para no reprogramar todo por cada nueva ciudad.' },
+  /* --- energía renovable (gate: datos/integra/soporte) --- */
+  { id:'sensor',       nec:'core', etapa:'semilla', costo:14, imp:26, n:'Medidor de bajo costo', d:'Si el hardware sale caro, no hay negocio que levantar.',
+    d2:'Hardware de medición barato de fabricar — el margen de todo lo que sigue depende de bajar este costo unitario desde el primer lote.' },
+  { id:'verificacion', nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Verificación de ahorro', d:'La prueba que convierte una lectura en factura que alguien paga otra vez.',
+    d2:'Confirmar de forma auditable cuánta energía se ahorró de verdad — sin esa prueba, nadie renueva el contrato el segundo año.' },
+  { id:'tarifas',      nec:'integra', etapa:'serieB', costo:22, imp:34, n:'Motor de tarifas', d:'Cada distribuidora nueva factura distinto, y ya no entrás a una sola ciudad.',
+    d2:'Un motor que traduce las reglas de facturación de cada distribuidora — sin él, cada mercado nuevo es reprogramar todo de cero.' },
+  { id:'despacho',     nec:'escala', etapa:'serieC', costo:26, imp:38, n:'Despacho automático de energía', d:'Vender el excedente en la hora cara, en miles de techos a la vez.',
+    d2:'Decidir solo, en tiempo real y a escala nacional, cuándo inyectar el excedente a la red — el número que un inversor institucional puede auditar.' },
 
-  /* --- devtools --- */
-  { id:'cli',       nec:'flujo',  costo:12, imp:30, n:'CLI de primera clase',           d:'Donde tu usuario ya vive.',
-    d2:'Una herramienta de línea de comandos pulida — para el desarrollador, vivir fuera de la terminal es fricción.' },
-  { id:'plantillas2',nec:'core',  costo:10, imp:22, n:'Recetas listas para usar',       d:'Del clone a corriendo en un minuto.',
-    d2:'Proyectos de arranque ya armados para los casos de uso más comunes — copiar, pegar y correr, sin configurar desde cero.' },
-  { id:'panel',     nec:'datos',  costo:14, imp:24, n:'Tablero para el que paga',       d:'El que firma no usa la CLI.',
-    d2:'Una vista visual y ejecutiva del uso y el costo, pensada para quien aprueba la factura y no toca una terminal.' },
-  { id:'openq',     nec:'soporte',costo:16, imp:20, n:'Edición abierta de comunidad',   d:'Adopción sí, ingresos quizás.', senuelo:true,
-    d2:'Dejar que la comunidad edite y aporte libremente. Suma usuarios rápido; convertirlos en pago es otro problema.' },
+  /* --- devtools (gate: integra/segur/datos) --- */
+  { id:'plantillas2', nec:'core', etapa:'semilla', costo:10, imp:22, n:'Recetas listas para usar', d:'Del clone a corriendo en un minuto, antes de tener nada más.',
+    d2:'Proyectos de arranque ya armados para los casos de uso más comunes — copiar, pegar y correr, cuando lo único que tenés es la idea.' },
+  { id:'cli',         nec:'flujo', etapa:'serieA', costo:14, imp:26, n:'CLI de primera clase', d:'Donde tu usuario ya vive, ahora que hay usuarios de verdad que volver a traer.',
+    d2:'Una herramienta de línea de comandos pulida — para el desarrollador que ya probó la v1, vivir fuera de la terminal es la razón por la que no vuelve.' },
+  { id:'openq',       nec:'soporte', etapa:'serieB', costo:18, imp:30, n:'Edición abierta de comunidad', d:'Adopción sí, ingresos quizás — y ahora tenés equipo para sostenerlo.', senuelo:true,
+    d2:'Dejar que la comunidad edite y aporte libremente suma usuarios rápido a escala. Convertirlos en clientes que pagan sigue siendo otro problema, uno que esto no resuelve solo.' },
+  { id:'gobernanza',  nec:'integra', etapa:'serieC', costo:22, imp:34, n:'Gobierno y permisos a nivel organización', d:'El admin de IT necesita controlar todo, no solo cada desarrollador suelto.',
+    d2:'SSO, roles y auditoría a nivel de toda la cuenta — lo que convierte mil desarrolladores usándote gratis en un solo contrato enterprise que alguien firma.' },
 
-  /* --- apuestas y juego online --- */
-  { id:'cuotas',    nec:'core',   costo:18, imp:34, n:'Motor de cuotas en vivo',        d:'Cuotas que se mueven con el partido. Tu margen vive acá.',
-    d2:'Recalcular probabilidades en tiempo real durante el evento — el corazón matemático de todo el negocio.' },
-  { id:'vip',       nec:'datos',  costo:16, imp:32, n:'Programa VIP',                   d:'El 2% de los apostadores deja el 60% del dinero.',
-    d2:'Atención dedicada y beneficios para el puñado de usuarios que genera la mayor parte de los ingresos.' },
-  { id:'autoexclusion',nec:'segur',costo:14,imp:30, n:'Controles de adicción',          d:'Lo primero que revisa el regulador y tú dejaste para después.',
-    d2:'Límites de gasto y autoexclusión voluntaria — protección al usuario que, además, es lo primero que audita el regulador.' },
-  { id:'pagos',     nec:'flujo',  costo:15, imp:28, n:'Depósito y retiro instantáneos', d:'El que no puede retirar rápido no vuelve.',
-    d2:'Que el dinero entre y salga sin demoras — cada hora de espera en un retiro es un usuario que no vuelve a depositar.' },
+  /* --- apuestas y juego online (gate: segur/datos/soporte) --- */
+  { id:'cuotas',       nec:'core', etapa:'semilla', costo:16, imp:28, n:'Motor de cuotas en vivo', d:'Cuotas que se mueven con el partido. Sin esto no hay producto, solo una promesa.',
+    d2:'Recalcular probabilidades en tiempo real durante el evento — el corazón matemático de todo el negocio, construido antes que cualquier otra cosa.' },
+  { id:'pagos',        nec:'flujo', etapa:'serieA', costo:18, imp:30, n:'Depósito y retiro instantáneos', d:'El que no puede retirar rápido no vuelve a depositar.',
+    d2:'Que el dinero entre y salga sin demoras — cada hora de espera en un retiro es un usuario que no vuelve, justo cuando necesitás que vuelvan.' },
+  { id:'autoexclusion',nec:'segur', etapa:'serieB', costo:22, imp:34, n:'Controles de adicción', d:'Lo primero que revisa el regulador en cuanto el volumen te hace visible.',
+    d2:'Límites de gasto y autoexclusión voluntaria — con más usuarios, es también lo primero que un regulador audita antes de dejarte crecer más.' },
+  { id:'vip',          nec:'soporte', etapa:'serieC', costo:26, imp:38, n:'Programa VIP', d:'El 2% de los apostadores deja el 60% del dinero, y ya sabés quiénes son.',
+    d2:'Atención dedicada y beneficios a medida para el puñado de cuentas que sostiene el negocio — el tipo de gasto que un negocio chico no puede justificar y uno maduro no puede no hacer.' },
 
-  /* --- salud premium --- */
-  { id:'concierge', nec:'soporte',costo:20, imp:36, n:'Equipo médico concierge',        d:'Una persona que contesta el teléfono a las 3 AM.',
-    d2:'Atención humana disponible a cualquier hora — el nivel de servicio que justifica cobrar como membresía premium.' },
-  { id:'longevidad',nec:'core',   costo:22, imp:34, n:'Programa de longevidad',         d:'El chequeo anual convertido en membresía.',
-    d2:'Un seguimiento continuo de biomarcadores en vez de un chequeo puntual una vez al año — ingreso recurrente, no una visita.' },
-  { id:'vipapp',    nec:'flujo',  costo:14, imp:28, n:'App para miembros',              d:'Resultados, citas e historial sin llamar a nadie.',
-    d2:'Autogestión completa desde el teléfono: agendar, ver resultados, historial — sin pasar por una llamada.' },
-  { id:'redmedica', nec:'integra',costo:18, imp:30, n:'Red de especialistas',           d:'El mejor cardiólogo de la ciudad, con cita mañana.',
-    d2:'Acceso curado a especialistas de primer nivel con turnos rápidos — la razón real por la que alguien paga la membresía.' },
+  /* --- salud premium (gate: soporte/segur/datos) --- */
+  { id:'longevidad', nec:'core', etapa:'semilla', costo:16, imp:28, n:'Programa de longevidad', d:'El chequeo anual convertido en membresía, desde el primer socio.',
+    d2:'Un seguimiento continuo de biomarcadores en vez de una visita puntual — el producto en sí, no un anexo de otra cosa.' },
+  { id:'vipapp',     nec:'flujo', etapa:'serieA', costo:18, imp:32, n:'App para miembros', d:'Resultados, citas e historial sin llamar a nadie — para que renueven solos.',
+    d2:'Autogestión completa desde el teléfono: agendar, ver resultados, historial — la fricción que decide si el socio renueva el segundo año.' },
+  { id:'redmedica',  nec:'integra', etapa:'serieB', costo:22, imp:36, n:'Red de especialistas', d:'El mejor cardiólogo de la ciudad, con cita mañana, en cada ciudad nueva.',
+    d2:'Acceso curado a especialistas de primer nivel con turnos rápidos — la razón real por la que alguien paga la membresía, ahora hay que sostenerla en cada mercado que abrís.' },
+  { id:'concierge',  nec:'soporte', etapa:'serieC', costo:26, imp:40, n:'Equipo médico concierge', d:'Una persona que contesta el teléfono a las 3 AM, para cada socio, a esta escala.',
+    d2:'Atención humana disponible a cualquier hora — el nivel de servicio que justifica el precio premium, sostenido con la operación de una empresa grande, no de una clínica boutique.' },
 
-  /* --- inteligencia artificial aplicada --- */
-  { id:'evals',     nec:'datos',  costo:16, imp:32, n:'Suite de evaluaciones',            d:'Saber si el modelo mejoró o solo cambió.',
-    d2:'Un banco de pruebas fijo contra el que medís cada versión. Sin esto, "está mejor" es una opinión con dos ejemplos.' },
-  { id:'finetune',  nec:'core',   costo:22, imp:36, n:'Modelo afinado con datos propios', d:'La ventaja que no se copia con una llave de API.',
-    d2:'Especializar el modelo con datos que solo vos tenés — lo único que un competidor no consigue comprando la misma API.' },
-  { id:'guardrails',nec:'segur',  costo:18, imp:32, n:'Barandas y trazabilidad',          d:'Para que la respuesta inventada no llegue al cliente.',
-    d2:'Filtros de salida, citas verificables y registro de cada respuesta — lo que te permite explicar qué dijo el modelo y por qué.' },
-  { id:'inferencia',nec:'escala', costo:20, imp:30, n:'Inferencia barata',                d:'Cada respuesta cuesta plata. Ahí vive tu margen.',
-    d2:'Caché, modelos chicos para lo fácil y lotes para lo pesado: la diferencia entre un negocio y una demo subsidiada.' },
-  { id:'agentes',   nec:'core',   costo:24, imp:38, n:'Agentes autónomos de punta a punta',d:'El video del anuncio es espectacular.', senuelo:true,
-    d2:'Un agente que hace todo el trabajo solo. En el video, dos minutos. En producción, un humano revisando cada paso.' },
+  /* --- inteligencia artificial aplicada (gate: datos/segur/integra) --- */
+  { id:'finetune',   nec:'core', etapa:'semilla', costo:18, imp:28, n:'Modelo afinado con datos propios', d:'La ventaja que no se copia con una llave de API, desde la primera versión.',
+    d2:'Especializar el modelo con datos que solo vos tenés — lo único que un competidor no consigue comprando la misma API que vos.' },
+  { id:'evals',      nec:'datos', etapa:'serieA', costo:16, imp:30, n:'Suite de evaluaciones', d:'Saber si el modelo mejoró o solo cambió, versión tras versión.',
+    d2:'Un banco de pruebas fijo contra el que medís cada release. Sin esto, "está mejor" es una opinión con dos ejemplos — y ya no alcanza con opiniones.' },
+  { id:'guardrails', nec:'segur', etapa:'serieB', costo:22, imp:36, n:'Barandas y trazabilidad', d:'Para que la respuesta inventada no llegue al cliente, ahora que hay miles por hora.',
+    d2:'Filtros de salida, citas verificables y registro de cada respuesta — lo que te permite explicar qué dijo el modelo y por qué, a un volumen que ya no podés revisar a mano.' },
+  { id:'inferencia', nec:'escala', etapa:'serieC', costo:26, imp:40, n:'Inferencia barata', d:'Cada respuesta cuesta plata. A este volumen, ahí vive todo tu margen.',
+    d2:'Caché, modelos chicos para lo fácil y lotes para lo pesado — la diferencia entre un negocio que un directorio puede defender y una demo subsidiada que nunca lo fue.' },
 
-  /* --- silicio y semiconductores --- */
-  { id:'tapeout',   nec:'core',   costo:30, imp:42, n:'Tape-out del primer silicio',      d:'Un solo tiro. Si sale mal, seis meses.',
-    d2:'Congelar el diseño y mandarlo a fabricar. A partir de ahí no hay parche: hay respin, y el respin se mide en semestres.' },
-  { id:'sdk',       nec:'integra',costo:20, imp:34, n:'SDK y compilador propios',         d:'El chip sin software es un pisapapeles caro.',
-    d2:'Las herramientas con las que el cliente programa tu chip. El hardware gana la evaluación; el software gana la cuenta.' },
-  { id:'yield',     nec:'escala', costo:24, imp:32, n:'Rendimiento de obleas',            d:'Cada punto de yield es margen puro.',
-    d2:'Cuántos chips buenos salen de cada oblea. Subirlo no se ve en ninguna demo y decide si el negocio existe.' },
-  { id:'fundicion', nec:'soporte',costo:22, imp:30, n:'Cupo en la fundición',             d:'No fabricas: te dan turno.',
-    d2:'Asegurar capacidad de fabricación con meses de anticipación. Sin cupo, tu mejor diseño espera en la fila.' },
+  /* --- silicio y semiconductores (gate: escala/integra/soporte) --- */
+  { id:'tapeout',   nec:'core', etapa:'semilla', costo:18, imp:30, n:'Tape-out del primer silicio', d:'Un solo tiro. Si sale mal, seis meses y la ronda semilla entera.',
+    d2:'Congelar el diseño y mandarlo a fabricar. A partir de acá no hay parche: hay respin, y el respin se mide en semestres que no tenés.' },
+  { id:'sdk',       nec:'flujo', etapa:'serieA', costo:22, imp:34, n:'SDK y compilador propios', d:'El chip sin software es un pisapapeles caro que nadie adopta.',
+    d2:'Las herramientas con las que el cliente programa tu chip. El hardware gana la evaluación técnica; el software decide si ese diseñador vuelve al segundo proyecto.' },
+  { id:'yield',     nec:'escala', etapa:'serieB', costo:26, imp:38, n:'Rendimiento de obleas', d:'Cada punto de yield es margen puro, multiplicado por cada lote que sale.',
+    d2:'Cuántos chips buenos salen de cada oblea. No se ve en ninguna demo y decide si el negocio existe en cuanto empezás a fabricar en volumen.' },
+  { id:'fundicion', nec:'soporte', etapa:'serieC', costo:30, imp:42, n:'Cupo en la fundición', d:'No fabricás: te dan turno, y a esta escala el turno es la mitad del negocio.',
+    d2:'Asegurar capacidad de fabricación con años de anticipación y contratos de por medio — sin cupo garantizado, tu mejor diseño espera en la fila de otro que sí lo aseguró.' },
 
-  /* --- ciberseguridad empresarial --- */
-  { id:'edr',       nec:'core',   costo:20, imp:36, n:'Agente en el endpoint',            d:'Vive dentro de la máquina del cliente. Si se cuelga, se cuelga todo.',
-    d2:'Detección en el propio equipo, con permisos de núcleo. Máxima visibilidad y máximo poder de romperle el lunes a un país.' },
-  { id:'soc',       nec:'soporte',costo:18, imp:32, n:'Centro de operaciones 24/7',       d:'Alguien mira las alertas a las 4 AM.',
-    d2:'Analistas de guardia todo el año. Es el servicio que el cliente cree que está comprando cuando compra el software.' },
-  { id:'certifica', nec:'segur',  costo:22, imp:38, n:'Certificaciones y cumplimiento',   d:'Papel caro que abre las puertas caras.',
-    d2:'SOC 2, ISO, el pliego del sector público. Meses de auditoría que no agregan una función y desbloquean el contrato grande.' },
-  { id:'cazador',   nec:'datos',  costo:16, imp:28, n:'Caza proactiva de amenazas',       d:'Buscar al que ya está adentro.',
-    d2:'Salir a buscar señales de intrusión en vez de esperar la alerta. Lo que separa un producto de un tablero de colores.' },
+  /* --- ciberseguridad empresarial (gate: segur/soporte/integra) --- */
+  { id:'edr',       nec:'core', etapa:'semilla', costo:16, imp:30, n:'Agente en el endpoint', d:'Vive dentro de la máquina del cliente desde el primer pilot. Si se cuelga, se cuelga todo.',
+    d2:'Detección en el propio equipo, con permisos de núcleo — máxima visibilidad y máximo poder de romperle el lunes a alguien, antes de tener ningún otro producto.' },
+  { id:'cazador',   nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Caza proactiva de amenazas', d:'Buscar al que ya está adentro, y tener los datos para probarlo.',
+    d2:'Salir a buscar señales de intrusión en vez de esperar la alerta — lo que convierte el pilot en la razón por la que el segundo cliente te llama a vos primero.' },
+  { id:'soc',       nec:'soporte', etapa:'serieB', costo:22, imp:36, n:'Centro de operaciones 24/7', d:'Alguien mira las alertas a las 4 AM, en cada cuenta nueva que sumás.',
+    d2:'Analistas de guardia todo el año. Es el servicio que el cliente cree que compra cuando compra el software, y a esta escala tiene que ser real.' },
+  { id:'certifica', nec:'segur', etapa:'serieC', costo:28, imp:42, n:'Certificaciones y cumplimiento', d:'Papel caro que abre las puertas caras, justo antes de la puerta más cara de todas.',
+    d2:'SOC 2, ISO, el pliego del sector público. Meses de auditoría que no agregan una función y desbloquean el contrato — y la ronda — que necesitás para llegar a bolsa.' },
 
-  /* --- marketplace y última milla --- */
-  { id:'densidad',  nec:'escala', costo:22, imp:36, n:'Densidad por zona',                d:'Un repartidor con tres pedidos gana; con uno, pierde.',
-    d2:'Concentrar demanda en pocas zonas antes de abrir la siguiente. La geografía es la unidad económica de este negocio.' },
-  { id:'vendedores',nec:'core',   costo:18, imp:32, n:'Herramientas para vendedores',     d:'El otro lado del mercado también es un producto.',
-    d2:'Inventario, precios y cobros para quien vende. Sin oferta no hay demanda, y la oferta se va con el que la trate mejor.' },
-  { id:'logistica', nec:'integra',costo:24, imp:34, n:'Logística propia',                 d:'Dejar de depender del correo.',
-    d2:'Depósitos y flota propios: carísimo, lento de montar, y lo único que te deja prometer una fecha y cumplirla.' },
-  { id:'reputacion',nec:'soporte',costo:14, imp:28, n:'Reseñas y garantía de compra',     d:'La confianza es el inventario del marketplace.',
-    d2:'Calificaciones creíbles y devolución del dinero si algo sale mal — lo que permite comprarle a un desconocido.' },
+  /* --- marketplace y última milla (gate: escala/soporte/datos) --- */
+  { id:'vendedores', nec:'core', etapa:'semilla', costo:14, imp:26, n:'Herramientas para vendedores', d:'El otro lado del mercado también es un producto, y hay que construirlo primero.',
+    d2:'Inventario, precios y cobros para quien vende. Sin oferta no hay demanda que valga la pena mostrar todavía.' },
+  { id:'reputacion', nec:'datos', etapa:'serieA', costo:16, imp:28, n:'Reseñas y garantía de compra', d:'La confianza es el inventario del marketplace, y ahora hay historial para medirla.',
+    d2:'Calificaciones creíbles y devolución del dinero si algo sale mal — el dato que permite comprarle a un desconocido una segunda vez.' },
+  { id:'logistica',  nec:'integra', etapa:'serieB', costo:20, imp:34, n:'Logística propia', d:'Dejar de depender del correo, en cada ciudad donde el volumen ya lo justifica.',
+    d2:'Depósitos y flota propios: carísimo, lento de montar, y lo único que te deja prometer una fecha y cumplirla mientras escalás a mercados nuevos.' },
+  { id:'densidad',   nec:'escala', etapa:'serieC', costo:26, imp:40, n:'Densidad por zona', d:'Un repartidor con tres pedidos gana; con uno, pierde — y ahora hay que probarlo en cada ciudad del mapa.',
+    d2:'Concentrar demanda en pocas zonas antes de abrir la siguiente. La unidad económica que un inversor de última ronda va a pedir ver, ciudad por ciudad.' },
 
-  /* --- streaming y creadores --- */
-  { id:'original',  nec:'core',   costo:26, imp:38, n:'Producción original',              d:'Carísimo, y es lo único que no te pueden quitar.',
-    d2:'Contenido propio: no vence, no se lo lleva el competidor cuando termina la licencia, y define de qué te acusan en Twitter.' },
-  { id:'recomendador',nec:'datos',costo:18, imp:34, n:'Motor de recomendación',           d:'El menú importa más que la comida.',
-    d2:'Qué se muestra primero decide qué se consume. En catálogos grandes, la portada vale más que la mitad del catálogo.' },
-  { id:'creadores', nec:'flujo',  costo:16, imp:30, n:'Programa de creadores',            d:'Que el catálogo lo haga otro y cobre por vista.',
-    d2:'Herramientas y reparto de ingresos para que la gente produzca lo que vos vendés. Margen inmejorable, control ninguno.' },
-  { id:'offline',   nec:'escala', costo:14, imp:24, n:'Descargas y modo sin conexión',    d:'Para el subte, el avión y el pueblo sin señal.',
-    d2:'Reproducir sin red. Invisible en la demo de la oficina, decisivo en la mitad de los mercados donde querés crecer.' },
-  { id:'interactivo',nec:'core',  costo:22, imp:36, n:'Experiencias interactivas',        d:'La prensa lo va a amar.', senuelo:true,
-    d2:'El capítulo donde el espectador elige. Sale en todas las notas del lanzamiento y en ninguna métrica de retención.' }
+  /* --- streaming y creadores (gate: core/datos/escala) --- */
+  { id:'creadores',    nec:'flujo', etapa:'semilla', costo:14, imp:26, n:'Programa de creadores', d:'Que el catálogo lo haga otro, antes de tener presupuesto para producir nada.',
+    d2:'Herramientas y reparto de ingresos para que la gente produzca lo que vos vendés — el catálogo más barato que existe cuando todavía no tenés caja.' },
+  { id:'recomendador', nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Motor de recomendación', d:'El menú importa más que la comida, en cuanto hay suficiente comida para elegir mal.',
+    d2:'Qué se muestra primero decide qué se consume. Con el catálogo creciendo, la portada empieza a valer más que la mitad de lo que hay atrás.' },
+  { id:'offline',      nec:'escala', etapa:'serieB', costo:22, imp:34, n:'Descargas y modo sin conexión', d:'Para el subte, el avión y el pueblo sin señal, ahora que ahí también hay mercado.',
+    d2:'Reproducir sin red. Invisible en la demo de la oficina, decisivo en la mitad de los mercados nuevos donde estás intentando crecer.' },
+  { id:'original',     nec:'core', etapa:'serieC', costo:28, imp:40, n:'Producción original', d:'Carísimo, y es lo único que no te pueden quitar cuando vence una licencia.',
+    d2:'Contenido propio que no se va cuando termina el acuerdo con otro estudio. Define de qué te acusan en la prensa financiera el día antes de salir a bolsa.' }
 ];
 
 for (var _i = 0; _i < APUESTAS_SECTOR.length; _i++) APUESTAS.push(APUESTAS_SECTOR[_i]);

@@ -82,7 +82,7 @@ var SECTORES = [
   gate:'Compra la organización, no el individuo',
   gateReqs:[['integra',55],['segur',50],['datos',50]],
   incidente:'infra', retMod:0.05,
-  apuestas:['cli','plantillas2','panel','openq'] },
+  apuestas:['plantillas2','cli','openq','gobernanza'] },
 
 { id:'apuestas', nombre:'Juego y apuestas en línea', corto:'Apuestas',
   desc:'Casino y apuestas deportivas. Márgenes de ensueño, retención moralmente de pesadilla y un regulador que ya te tiene en la agenda.',
@@ -109,7 +109,7 @@ var SECTORES = [
   gate:'Precisión auditable y datos que no se filtran',
   gateReqs:[['datos',65],['segur',60],['integra',55]],
   incidente:'alucina', retMod:0.03,
-  apuestas:['evals','finetune','guardrails','inferencia','agentes'] },
+  apuestas:['finetune','evals','guardrails','inferencia'] },
 
 { id:'chips', nombre:'Silicio y semiconductores', corto:'Silicio',
   desc:'Dieciocho meses desde el diseño hasta el primer chip que enciende. Un error en el metal cuesta un respin y medio año de tu vida.',
@@ -145,7 +145,7 @@ var SECTORES = [
   gate:'Catálogo propio y una razón para no cancelar',
   gateReqs:[['core',60],['datos',55],['escala',55]],
   incidente:'derechos', retMod:0.04,
-  apuestas:['original','recomendador','creadores','offline','interactivo'] }
+  apuestas:['creadores','recomendador','offline','original'] }
 ];
 
 function sectorPorId(id) {

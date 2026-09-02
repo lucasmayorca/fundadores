@@ -204,6 +204,8 @@ var Motor = (function () {
     var sec = sectorPorId(e.sectorId), pool = [], i, id;
     for (i = 0; i < sec.apuestas.length; i++) {
       id = sec.apuestas[i];
+      var ap0 = apuesta(id);
+      if (ap0 && ap0.etapa && ap0.etapa !== e.etapa) continue;
       if (!e.hechas[id] && !e.enVuelo[id] && e.backlog.indexOf(id) < 0) pool.push(id);
     }
     var propias = pool.length;
@@ -239,6 +241,8 @@ var Motor = (function () {
     var sec = sectorPorId(e.sectorId), pool = [], propias = 0;
     for (i = 0; i < sec.apuestas.length; i++) {
       id = sec.apuestas[i];
+      var ap0b = apuesta(id);
+      if (ap0b && ap0b.etapa && ap0b.etapa !== e.etapa) continue;
       if (!e.hechas[id] && !e.enVuelo[id] && e.backlog.indexOf(id) < 0) { pool.push(id); propias++; }
     }
     for (i = 0; i < APUESTAS.length; i++) {
