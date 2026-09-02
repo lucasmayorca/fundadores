@@ -261,6 +261,27 @@ El almacén es un archivo JSON en un **volumen de Railway montado en
 ranking se resetea en cada deploy. En local cae a la carpeta del repo (o a
 `RANKING_DIR`).
 
+## Identidad visual (hoja de ruta)
+
+El motor está completo; la expresión visual todavía es sobre todo tipografía.
+Diagnóstico y propuesta, comparando contra 100 juegos de habilidades y eras
+(Civilization, Age of Empires, Football Manager, Crusader Kings, Darkest
+Dungeon, Duolingo, GTA...): **[La Identidad Visual de Founder
+Mode](https://claude.ai/code/artifact/eca128b7-1e51-4b1f-8f59-59117f587fc2)**.
+
+Todo corre con SVG inline + CSS — cero dependencias nuevas, compatible con
+Safari 9. Orden de trabajo:
+
+1. **Ahora**: tira de eras con ícono propio y glow en la activa (`#era`);
+   elenco con silueta por rol y marco de color por postura (ayuda/bloquea)
+   en vez de una letra en un círculo.
+2. **Después**: radar de 5 ejes (producto/tecnología/GTM/gente/capital) con
+   el mes anterior como contorno fantasma; la Lupa del regulador como fila
+   de íconos que se llenan, estilo wanted level de GTA.
+3. **Más adelante**: las tres etapas de PMF como camino de nodos (no barras
+   sueltas); los 17 logros y las facciones del ranking como vitrina de
+   badges en vez de listas con candado.
+
 ## Archivos
 
 ```
