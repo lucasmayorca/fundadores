@@ -1,4 +1,4 @@
-# Founders — a career in product
+# Founder Mode — a career in product
 
 **Play it here: https://fundadores-production.up.railway.app/**
 
