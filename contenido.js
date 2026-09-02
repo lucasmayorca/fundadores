@@ -1,147 +1,146 @@
-/* Game content: needs, segments, ideas, backlog and dilemmas.
-   Strict ES5 (Safari 9). */
+/* Contenido del juego: necesidades, segmentos, ideas, backlog y dilemas.
+   ES5 estricto (Safari 9). */
 
-/* Needs are the customer's "job to be done". Each backlog bet covers one.
-   Each segment demands a different subset: that's where the chasm
-   lives. */
+/* Las necesidades son el "trabajo por hacer" del cliente. Cada apuesta del
+   backlog cubre una. Cada segmento exige un subconjunto distinto: ahí
+   vive el abismo. */
 var NECESIDADES = [
-  { id:'core',   nombre:'The core job',            corto:'Core' },
-  { id:'flujo',  nombre:'Get in and get going',    corto:'Flow' },
-  { id:'datos',  nombre:'See what\'s happening',   corto:'Data' },
-  { id:'integra',nombre:'Plug into what they already use', corto:'Integr.' },
-  { id:'soporte',nombre:'Support and guarantees',  corto:'Support' },
-  { id:'segur',  nombre:'Security and compliance', corto:'Security' },
-  { id:'escala', nombre:'Handle the volume',       corto:'Scale' }
+  { id:'core',   nombre:'El trabajo central',      corto:'Núcleo' },
+  { id:'flujo',  nombre:'Entrar y activarse',      corto:'Flujo' },
+  { id:'datos',  nombre:'Ver qué pasa',            corto:'Datos' },
+  { id:'integra',nombre:'Integrarse', corto:'Integr.' },
+  { id:'soporte',nombre:'Soporte',  corto:'Soporte' },
+  { id:'segur',  nombre:'Seguridad', corto:'Segur.' },
+  { id:'escala', nombre:'Aguantar volumen',        corto:'Escala' }
 ];
 
 var SEGMENTOS = [
-  { id:'innov', nombre:'Innovators', desc:'They\'ll try anything new. They forgive you everything.',
+  { id:'innov', nombre:'Innovadores', desc:'Prueban cualquier cosa nueva. Te perdonan todo.',
     tam:900,    requiere:['core'],
     retBase:0.70, exigFiab:0.15, paga:0.5 },
-  { id:'visio', nombre:'Visionaries', desc:'They buy the promise. They want an edge, not safety.',
+  { id:'visio', nombre:'Visionarios', desc:'Compran la promesa. Quieren ventaja, no seguridad.',
     tam:6000,   requiere:['core','flujo','datos'],
     retBase:0.78, exigFiab:0.40, paga:1.0 },
-  { id:'pragm', nombre:'Early majority', desc:'They buy what already works for someone like them.',
+  { id:'pragm', nombre:'Mayoría temprana', desc:'Compran lo que ya le funciona a alguien como ellos.',
     tam:32000,  requiere:['core','flujo','datos','integra','soporte','segur'],
     retBase:0.91, exigFiab:0.85, paga:1.2 },
-  { id:'conse', nombre:'Late majority', desc:'They buy when not buying is the risk.',
+  { id:'conse', nombre:'Mayoría tardía', desc:'Compran cuando el riesgo es no comprar.',
     tam:55000,  requiere:['core','flujo','datos','integra','soporte','segur','escala'],
     retBase:0.95, exigFiab:0.95, paga:1.0 }
 ];
 
 var IDEAS = [
   { id:'cobranzas',
-    nombre:'Collections for SMBs',
-    tagline:'Invoices that collect themselves.',
-    desc:'Huge, underserved market. The leader sells to corporations and won\'t '+
-         'bother looking at you for years. Textbook disruption — if you can take it.',
-    precio:60, escala:1.0, viral:1.0, cac:1.0, caja:210000, competidor:0.55, ventaja:'The low end is wide open.',
-    riesgo:'Small ticket: you need volume, and volume breaks things.' },
+    nombre:'Cobranzas para pymes',
+    tagline:'Facturas que se cobran solas.',
+    desc:'Mercado enorme y desatendido. El líder le vende a corporaciones y no '+
+         'se va a molestar en mirarte por años. Disrupción de manual — si la aguantas.',
+    precio:60, escala:1.0, viral:1.0, cac:1.0, caja:210000, competidor:0.55, ventaja:'La gama baja está abierta de par en par.',
+    riesgo:'Ticket chico: necesitas volumen, y el volumen rompe cosas.' },
   { id:'datos',
-    nombre:'Retail data platform',
-    tagline:'One place where the number is the same everywhere.',
-    desc:'Big ticket and serious clients. But security, integrations and support '+
-         'aren\'t optional: the chasm starts at practically your first customer.',
-    precio:220, escala:0.32, viral:0.55, cac:0.55, caja:230000, competidor:0.8, ventaja:'Each client pays like ten.',
-    riesgo:'Without a complete product you sell nothing, and complete takes time.' },
+    nombre:'Plataforma de datos para retail',
+    tagline:'Un solo lugar donde el número es el mismo en todas partes.',
+    desc:'Ticket grande y clientes serios. Pero seguridad, integraciones y soporte '+
+         'no son opcionales: el abismo empieza prácticamente con tu primer cliente.',
+    precio:220, escala:0.32, viral:0.55, cac:0.55, caja:230000, competidor:0.8, ventaja:'Cada cliente paga como diez.',
+    riesgo:'Sin producto completo no vendes nada, y completo toma tiempo.' },
   { id:'habitos',
-    nombre:'Consumer finance habits',
-    tagline:'Saving without thinking about it.',
-    desc:'Viral growth is possible and there\'s no compliance red tape. The problem '+
-         'is the other thing: people leave after two weeks unless you changed their life.',
-    precio:15, escala:14, viral:2.6, cac:2.2, caja:190000, competidor:0.35, ventaja:'Cheap word of mouth.',
-    riesgo:'Brutal retention. Without a habit loop, it\'s a leaky bucket.' }
+    nombre:'Hábitos financieros de consumo',
+    tagline:'Ahorrar sin pensarlo.',
+    desc:'El crecimiento viral es posible y no hay trabas regulatorias. El problema '+
+         'es lo otro: la gente se va a las dos semanas salvo que le hayas cambiado la vida.',
+    precio:15, escala:14, viral:2.6, cac:2.2, caja:190000, competidor:0.35, ventaja:'Boca a boca barato.',
+    riesgo:'Retención brutal. Sin un ciclo de hábito, es un balde con fugas.' }
 ];
 
-/* Backlog. impactoBase is the ceiling; the engine applies a hidden factor at
-   the start of each run, so no two runs reward the same bets.
-   senuelo = sounds great, almost never delivers. */
+/* Backlog. impactoBase es el techo; el motor aplica un factor oculto al
+   inicio de cada partida, así que no hay dos partidas que premien las
+   mismas apuestas. senuelo = suena genial, casi nunca cumple. */
 var APUESTAS = [
-  { id:'motor',    nec:'core',   costo:14, imp:30, n:'Rules engine v1',            d:'Automates the core use case.' },
-  { id:'plantillas',nec:'core',  costo:8,  imp:18, n:'Industry templates',         d:'Users start with something already built.' },
-  { id:'batch',    nec:'core',   costo:12, imp:22, n:'Batch operations',           d:'Do by the thousand what was done one at a time.' },
-  { id:'movil',    nec:'core',   costo:16, imp:16, n:'Native mobile app',          d:'Everyone asks for it. Nobody knows what for.' },
-  { id:'ia',       nec:'core',   costo:18, imp:34, n:'AI assistant',               d:'The board will love it.', senuelo:true },
+  { id:'motor',    nec:'core',   costo:14, imp:30, n:'Motor de reglas v1',         d:'Automatiza el caso de uso central.' },
+  { id:'plantillas',nec:'core',  costo:8,  imp:18, n:'Plantillas por industria',   d:'Los usuarios arrancan con algo ya construido.' },
+  { id:'batch',    nec:'core',   costo:12, imp:22, n:'Operaciones masivas',        d:'Hacer de a miles lo que se hacía de a uno.' },
+  { id:'movil',    nec:'core',   costo:16, imp:16, n:'App móvil nativa',           d:'Todos la piden. Nadie sabe para qué.' },
+  { id:'ia',       nec:'core',   costo:18, imp:34, n:'Asistente de IA',            d:'Al directorio le va a encantar.', senuelo:true },
 
-  { id:'onboard',  nec:'flujo',  costo:9,  imp:26, n:'Guided onboarding',          d:'From signup to first value with no hand-holding.' },
-  { id:'importar', nec:'flujo',  costo:11, imp:24, n:'Data importer',              d:'Bring in what they already have without the pain.' },
-  { id:'rediseno', nec:'flujo',  costo:15, imp:20, n:'Full visual redesign',       d:'It looks way better.', senuelo:true },
-  { id:'atajos',   nec:'flujo',  costo:6,  imp:14, n:'Shortcuts and quick actions',d:'For the ones who already live inside.' },
+  { id:'onboard',  nec:'flujo',  costo:9,  imp:26, n:'Onboarding guiado',          d:'Del registro al primer valor sin llevarlos de la mano.' },
+  { id:'importar', nec:'flujo',  costo:11, imp:24, n:'Importador de datos',        d:'Traer lo que ya tienen sin el dolor.' },
+  { id:'rediseno', nec:'flujo',  costo:15, imp:20, n:'Rediseño visual completo',   d:'Se ve mucho mejor.', senuelo:true },
+  { id:'atajos',   nec:'flujo',  costo:6,  imp:14, n:'Atajos y acciones rápidas',  d:'Para los que ya viven adentro.' },
 
-  { id:'tablero',  nec:'datos',  costo:10, imp:24, n:'Control dashboard',          d:'The number the boss asks for on Monday.' },
-  { id:'alertas',  nec:'datos',  costo:8,  imp:20, n:'Configurable alerts',        d:'The product speaks up instead of waiting.' },
-  { id:'export',   nec:'datos',  costo:5,  imp:12, n:'Export to spreadsheet',      d:'Yes, everyone exports to a spreadsheet anyway.' },
+  { id:'tablero',  nec:'datos',  costo:10, imp:24, n:'Tablero de control',         d:'El número que el jefe pide el lunes.' },
+  { id:'alertas',  nec:'datos',  costo:8,  imp:20, n:'Alertas configurables',      d:'El producto avisa en vez de esperar.' },
+  { id:'export',   nec:'datos',  costo:5,  imp:12, n:'Exportar a planilla',        d:'Sí, igual todos exportan a una planilla.' },
 
-  { id:'api',      nec:'integra',costo:13, imp:26, n:'Public API',                 d:'Let others build on top.' },
-  { id:'conectores',nec:'integra',costo:16,imp:32, n:'Connectors to the big 5',    d:'The systems they already use and won\'t give up.' },
-  { id:'webhooks', nec:'integra',costo:7,  imp:16, n:'Webhooks',                   d:'Cheap glue for automation.' },
+  { id:'api',      nec:'integra',costo:13, imp:26, n:'API pública',                d:'Que otros construyan encima.' },
+  { id:'conectores',nec:'integra',costo:16,imp:32, n:'Conectores a los 5 grandes', d:'Los sistemas que ya usan y no van a soltar.' },
+  { id:'webhooks', nec:'integra',costo:7,  imp:16, n:'Webhooks',                   d:'Pegamento barato para automatizar.' },
 
-  { id:'sla',      nec:'soporte',costo:12, imp:28, n:'Support with an SLA',        d:'Someone picks up, and it\'s in writing.' },
-  { id:'docs',     nec:'soporte',costo:7,  imp:18, n:'Docs and help center',       d:'So not everything ends up in a chat.' },
-  { id:'casos',    nec:'soporte',costo:9,  imp:22, n:'Published case studies',     d:'The reference the pragmatist needs.' },
+  { id:'sla',      nec:'soporte',costo:12, imp:28, n:'Soporte con SLA',            d:'Alguien contesta, y está por escrito.' },
+  { id:'docs',     nec:'soporte',costo:7,  imp:18, n:'Docs y centro de ayuda',     d:'Para que no todo termine en un chat.' },
+  { id:'casos',    nec:'soporte',costo:9,  imp:22, n:'Casos de éxito publicados',  d:'La referencia que el pragmático necesita.' },
 
-  { id:'sso',      nec:'segur',  costo:11, imp:24, n:'SSO and roles',              d:'Without this, IT stops you at the door.' },
-  { id:'auditoria',nec:'segur',  costo:14, imp:26, n:'Audit and traceability',     d:'Who touched what, and when.' },
-  { id:'cifrado',  nec:'segur',  costo:10, imp:20, n:'Encryption and data retention', d:'Question 3 on every security questionnaire.' },
+  { id:'sso',      nec:'segur',  costo:11, imp:24, n:'SSO y roles',                d:'Sin esto, TI te frena en la puerta.' },
+  { id:'auditoria',nec:'segur',  costo:14, imp:26, n:'Auditoría y trazabilidad',   d:'Quién tocó qué, y cuándo.' },
+  { id:'cifrado',  nec:'segur',  costo:10, imp:20, n:'Cifrado y retención de datos', d:'La pregunta 3 de todo cuestionario de seguridad.' },
 
-  { id:'cache',    nec:'escala', costo:12, imp:26, n:'Cache and queues',           d:'So the spike isn\'t an incident.' },
-  { id:'multi',    nec:'escala', costo:17, imp:30, n:'Multi-region',               d:'Real latency and real staying power.' },
-  { id:'observa',  nec:'escala', costo:9,  imp:22, n:'Observability',              d:'See the problem before the customer does.' }
+  { id:'cache',    nec:'escala', costo:12, imp:26, n:'Caché y colas',              d:'Para que el pico no sea un incidente.' },
+  { id:'multi',    nec:'escala', costo:17, imp:30, n:'Multirregión',               d:'Latencia real y aguante real.' },
+  { id:'observa',  nec:'escala', costo:9,  imp:22, n:'Observabilidad',             d:'Ver el problema antes que el cliente.' }
 ];
 
-/* Sector-specific bets. They join the generic backlog depending on where
-   you're working: at a neobank the license is the product; in silicon, the
-   respin. */
+/* Apuestas por sector. Se suman al backlog genérico según dónde trabajes:
+   en un neobanco la licencia es el producto; en silicio, el respin. */
 var APUESTAS_SECTOR = [
-  /* --- data and public opinion --- */
-  { id:'padron',    nec:'integra',costo:16, imp:32, n:'Public data integration',        d:'Voter rolls, gazettes, budgets: all cross-referenced.' },
-  { id:'microseg',  nec:'core',   costo:18, imp:34, n:'Fine-grained audience segmentation',d:'The right message to the right block.' },
-  { id:'transparencia',nec:'segur',costo:14,imp:30, n:'Public transparency dashboard',  d:'Show what data you use before they ask.' },
-  { id:'simulador', nec:'datos',  costo:20, imp:36, n:'Scenario simulator',             d:'What happens if the undecided split 60/40.' },
+  /* --- datos y opinión pública --- */
+  { id:'padron',    nec:'integra',costo:16, imp:32, n:'Integración de datos públicos',  d:'Padrones, boletines, presupuestos: todo cruzado.' },
+  { id:'microseg',  nec:'core',   costo:18, imp:34, n:'Segmentación fina de audiencias',d:'El mensaje correcto al bloque correcto.' },
+  { id:'transparencia',nec:'segur',costo:14,imp:30, n:'Tablero público de transparencia',d:'Mostrar qué datos usas antes de que pregunten.' },
+  { id:'simulador', nec:'datos',  costo:20, imp:36, n:'Simulador de escenarios',        d:'Qué pasa si los indecisos se parten 60/40.' },
 
-  /* --- biogenetics --- */
-  { id:'plegado',   nec:'core',   costo:26, imp:40, n:'Proprietary folding model',      d:'Your edge or your ruin. Months of compute.' },
-  { id:'sintesis',  nec:'escala', costo:22, imp:34, n:'Synthesis pipeline',             d:'From in-silico design to test tube with no queue.' },
-  { id:'bioseg',    nec:'segur',  costo:18, imp:34, n:'Biosafety protocols',            d:'Question one from every auditor.' },
-  { id:'patentes',  nec:'soporte',costo:16, imp:28, n:'Patent portfolio',               d:'The only part of your science the investor understands.' },
+  /* --- biogenética --- */
+  { id:'plegado',   nec:'core',   costo:26, imp:40, n:'Modelo propio de plegado',       d:'Tu ventaja o tu ruina. Meses de cómputo.' },
+  { id:'sintesis',  nec:'escala', costo:22, imp:34, n:'Pipeline de síntesis',           d:'Del diseño in silico al tubo de ensayo sin fila.' },
+  { id:'bioseg',    nec:'segur',  costo:18, imp:34, n:'Protocolos de bioseguridad',     d:'La pregunta uno de todo auditor.' },
+  { id:'patentes',  nec:'soporte',costo:16, imp:28, n:'Portafolio de patentes',         d:'La única parte de tu ciencia que el inversionista entiende.' },
 
-  /* --- digital bank --- */
-  { id:'licencia',  nec:'segur',  costo:28, imp:40, n:'License and compliance',         d:'Without this there\'s no big market.' },
-  { id:'antifraude',nec:'segur',  costo:18, imp:30, n:'Anti-fraud engine',              d:'Every point of fraud comes out of your margin.' },
-  { id:'adelanto',  nec:'core',   costo:20, imp:34, n:'Credit and cash advances',       d:'What actually brings them in.' },
-  { id:'conciliar', nec:'datos',  costo:14, imp:26, n:'Automatic reconciliation',       d:'The chore they hate every single month.' },
+  /* --- banco digital --- */
+  { id:'licencia',  nec:'segur',  costo:28, imp:40, n:'Licencia y cumplimiento',        d:'Sin esto no hay mercado grande.' },
+  { id:'antifraude',nec:'segur',  costo:18, imp:30, n:'Motor antifraude',               d:'Cada punto de fraude sale de tu margen.' },
+  { id:'adelanto',  nec:'core',   costo:20, imp:34, n:'Crédito y adelantos',            d:'Lo que de verdad los trae.' },
+  { id:'conciliar', nec:'datos',  costo:14, imp:26, n:'Conciliación automática',        d:'La tarea que odian todos los meses.' },
 
-  /* --- renewable energy --- */
-  { id:'sensor',    nec:'core',   costo:18, imp:30, n:'Low-cost meter',                 d:'If the hardware runs expensive, there\'s no business.' },
-  { id:'verificacion',nec:'datos',costo:20, imp:36, n:'Savings verification',           d:'The proof that turns a reading into an invoice.' },
-  { id:'despacho',  nec:'escala', costo:22, imp:30, n:'Automatic energy dispatch',      d:'Sell the surplus at the expensive hour.' },
-  { id:'tarifas',   nec:'integra',costo:12, imp:24, n:'Tariff engine',                  d:'Every utility bills differently.' },
+  /* --- energía renovable --- */
+  { id:'sensor',    nec:'core',   costo:18, imp:30, n:'Medidor de bajo costo',          d:'Si el hardware sale caro, no hay negocio.' },
+  { id:'verificacion',nec:'datos',costo:20, imp:36, n:'Verificación de ahorro',         d:'La prueba que convierte una lectura en factura.' },
+  { id:'despacho',  nec:'escala', costo:22, imp:30, n:'Despacho automático de energía', d:'Vender el excedente en la hora cara.' },
+  { id:'tarifas',   nec:'integra',costo:12, imp:24, n:'Motor de tarifas',               d:'Cada distribuidora factura distinto.' },
 
   /* --- devtools --- */
-  { id:'cli',       nec:'flujo',  costo:12, imp:30, n:'First-class CLI',                d:'Where your user already lives.' },
-  { id:'plantillas2',nec:'core',  costo:10, imp:22, n:'Ready-made recipes',             d:'From clone to running in one minute.' },
-  { id:'panel',     nec:'datos',  costo:14, imp:24, n:'Dashboard for the one who pays', d:'The one who signs doesn\'t use the CLI.' },
-  { id:'openq',     nec:'soporte',costo:16, imp:20, n:'Open community edition',         d:'Adoption yes, revenue maybe.', senuelo:true },
+  { id:'cli',       nec:'flujo',  costo:12, imp:30, n:'CLI de primera clase',           d:'Donde tu usuario ya vive.' },
+  { id:'plantillas2',nec:'core',  costo:10, imp:22, n:'Recetas listas para usar',       d:'Del clone a corriendo en un minuto.' },
+  { id:'panel',     nec:'datos',  costo:14, imp:24, n:'Tablero para el que paga',       d:'El que firma no usa la CLI.' },
+  { id:'openq',     nec:'soporte',costo:16, imp:20, n:'Edición abierta de comunidad',   d:'Adopción sí, ingresos quizás.', senuelo:true },
 
-  /* --- betting and online gaming --- */
-  { id:'cuotas',    nec:'core',   costo:18, imp:34, n:'Live odds engine',               d:'Odds that move with the match. Your margin lives here.' },
-  { id:'vip',       nec:'datos',  costo:16, imp:32, n:'VIP program',                    d:'2% of the bettors leave 60% of the money.' },
-  { id:'autoexclusion',nec:'segur',costo:14,imp:30, n:'Addiction controls',             d:'The first thing the regulator checks and you left for later.' },
-  { id:'pagos',     nec:'flujo',  costo:15, imp:28, n:'Instant deposit and withdrawal', d:'Whoever can\'t cash out fast doesn\'t come back.' },
+  /* --- apuestas y juego online --- */
+  { id:'cuotas',    nec:'core',   costo:18, imp:34, n:'Motor de cuotas en vivo',        d:'Cuotas que se mueven con el partido. Tu margen vive acá.' },
+  { id:'vip',       nec:'datos',  costo:16, imp:32, n:'Programa VIP',                   d:'El 2% de los apostadores deja el 60% del dinero.' },
+  { id:'autoexclusion',nec:'segur',costo:14,imp:30, n:'Controles de adicción',          d:'Lo primero que revisa el regulador y tú dejaste para después.' },
+  { id:'pagos',     nec:'flujo',  costo:15, imp:28, n:'Depósito y retiro instantáneos', d:'El que no puede retirar rápido no vuelve.' },
 
-  /* --- premium healthcare --- */
-  { id:'concierge', nec:'soporte',costo:20, imp:36, n:'Concierge medical team',         d:'A person who answers the phone at 3 AM.' },
-  { id:'longevidad',nec:'core',   costo:22, imp:34, n:'Longevity program',              d:'The annual checkup turned into a membership.' },
-  { id:'vipapp',    nec:'flujo',  costo:14, imp:28, n:'Member app',                     d:'Results, appointments and history without calling anyone.' },
-  { id:'redmedica', nec:'integra',costo:18, imp:30, n:'Specialist network',             d:'The best cardiologist in town, with an appointment tomorrow.' }
+  /* --- salud premium --- */
+  { id:'concierge', nec:'soporte',costo:20, imp:36, n:'Equipo médico concierge',        d:'Una persona que contesta el teléfono a las 3 AM.' },
+  { id:'longevidad',nec:'core',   costo:22, imp:34, n:'Programa de longevidad',         d:'El chequeo anual convertido en membresía.' },
+  { id:'vipapp',    nec:'flujo',  costo:14, imp:28, n:'App para miembros',              d:'Resultados, citas e historial sin llamar a nadie.' },
+  { id:'redmedica', nec:'integra',costo:18, imp:30, n:'Red de especialistas',           d:'El mejor cardiólogo de la ciudad, con cita mañana.' }
 ];
 
 for (var _i = 0; _i < APUESTAS_SECTOR.length; _i++) APUESTAS.push(APUESTAS_SECTOR[_i]);
 
 /* ---------------------------------------------------------------
-   Dilemmas. Each one teaches something and is tied to a book.
-   quien: who on the cast brings it to you (the UI adds name and title).
-   cuando(e) decides whether it can fire this month.
+   Dilemas. Cada uno enseña algo y está atado a un libro.
+   quien: quién del elenco te lo trae (la UI agrega nombre y cargo).
+   cuando(e) decide si puede dispararse este mes.
    --------------------------------------------------------------- */
 function nota(log, tipo, texto, libro) {
   log.push({ tipo:tipo, texto:texto, libro:libro || null });
@@ -151,1361 +150,1361 @@ var EVENTOS = [
 
 { id:'momtest', libro:'momtest', prio:100, quien:'cto',
   cuando:function(e){ return e.mesPuesto === 1 && e.evidencia < 55; },
-  titulo:'How we\'re going to talk to users',
-  texto:'"I booked ten customer meetings for this week. What do we ask them?"',
+  titulo:'Cómo vamos a hablar con los usuarios',
+  texto:'"Agendé diez reuniones con clientes para esta semana. ¿Qué les preguntamos?"',
   variantes:[
-    { titulo:'The user council', texto:'"Twelve of our biggest accounts agreed to a quarterly council. First session is Friday. What\'s on the agenda?"' },
-    { titulo:'The road trip', texto:'"I\'m visiting eight customers on-site next week. One question decides what I bring back: what do I ask?"' }
+    { titulo:'El consejo de usuarios', texto:'"Doce de nuestras cuentas más grandes aceptaron un consejo trimestral. La primera sesión es el viernes. ¿Qué va en la agenda?"' },
+    { titulo:'La gira', texto:'"La próxima semana visito a ocho clientes en sus oficinas. Una pregunta decide lo que traigo de vuelta: ¿qué pregunto?"' }
   ],
   opciones:[
-    { txt:'Show them the demo and ask if they\'d buy it',
-      nota:'Nobody says no to your face. You\'ll walk out with ten "love it"s and zero information.',
+    { txt:'Mostrarles la demo y preguntar si la comprarían',
+      nota:'Nadie te dice que no a la cara. Vas a salir con diez "me encanta" y cero información.',
       libro:'momtest',
       ef:function(e,log){ e.calidadDesc = 0.35; e.sesgo = 1;
-        nota(log,'malo','You chose to ask about the future. Your impact estimates now come inflated.','momtest'); } },
-    { txt:'Ask what they did the last time they had the problem',
-      nota:'Facts from the past don\'t lie. It costs more and bores more, but it\'s the only usable thing.',
+        nota(log,'malo','Elegiste preguntar por el futuro. Tus estimaciones de impacto ahora vienen infladas.','momtest'); } },
+    { txt:'Preguntar qué hicieron la última vez que tuvieron el problema',
+      nota:'Los hechos del pasado no mienten. Cuesta más y aburre más, pero es lo único usable.',
       libro:'momtest',
       ef:function(e,log){ e.calidadDesc = 1.0; e.sesgo = 0;
-        nota(log,'bueno','You\'ll learn slower and truer. Your estimates will be reliable.','momtest'); } },
-    { txt:'Ask for commitment: an advance or a paid pilot',
-      nota:'Commitment is the most expensive signal to fake. It also scares off the ones who were just being nice.',
+        nota(log,'bueno','Vas a aprender más lento y más cierto. Tus estimaciones serán confiables.','momtest'); } },
+    { txt:'Pedir compromiso: un adelanto o un piloto pagado',
+      nota:'El compromiso es la señal más cara de fingir. También espanta a los que solo estaban siendo amables.',
       libro:'momtest',
       ef:function(e,log){ e.calidadDesc = 1.15; e.sesgo = 0; e.caja += 12000;
-        nota(log,'bueno','Two signed a paid pilot. Money came in and, better, certainty came in.','momtest'); } }
+        nota(log,'bueno','Dos firmaron un piloto pagado. Entró dinero y, mejor, entró certeza.','momtest'); } }
   ]},
 
 { id:'contratar', libro:'brooks', prio:80, quien:'ceo',
   cuando:function(e){ return Motor.runwayMeses(e) > 9 && e.mesPuesto > 2 && e.rampa.length === 0; },
-  titulo:'There\'s budget and you\'re behind',
-  texto:'"The roadmap is late and the board approved money for headcount. How many do we bring in?"',
+  titulo:'Hay presupuesto y vas atrasado',
+  texto:'"El roadmap está atrasado y el directorio aprobó plata para contratar. ¿A cuántos traemos?"',
   variantes:[
-    { titulo:'The board wants headcount', texto:'"We just raised. The board keeps asking why the team is still this small. There\'s budget for four engineers, starting Monday."' },
-    { titulo:'The acqui-hire offer', texto:'"A dying startup nearby is shopping its whole eng team. Four people, one interview, they start next week."' }
+    { titulo:'El directorio quiere gente', texto:'"Acabamos de levantar. El directorio no deja de preguntar por qué el equipo sigue tan chico. Hay presupuesto para cuatro ingenieros, desde el lunes."' },
+    { titulo:'La oferta de acqui-hire', texto:'"Una startup moribunda de la zona está ofreciendo su equipo de ingeniería completo. Cuatro personas, una entrevista, empiezan la próxima semana."' }
   ],
   opciones:[
-    { txt:'Four engineers, now',
-      nota:'New hires produce nothing for two months and consume the ones who were producing. Four at once is a lost quarter.',
+    { txt:'Cuatro ingenieros, ya',
+      nota:'Los recién llegados no producen nada por dos meses y consumen a los que sí producían. Cuatro de golpe es un trimestre perdido.',
       libro:'brooks',
       ef:function(e,log){ var i; for(i=0;i<4;i++) Motor.contratar(e,'ing');
-        nota(log,'malo','Four simultaneous hires. Mentoring eats the next few months.','brooks'); } },
-    { txt:'One now, we reassess in two months',
-      nota:'One at a time, communication stays manageable and each person gets productive before the next one lands.',
+        nota(log,'malo','Cuatro contrataciones simultáneas. La mentoría se come los próximos meses.','brooks'); } },
+    { txt:'Uno ahora, reevaluamos en dos meses',
+      nota:'De a uno, la comunicación sigue manejable y cada persona se vuelve productiva antes de que aterrice la siguiente.',
       libro:'brooks',
       ef:function(e,log){ Motor.contratar(e,'ing');
-        nota(log,'bueno','One hire. Mentoring cost contained.','brooks'); } },
-    { txt:'Nobody: first we pay down debt',
-      nota:'With high debt, every new person yields less. Sometimes the fastest team is the same one with less drag.',
+        nota(log,'bueno','Una contratación. Costo de mentoría contenido.','brooks'); } },
+    { txt:'Nadie: primero pagamos deuda',
+      nota:'Con deuda alta, cada persona nueva rinde menos. A veces el equipo más rápido es el mismo con menos lastre.',
       libro:'fowler',
       ef:function(e,log){ e.deuda = Math.max(0, e.deuda - 8);
-        nota(log,'bueno','No new hires. The team breathes and debt drops 8 points.','fowler'); } }
+        nota(log,'bueno','Sin contrataciones. El equipo respira y la deuda baja 8 puntos.','fowler'); } }
   ]},
 
 { id:'clientegrande', libro:'trap', prio:85, quien:'ventas',
   cuando:function(e){ return e.mesPuesto > 3 && e.mrr > Motor.burnMensual(e) * 0.2; },
-  titulo:'The customer who saves the quarter',
-  texto:'"They\'ll sign for 18 months. They only ask for one custom module that\'s useless to anyone else. Do we close?"',
+  titulo:'El cliente que salva el trimestre',
+  texto:'"Firman por 18 meses. Solo piden un módulo a medida que no le sirve a nadie más. ¿Cerramos?"',
   variantes:[
-    { titulo:'The whale RFP', texto:'"A multinational dropped an RFP on us. Eighteen months guaranteed — if we build their custom approval-workflow module. Nobody else will ever use it."' },
-    { titulo:'The logo we always wanted', texto:'"THE brand just called. They\'ll sign today if we commit to a bespoke integration their team designed. It\'s them, so everyone here wants to say yes."' }
+    { titulo:'La RFP de la ballena', texto:'"Una multinacional nos tiró una RFP. Dieciocho meses garantizados — si construimos su módulo a medida de flujos de aprobación. Nadie más lo va a usar jamás."' },
+    { titulo:'El logo que siempre quisimos', texto:'"Acaba de llamar LA marca. Firman hoy si nos comprometemos a una integración a medida que diseñó su equipo. Son ellos, así que aquí todos quieren decir que sí."' }
   ],
   opciones:[
-    { txt:'Take it. It\'s money today',
-      nota:'It\'s real revenue and also a mortgage: that module gets maintained forever and moves your product nowhere.',
+    { txt:'Tómalo. Es dinero hoy',
+      nota:'Es ingreso real y también una hipoteca: ese módulo se mantiene para siempre y no mueve tu producto a ninguna parte.',
       libro:'trap',
       ef:function(e,log){ e.caja += Motor.burnMensual(e) * 2.5; e.deuda += 12; e.capacidadReservada = 3;
-        nota(log,'neutro','The money came in, along with a bespoke obligation: +12 debt and three months of committed capacity.','trap'); } },
-    { txt:'Only if it ships as a general version of the request',
-      nota:'Turning a one-off request into capability for everyone is the elegant way out. You charge less and learn more.',
+        nota(log,'neutro','Entró el dinero, junto con una obligación a medida: +12 de deuda y tres meses de capacidad comprometida.','trap'); } },
+    { txt:'Solo si sale como versión general del pedido',
+      nota:'Convertir un pedido puntual en capacidad para todos es la salida elegante. Cobras menos y aprendes más.',
       libro:'inspired',
       ef:function(e,log){ e.caja += Motor.burnMensual(e) * 1.2; e.cobertura.integra += 10;
-        nota(log,'bueno','Less money, and the request shipped as a generic integration: +10 to Integrations.','inspired'); } },
-    { txt:'Turn it down',
-      nota:'Saying no to a check is the hardest call there is. Also the one that protects your focus.',
+        nota(log,'bueno','Menos dinero, y el pedido salió como integración genérica: +10 a Integraciones.','inspired'); } },
+    { txt:'Rechazarlo',
+      nota:'Decirle que no a un cheque es la decisión más difícil que existe. También la que protege tu foco.',
       libro:'hard',
       ef:function(e,log){ e.foco += 6; e.moral -= 3; e.politico -= 4;
-        nota(log,'neutro','You said no. Sales didn\'t get it; the roadmap is still yours.','hard'); } }
+        nota(log,'neutro','Dijiste que no. Ventas no lo entendió; el roadmap sigue siendo tuyo.','hard'); } }
   ]},
 
 { id:'reescritura', libro:'fowler', prio:90, quien:'estrella',
   cuando:function(e){ return e.deuda > 55; },
-  titulo:'"We have to rewrite the whole thing"',
-  texto:'"It can\'t be sustained any longer. Give me three months with no features and I\'ll leave it spotless."',
+  titulo:'"Hay que reescribir todo"',
+  texto:'"Ya no se puede sostener. Dame tres meses sin features y te lo dejo impecable."',
   variantes:[
-    { titulo:'"It\'s spaghetti all the way down"', texto:'Your best engineer slides a 12-page doc across the table: a full rewrite plan, new stack, three months. "We keep patching a corpse."' },
-    { titulo:'The new CTO\'s first move', texto:'The recently hired staff engineer says the codebase is unsalvageable and wants to greenfield the core. Half the team quietly agrees.' }
+    { titulo:'"Es espagueti hasta el fondo"', texto:'Tu mejor ingeniera desliza un documento de 12 páginas sobre la mesa: plan de reescritura completa, stack nuevo, tres meses. "Seguimos parchando un cadáver."' },
+    { titulo:'La primera jugada del nuevo CTO', texto:'El staff engineer recién contratado dice que la base de código no tiene salvación y quiere rehacer el núcleo desde cero. Medio equipo asiente en silencio.' }
   ],
   opciones:[
-    { txt:'Full rewrite (3 months, no features)',
-      nota:'The rewrite almost always costs double the estimate and arrives with the same problems plus new ones.',
+    { txt:'Reescritura completa (3 meses, sin features)',
+      nota:'La reescritura casi siempre cuesta el doble de lo estimado y llega con los mismos problemas más algunos nuevos.',
       libro:'fowler',
       ef:function(e,log){ e.reescritura = 3; e.deuda = 18;
-        nota(log,'malo','Three months frozen for features. Hope the market waits.','fowler'); } },
-    { txt:'Continuous refactoring: 20% of every month',
-      nota:'Paying the debt in installments while you keep shipping is slower to feel and cheaper to finish.',
+        nota(log,'malo','Tres meses congelados para features. Ojalá el mercado espere.','fowler'); } },
+    { txt:'Refactor continuo: 20% de cada mes',
+      nota:'Pagar la deuda en cuotas mientras sigues entregando se siente más lento y sale más barato.',
       libro:'fowler',
       ef:function(e,log){ e.refactorFijo = true;
-        nota(log,'bueno','Permanent refactoring: every month reserves capacity to pay down debt.','fowler'); } },
-    { txt:'Not now. We\'re about to launch',
-      nota:'Legitimate once. Repeated, it\'s the definition of compound interest working against you.',
+        nota(log,'bueno','Refactor permanente: cada mes reserva capacidad para pagar deuda.','fowler'); } },
+    { txt:'Ahora no. Estamos por lanzar',
+      nota:'Legítimo una vez. Repetido, es la definición del interés compuesto trabajando en tu contra.',
       libro:'fowler',
       ef:function(e,log){ e.deuda += 10; e.moral -= 4;
-        nota(log,'malo','Debt climbs 10 more and your best engineer starts browsing LinkedIn.','fowler'); } }
+        nota(log,'malo','La deuda sube 10 más y tu mejor ingeniera empieza a mirar LinkedIn.','fowler'); } }
   ]},
 
 { id:'vanidad', libro:'analytics', prio:75, quien:'ceo',
   cuando:function(e){ return e.mesPuesto > 4 && Motor.retencionMedia(e) < 0.88; },
-  titulo:'The board slide',
-  texto:'"I present tomorrow. Cumulative signups are climbing nicely. Last month\'s retention... better not to show it, right?"',
+  titulo:'La diapositiva del directorio',
+  texto:'"Presento mañana. Los registros acumulados suben lindo. La retención del mes pasado... mejor no mostrarla, ¿no?"',
   variantes:[
-    { titulo:'The investor update', texto:'The monthly investor email is due. Cumulative signups look spectacular. Last month\'s cohort retention... does not.' },
-    { titulo:'The all-hands slide', texto:'Tomorrow\'s all-hands. The team is tired and needs a win. Total users makes a beautiful up-and-to-the-right chart. The cohorts tell another story.' }
+    { titulo:'El update a inversionistas', texto:'Toca el correo mensual a inversionistas. Los registros acumulados se ven espectaculares. La retención por cohortes del mes pasado... no.' },
+    { titulo:'La diapositiva del all-hands', texto:'Mañana es el all-hands. El equipo está cansado y necesita una victoria. El total de usuarios hace una curva hermosa, arriba y a la derecha. Las cohortes cuentan otra historia.' }
   ],
   opciones:[
-    { txt:'Show the cumulative numbers. The board wants good news',
-      nota:'A cumulative total never goes down: that\'s why it soothes and that\'s why it says nothing. You buy peace and lose six weeks.',
+    { txt:'Mostrar los acumulados. El directorio quiere buenas noticias',
+      nota:'Un total acumulado nunca baja: por eso calma y por eso no dice nada. Compras paz y pierdes seis semanas.',
       libro:'analytics',
       ef:function(e,log){ e.moral += 4; e.politico += 6; e.evidencia = Math.max(0, e.evidencia - 12);
-        nota(log,'malo','Everyone\'s happy. You now know less about your own business.','analytics'); } },
-    { txt:'Cohorts and retention, even if it hurts',
-      nota:'One metric that matters, by cohort, against a baseline. The only thing that steers decisions.',
+        nota(log,'malo','Todos contentos. Ahora sabes menos de tu propio negocio.','analytics'); } },
+    { txt:'Cohortes y retención, aunque duela',
+      nota:'Una métrica que importa, por cohorte, contra una línea base. Lo único que orienta decisiones.',
       libro:'analytics',
       ef:function(e,log){ e.evidencia = Math.min(100, e.evidencia + 10); e.politico -= 5; e.foco += 5;
-        nota(log,'bueno','Awkward meeting, focus recovered: +10 evidence.','analytics'); } }
+        nota(log,'bueno','Reunión incómoda, foco recuperado: +10 de evidencia.','analytics'); } }
   ]},
 
 { id:'errorbudget', libro:'sre', prio:110, quien:'cto',
   cuando:function(e){ return e.presupuestoError <= 0 && !e.congelado; },
-  titulo:'The error budget is spent',
-  texto:'"This quarter\'s incidents ate the entire margin we agreed on. Per what we signed, we freeze now."',
+  titulo:'El presupuesto de error se agotó',
+  texto:'"Los incidentes del trimestre se comieron todo el margen que acordamos. Según lo que firmamos, congelamos ya."',
   opciones:[
-    { txt:'Freeze features and stabilize',
-      nota:'When the budget runs out, the priority changes on its own. That\'s what it\'s for: so you don\'t argue it every time.',
+    { txt:'Congelar features y estabilizar',
+      nota:'Cuando el presupuesto se acaba, la prioridad cambia sola. Para eso existe: para no discutirlo cada vez.',
       libro:'sre',
       ef:function(e,log){ e.congelado = true;
-        nota(log,'neutro','Stabilization month. Nothing gets built; things get fixed.','sre'); } },
-    { txt:'Keep shipping: the market doesn\'t wait',
-      nota:'You can. It\'s also how you lose in one quarter the trust that took two years to earn.',
+        nota(log,'neutro','Mes de estabilización. No se construye nada; se arreglan cosas.','sre'); } },
+    { txt:'Seguir entregando: el mercado no espera',
+      nota:'Puedes. También es como se pierde en un trimestre la confianza que tomó dos años ganar.',
       libro:'sre',
       ef:function(e,log){ e.deuda += 14; e.riesgoExtra = 0.25; e.politico -= 6;
-        nota(log,'malo','You ignored the agreement: +14 debt, sky-high risk, and the CTO taking notes.','sre'); } }
+        nota(log,'malo','Ignoraste el acuerdo: +14 de deuda, riesgo por las nubes y el CTO tomando nota.','sre'); } }
   ]},
 
 { id:'chasm', libro:'chasm', prio:95, quien:'ventas',
   cuando:function(e){ return e.mesPuesto > 5 && Motor.fit(e,'visio') > 0.55 && !e.gateRevelado && Motor.compuerta(e,'pragm') < 0.6; },
-  titulo:'Growth flatlined',
-  texto:'"The early adopters love us. The big market won\'t answer our emails, and I swear it\'s not the price."',
+  titulo:'El crecimiento se planchó',
+  texto:'"Los early adopters nos aman. El mercado grande no contesta nuestros correos, y te juro que no es el precio."',
   opciones:[
-    { txt:'Double the marketing spend',
-      nota:'Pushing harder against the chasm is the most expensive way to learn the problem wasn\'t reach.',
+    { txt:'Duplicar el gasto en marketing',
+      nota:'Empujar más fuerte contra el abismo es la forma más cara de aprender que el problema no era el alcance.',
       libro:'chasm',
       ef:function(e,log){ e.caja -= Motor.burnMensual(e); e.gateRevelado = true;
-        nota(log,'malo','A month of burn into the wind. At least now you know where the wall is: check the Gate panel.','chasm'); } },
-    { txt:'Pick a niche and give it the complete product',
-      nota:'The pragmatist doesn\'t buy product: they buy zero risk. What the product lacks IS the product.',
+        nota(log,'malo','Un mes de burn tirado al viento. Al menos ya sabes dónde está el muro: mira el panel de la compuerta.','chasm'); } },
+    { txt:'Elegir un nicho y darle el producto completo',
+      nota:'El pragmático no compra producto: compra riesgo cero. Lo que le falta al producto ES el producto.',
       libro:'chasm',
       ef:function(e,log){ e.gateRevelado = true; e.foco += 8;
-        nota(log,'bueno','Beachhead chosen. The Gate panel shows you exactly what\'s missing.','chasm'); } }
+        nota(log,'bueno','Cabeza de playa elegida. El panel de la compuerta te muestra exactamente qué falta.','chasm'); } }
   ]},
 
 { id:'termsheet', libro:'deals', prio:120, quien:'board',
   cuando:function(e){ return e.levantando && e.esFundador; },
-  titulo:'Two term sheets',
-  texto:'"Both offer the same money. Only one lets you keep it."',
+  titulo:'Dos term sheets',
+  texto:'"Los dos ofrecen la misma plata. Solo uno te deja quedártela."',
   opciones:[
-    { txt:'High valuation — 2x participating preference, 15% pool pre',
-      nota:'Valuation is the headline. The participating preference gets paid first AND takes a share of the rest; the pre-money pool comes out of you.',
+    { txt:'Valuación alta — preferencia participante 2x, pool del 15% pre',
+      nota:'La valuación es el titular. La preferencia participante cobra primero Y se lleva parte del resto; el pool pre-money sale de ti.',
       libro:'deals',
       ef:function(e,log){ var monto = Math.max(2500000, e.mrr * 14); Motor.ronda(e, monto, monto*6, 2, true, 0.15, true);
-        nota(log,'malo','You signed the pretty headline. The exit waterfall will explain it to you.','deals'); } },
-    { txt:'Lower valuation — 1x non-participating preference, 10% pool post',
-      nota:'Clean terms. In almost any realistic exit, more of it ends up yours.',
+        nota(log,'malo','Firmaste el titular bonito. La cascada del exit te lo va a explicar.','deals'); } },
+    { txt:'Valuación menor — preferencia no participante 1x, pool del 10% post',
+      nota:'Términos limpios. En casi cualquier exit realista, te queda más a ti.',
       libro:'deals',
       ef:function(e,log){ var monto = Math.max(2500000, e.mrr * 14); Motor.ronda(e, monto, monto*4.2, 1, false, 0.10, false);
-        nota(log,'bueno','Less headline, more money that\'s yours.','deals'); } },
-    { txt:'Don\'t raise yet',
-      nota:'Not raising is a real option if the business can take it.',
+        nota(log,'bueno','Menos titular, más dinero que es tuyo.','deals'); } },
+    { txt:'No levantar todavía',
+      nota:'No levantar es una opción real si el negocio lo aguanta.',
       libro:'hard',
       ef:function(e,log){ e.levantando = false;
-        nota(log,'neutro','Still running on your own money. And your own company.','hard'); } }
+        nota(log,'neutro','Sigues corriendo con tu propia plata. Y tu propia empresa.','hard'); } }
   ]},
 
 { id:'upmarket', libro:'innov', prio:70, quien:'ventas',
   cuando:function(e){ return e.mesPuesto > 6 && (e.usuarios.pragm||0) > e.tam.pragm * 0.03; },
-  titulo:'The big accounts want more',
-  texto:'"Our best accounts want enterprise features. They pay triple. It\'s easy money."',
+  titulo:'Las cuentas grandes quieren más',
+  texto:'"Nuestras mejores cuentas quieren features enterprise. Pagan el triple. Es plata fácil."',
   opciones:[
-    { txt:'Go upmarket: they pay the most',
-      nota:'Exactly what the incumbent does right before losing. Moving upmarket abandons the ground they\'ll attack YOU from.',
+    { txt:'Subir de mercado: son los que más pagan',
+      nota:'Exactamente lo que hace el incumbente justo antes de perder. Subir de mercado abandona el terreno desde el que te van a atacar A TI.',
       libro:'innov',
       ef:function(e,log){ e.precio = Math.round(e.precio*1.6); e.competidor.atencion += 0.3;
-        nota(log,'neutro','Price +60% and the leader is watching you now. More margin, less air.','innov'); } },
-    { txt:'Stay low and automate the volume',
-      nota:'The low end is boring until it\'s the entire market. Being ignored is a temporary advantage.',
+        nota(log,'neutro','Precio +60% y el líder ahora te está mirando. Más margen, menos aire.','innov'); } },
+    { txt:'Quedarse abajo y automatizar el volumen',
+      nota:'La gama baja es aburrida hasta que es todo el mercado. Que te ignoren es una ventaja temporal.',
       libro:'innov',
       ef:function(e,log){ e.competidor.atencion = Math.max(0, e.competidor.atencion - 0.2); e.cobertura.core += 6;
-        nota(log,'bueno','Still invisible to the leader. That\'s free time: use it.','innov'); } }
+        nota(log,'bueno','Sigues invisible para el líder. Eso es tiempo gratis: úsalo.','innov'); } }
   ]},
 
 { id:'paridad', libro:'zero', prio:65, quien:'ventas',
   cuando:function(e){ return e.mesPuesto > 4 && e.competidor.atencion > 0.3; },
-  titulo:'The competitor shipped something',
-  texto:'"We lost three deals this week over a feature they have and we don\'t."',
+  titulo:'El competidor lanzó algo',
+  texto:'"Perdimos tres deals esta semana por una feature que ellos tienen y nosotros no."',
   opciones:[
-    { txt:'Copy it and catch up',
-      nota:'Parity removes an objection from the list and gives no reason to pick you. Whoever\'s ahead wins by default.',
+    { txt:'Copiarla y emparejar',
+      nota:'La paridad quita una objeción de la lista y no da ninguna razón para elegirte. El que va adelante gana por defecto.',
       libro:'zero',
       ef:function(e,log){ e.cobertura.core += 4; e.foco -= 6;
-        nota(log,'malo','You tied that box. You lost a month of being different.','zero'); } },
-    { txt:'Go deeper on what they\'ll never do',
-      nota:'Being 5% better isn\'t defensible. Being the only one who nails one concrete thing is.',
+        nota(log,'malo','Empataste esa casilla. Perdiste un mes de ser distinto.','zero'); } },
+    { txt:'Profundizar en lo que ellos nunca van a hacer',
+      nota:'Ser 5% mejor no es defendible. Ser el único que clava una cosa concreta, sí.',
       libro:'zero',
       ef:function(e,log){ e.foco += 8; e.marca += 6;
-        nota(log,'bueno','You doubled down on your difference. The brand notices.','zero'); } }
+        nota(log,'bueno','Doblaste la apuesta por tu diferencia. La marca lo nota.','zero'); } }
   ]},
 
 { id:'topologies', libro:'topologies', prio:88, quien:'cto',
   cuando:function(e){ return (e.ing + e.prod) > 10 && !e.teamTopo && e.mesPuesto > 2; },
-  titulo:'The team doesn\'t fit in one meeting',
-  texto:'"Everyone touches everything, every change steps on someone else\'s, and coordination meetings ate our Wednesdays."',
+  titulo:'El equipo ya no cabe en una reunión',
+  texto:'"Todos tocan todo, cada cambio pisa el de otro, y las reuniones de coordinación se comieron los miércoles."',
   opciones:[
-    { txt:'Split into teams, each with clear ownership of one part',
-      nota:'There\'s a ceiling to how much system fits in one head. You raise it by cutting the system, not by demanding effort.',
+    { txt:'Partir en equipos, cada uno dueño claro de una parte',
+      nota:'Hay un techo a cuánto sistema cabe en una cabeza. Se sube cortando el sistema, no exigiendo esfuerzo.',
       libro:'topologies',
       ef:function(e,log){ e.teamTopo = true; e.arquitectura += 8;
-        nota(log,'bueno','Teams with boundaries. The ceiling rises, and by Conway the architecture follows the cut.','topologies'); } },
-    { txt:'Add a project manager to coordinate',
-      nota:'More coordination doesn\'t lower cognitive load: it adds a channel to a too-many-channels problem.',
+        nota(log,'bueno','Equipos con fronteras. El techo sube, y por Conway la arquitectura sigue al corte.','topologies'); } },
+    { txt:'Sumar un project manager que coordine',
+      nota:'Más coordinación no baja la carga cognitiva: agrega un canal a un problema de demasiados canales.',
       libro:'brooks',
       ef:function(e,log){ e.caja -= 60000;
-        nota(log,'malo','More coordination over the same tangle. The ceiling stays where it was.','brooks'); } }
+        nota(log,'malo','Más coordinación sobre el mismo enredo. El techo sigue donde estaba.','brooks'); } }
   ]},
 
 { id:'deploys', libro:'accelerate', prio:78, quien:'estrella',
   cuando:function(e){ return e.mesPuesto > 2 && !e.cd; },
-  titulo:'Deploys are an event',
-  texto:'"We push to production every three weeks, on a Thursday night, with two people praying."',
+  titulo:'Los deploys son un evento',
+  texto:'"Subimos a producción cada tres semanas, un jueves de noche, con dos personas rezando."',
   variantes:[
-    { titulo:'The release train', texto:'"We ship every third Thursday, 9 PM, war room, pizza. It\'s tradition. Last one took six hours and two rollbacks."' },
-    { titulo:'The freeze request', texto:'"Ops wants a two-week code freeze before the big client demo. Freezes make releases bigger, and bigger releases are why we freeze."' }
+    { titulo:'El tren de release', texto:'"Lanzamos cada tercer jueves, 9 PM, sala de guerra, pizza. Es tradición. El último tomó seis horas y dos rollbacks."' },
+    { titulo:'El pedido de freeze', texto:'"Ops quiere dos semanas de congelamiento de código antes de la demo para el cliente grande. Los freezes agrandan los releases, y los releases grandes son la razón del freeze."' }
   ],
   opciones:[
-    { txt:'Invest in continuous deployment',
-      nota:'Small, frequent batches fail less and recover faster. Speed and stability rise together.',
+    { txt:'Invertir en despliegue continuo',
+      nota:'Los lotes chicos y frecuentes fallan menos y se recuperan más rápido. Velocidad y estabilidad suben juntas.',
       libro:'accelerate',
       ef:function(e,log){ e.cd = true; e.deudaPendiente = 8;
-        nota(log,'bueno','Continuous deployment: less incident risk and more capacity, forever.','accelerate'); } },
-    { txt:'Leave it: it works',
-      nota:'It works until the day it doesn\'t. And that day the problem won\'t be the change: it\'ll be the batch size.',
+        nota(log,'bueno','Despliegue continuo: menos riesgo de incidentes y más capacidad, para siempre.','accelerate'); } },
+    { txt:'Dejarlo así: funciona',
+      nota:'Funciona hasta el día que no. Y ese día el problema no va a ser el cambio: va a ser el tamaño del lote.',
       libro:'accelerate',
       ef:function(e,log){ e.riesgoExtra = (e.riesgoExtra||0) + 0.06;
-        nota(log,'neutro','Still deploying by event. The risk piles up quietly.','accelerate'); } }
+        nota(log,'neutro','Se sigue desplegando por evento. El riesgo se acumula en silencio.','accelerate'); } }
   ]},
 
 { id:'escala', libro:'ddia', prio:105, quien:'cto',
   cuando:function(e){ return Motor.carga(e) > 0.85 && e.mesPuesto > 2; },
-  titulo:'The database started to sweat',
-  texto:'"Queries that took 80 ms now take 2 seconds. Nobody has complained loudly yet. Yet."',
+  titulo:'La base de datos empezó a sudar',
+  texto:'"Consultas que tomaban 80 ms ahora toman 2 segundos. Nadie se ha quejado fuerte todavía. Todavía."',
   variantes:[
-    { titulo:'The Monday graph', texto:'"Look at this latency chart. Every Monday at 9 AM we flirt with a timeout. We\'re one good press mention away from falling over."' },
-    { titulo:'The success problem', texto:'"That viral post tripled our traffic. Nothing died — yet. The database is running at a temperature I don\'t like."' }
+    { titulo:'El gráfico del lunes', texto:'"Mira esta curva de latencia. Cada lunes a las 9 AM coqueteamos con un timeout. Estamos a una buena mención de prensa de caernos."' },
+    { titulo:'El problema del éxito', texto:'"Ese post viral triplicó el tráfico. No murió nada — todavía. La base de datos corre a una temperatura que no me gusta."' }
   ],
   opciones:[
-    { txt:'Fix it now, even if it stalls the roadmap',
-      nota:'Architecture doesn\'t degrade gracefully: it holds, then collapses all at once. This is the cheap warning; the next one is expensive.',
+    { txt:'Arreglarlo ya, aunque frene el roadmap',
+      nota:'La arquitectura no se degrada con gracia: aguanta, y después colapsa toda junta. Este es el aviso barato; el próximo es caro.',
       libro:'ddia',
       ef:function(e,log){ e.arquitectura += 18; e.capacidadReservada = 1;
-        nota(log,'bueno','+18 architecture at the cost of a month. You bought the cheap warning.','ddia'); } },
-    { txt:'Buy a bigger server and move on',
-      nota:'Buying hardware moves the limit a little and doesn\'t touch the assumption that\'s about to break. Aspirin, not diagnosis.',
+        nota(log,'bueno','+18 de arquitectura al costo de un mes. Compraste el aviso barato.','ddia'); } },
+    { txt:'Comprar un servidor más grande y seguir',
+      nota:'Comprar hardware corre el límite un poco y no toca el supuesto que está por romperse. Aspirina, no diagnóstico.',
       libro:'ddia',
       ef:function(e,log){ e.arquitectura += 4; e.infraExtra = (e.infraExtra||0) + 6000;
-        nota(log,'neutro','Some breathing room and a bigger infrastructure bill. The problem is still there.','ddia'); } }
+        nota(log,'neutro','Algo de aire y una cuenta de infraestructura más grande. El problema sigue ahí.','ddia'); } }
   ]},
 
 { id:'hooked', libro:'hooked', prio:72, quien:'ceo',
   cuando:function(e){ return e.mesPuesto > 3 && Motor.retencionMedia(e) < 0.85; },
-  titulo:'They come once and don\'t come back',
-  texto:'"Activation is fine, they use it for two days and vanish. Marketing wants aggressive notifications. Do we ship them?"',
+  titulo:'Vienen una vez y no vuelven',
+  texto:'"La activación está bien, lo usan dos días y desaparecen. Marketing quiere notificaciones agresivas. ¿Las lanzamos?"',
   opciones:[
-    { txt:'Aggressive notifications and streaks',
-      nota:'External triggers raise the number this week. With no real value behind them, users learn to ignore you and hate you for it.',
+    { txt:'Notificaciones agresivas y rachas',
+      nota:'Los disparadores externos suben el número esta semana. Sin valor real detrás, los usuarios aprenden a ignorarte y a odiarte por ello.',
       libro:'hooked',
       ef:function(e,log){ e.retBonus = (e.retBonus||0)+0.05; e.marca -= 14;
-        nota(log,'malo','Retention +5% and brand through the floor. You\'re borrowing against your reputation.','hooked'); } },
-    { txt:'Build the full loop, with something they leave inside',
-      nota:'A habit holds when users deposit something of their own and each return visit is worth more than the last.',
+        nota(log,'malo','Retención +5% y marca por el piso. Estás pidiendo prestado contra tu reputación.','hooked'); } },
+    { txt:'Construir el ciclo completo, con algo que dejen adentro',
+      nota:'Un hábito se sostiene cuando los usuarios depositan algo propio y cada regreso vale más que el anterior.',
       libro:'hooked',
       ef:function(e,log){ e.retBonus = (e.retBonus||0)+0.08; e.cobertura.flujo += 8;
-        nota(log,'bueno','A real loop: +8% retention and more Flow. Word of mouth lights up.','hooked'); } }
+        nota(log,'bueno','Un ciclo real: +8% de retención y más Flujo. El boca a boca se enciende.','hooked'); } }
   ]},
 
 { id:'friccion', libro:'krug', prio:68, quien:'estrella',
   cuando:function(e){ return e.usabilidad < 45 && e.mesPuesto > 2; },
-  titulo:'They look at the signup and leave',
-  texto:'"Of every ten who arrive, one finishes signup. Sales swears the product is great."',
+  titulo:'Miran el registro y se van',
+  texto:'"De cada diez que llegan, uno termina el registro. Ventas jura que el producto es buenísimo."',
   variantes:[
-    { titulo:'The demo that needed a pilot', texto:'Sales closed three deals this month — every one required a live walkthrough. Nobody gets through onboarding alone.' },
-    { titulo:'The support ticket pattern', texto:'A third of support tickets are the same question: "how do I even start?" The product answers it on screen. Apparently not.' }
+    { titulo:'La demo que necesitó piloto', texto:'Ventas cerró tres deals este mes — todos requirieron un recorrido en vivo. Nadie atraviesa el onboarding solo.' },
+    { titulo:'El patrón de los tickets', texto:'Un tercio de los tickets de soporte es la misma pregunta: "¿por dónde empiezo?" El producto la responde en pantalla. Aparentemente no.' }
   ],
   opciones:[
-    { txt:'Watch five people use it, in silence',
-      nota:'Nobody reads an interface: they scan it and guess. Five people getting stuck find more than six opinion meetings.',
+    { txt:'Mirar a cinco personas usarlo, en silencio',
+      nota:'Nadie lee una interfaz: la escanean y adivinan. Cinco personas trabadas encuentran más que seis reuniones de opiniones.',
       libro:'krug',
       ef:function(e,log){ e.usabilidad += 12; e.evidencia = Math.min(100, e.evidencia+6);
-        nota(log,'bueno','+12 usability. All the traffic you bring now converts better.','krug'); } },
-    { txt:'Bring more traffic to compensate',
-      nota:'Filling a leaky bucket is the most expensive way to operate. Conversion multiplies everything you spend upstream.',
+        nota(log,'bueno','+12 de usabilidad. Todo el tráfico que traes ahora convierte mejor.','krug'); } },
+    { txt:'Traer más tráfico para compensar',
+      nota:'Llenar un balde con fugas es la forma más cara de operar. La conversión multiplica todo lo que gastas río arriba.',
       libro:'krug',
       ef:function(e,log){ e.caja -= Motor.burnMensual(e)*0.5; e.gtmBonus = 0.3;
-        nota(log,'malo','Half a month of burn on traffic over a broken funnel. Guess where it went.','krug'); } }
+        nota(log,'malo','Medio mes de burn en tráfico sobre un embudo roto. Adivina adónde fue.','krug'); } }
   ]},
 
 { id:'okr', libro:'grove', prio:60, quien:'ceo',
   cuando:function(e){ return e.mesPuesto > 0 && e.mesPuesto % 6 === 0; },
-  titulo:'The semester begins',
-  texto:'"We have to decide what the org chases these six months. Every team sent in its wish list."',
+  titulo:'Empieza el semestre',
+  texto:'"Hay que decidir qué persigue la organización estos seis meses. Cada equipo mandó su lista de deseos."',
   variantes:[
-    { titulo:'Planning season', texto:'Quarter kicks off Monday. Every team lead sent their own list of priorities. Together they add up to twenty-three.' },
-    { titulo:'The offsite whiteboard', texto:'Two days of offsite produced a whiteboard with nine "strategic pillars". Someone has to turn this into a quarter.' }
+    { titulo:'Temporada de planificación', texto:'El trimestre arranca el lunes. Cada líder de equipo mandó su propia lista de prioridades. Juntas suman veintitrés.' },
+    { titulo:'La pizarra del offsite', texto:'Dos días de offsite produjeron una pizarra con nueve "pilares estratégicos". Alguien tiene que convertir esto en un trimestre.' }
   ],
   opciones:[
-    { txt:'One objective, three measurable results',
-      nota:'Fewer objectives, measured by outcome, not activity. Clarity is the cheapest lever there is.',
+    { txt:'Un objetivo, tres resultados medibles',
+      nota:'Menos objetivos, medidos por resultado, no por actividad. La claridad es la palanca más barata que existe.',
       libro:'grove',
       ef:function(e,log){ e.foco += 12; e.moral += 5;
-        nota(log,'bueno','Focus +12. The team knows what it will NOT do, which is the useful part.','grove'); } },
-    { txt:'Nine objectives, one per area, so nobody\'s offended',
-      nota:'Nine priorities is zero priorities. Every area optimizes its own and the total doesn\'t move.',
+        nota(log,'bueno','Foco +12. El equipo sabe qué NO va a hacer, que es la parte útil.','grove'); } },
+    { txt:'Nueve objetivos, uno por área, para que nadie se ofenda',
+      nota:'Nueve prioridades son cero prioridades. Cada área optimiza la suya y el total no se mueve.',
       libro:'grove',
       ef:function(e,log){ e.foco -= 10; e.moral += 2; e.politico += 3;
-        nota(log,'malo','Everyone happy, nobody focused. Focus -10.','grove'); } }
+        nota(log,'malo','Todos contentos, nadie enfocado. Foco -10.','grove'); } }
   ]},
 
 { id:'discovery', libro:'torres', prio:62, quien:'cto',
   cuando:function(e){ return e.mesPuesto > 2 && e.evidencia < 35; },
-  titulo:'When was the last interview?',
-  texto:'"The team is shipping fine. But nobody remembers the last time they talked to a user."',
+  titulo:'¿Cuándo fue la última entrevista?',
+  texto:'"El equipo entrega bien. Pero nadie recuerda la última vez que habló con un usuario."',
   variantes:[
-    { titulo:'When did we last talk to a user?', texto:'Someone asks it in standup. Silence. The last recorded interview is from two quarters ago; the roadmap has been running on opinion since.' },
-    { titulo:'The proxy problem', texto:'All user knowledge now arrives via sales anecdotes and support escalations — filtered, angry, and third-hand.' }
+    { titulo:'¿Cuándo hablamos con un usuario por última vez?', texto:'Alguien lo pregunta en el standup. Silencio. La última entrevista registrada es de hace dos trimestres; desde entonces el roadmap corre a pura opinión.' },
+    { titulo:'El problema del intermediario', texto:'Todo el conocimiento del usuario llega ahora vía anécdotas de ventas y escalamientos de soporte — filtrado, enojado y de tercera mano.' }
   ],
   opciones:[
-    { txt:'A weekly interview, sacred, done by the team that builds',
-      nota:'Discovery isn\'t a phase: it\'s a habit. And it works when the builders do it themselves.',
+    { txt:'Una entrevista semanal, sagrada, hecha por el equipo que construye',
+      nota:'El discovery no es una fase: es un hábito. Y funciona cuando los que construyen lo hacen ellos mismos.',
       libro:'torres',
       ef:function(e,log){ e.cadenciaDesc = true;
-        nota(log,'bueno','Weekly cadence: evidence stops evaporating so fast.','torres'); } },
-    { txt:'Hire a consultancy for a big study',
-      nota:'An 80-page report arrives late, gets read once, and changes no decision the following week.',
+        nota(log,'bueno','Cadencia semanal: la evidencia deja de evaporarse tan rápido.','torres'); } },
+    { txt:'Contratar una consultora para un gran estudio',
+      nota:'Un informe de 80 páginas llega tarde, se lee una vez y no cambia ninguna decisión de la semana siguiente.',
       libro:'torres',
       ef:function(e,log){ e.caja -= 80000; e.evidencia = Math.min(100, e.evidencia+15);
-        nota(log,'neutro','$80,000 for a spike of evidence that decays all the same.','torres'); } }
+        nota(log,'neutro','$80.000 por un pico de evidencia que igual se degrada.','torres'); } }
   ]},
 
 { id:'roadmap', libro:'trap', prio:64, quien:'ventas',
   cuando:function(e){ return e.mesPuesto > 4 && e.mesPuesto % 5 === 0; },
-  titulo:'The semester roadmap',
-  texto:'"I need dates and feature names to promise customers. It\'s what they ask for."',
+  titulo:'El roadmap del semestre',
+  texto:'"Necesito fechas y nombres de features para prometerles a los clientes. Es lo que piden."',
   opciones:[
-    { txt:'A list of features with dates',
-      nota:'A roadmap of deliverables turns the team into a factory: measured by how much shipped, never by what changed.',
+    { txt:'Una lista de features con fechas',
+      nota:'Un roadmap de entregables convierte al equipo en fábrica: medido por cuánto salió, nunca por qué cambió.',
       libro:'trap',
       ef:function(e,log){ e.fabrica = true; e.foco -= 5; e.politico += 4;
-        nota(log,'malo','Factory mode. You\'ll ship a lot and move little.','trap'); } },
-    { txt:'Problems to solve, with expected outcomes',
-      nota:'Committing to the problem and the metric leaves the how open, which is where the team adds value.',
+        nota(log,'malo','Modo fábrica. Vas a entregar mucho y mover poco.','trap'); } },
+    { txt:'Problemas por resolver, con resultados esperados',
+      nota:'Comprometerse con el problema y la métrica deja abierto el cómo, que es donde el equipo agrega valor.',
       libro:'trap',
       ef:function(e,log){ e.fabrica = false; e.foco += 7; e.politico -= 3;
-        nota(log,'bueno','An outcome roadmap. Harder to sell internally, pays better.','trap'); } }
+        nota(log,'bueno','Un roadmap de resultados. Más difícil de vender adentro, paga mejor.','trap'); } }
   ]},
 
 { id:'empoderar', libro:'inspired', prio:58, quien:'estrella',
   cuando:function(e){ return (e.ing+e.prod) > 6 && e.mesPuesto > 5 && !e.empoderado; },
-  titulo:'Who decides what gets built',
-  texto:'"Every decision still goes through you. We wait days for things we could resolve ourselves."',
+  titulo:'Quién decide qué se construye',
+  texto:'"Cada decisión sigue pasando por ti. Esperamos días por cosas que podríamos resolver nosotros."',
   opciones:[
-    { txt:'Give the team the problem and the context, not the solution',
-      nota:'A team handed a list can only attack feasibility. The risks that kill products are the other ones.',
+    { txt:'Darle al equipo el problema y el contexto, no la solución',
+      nota:'Un equipo al que le entregan una lista solo puede atacar la factibilidad. Los riesgos que matan productos son los otros.',
       libro:'inspired',
       ef:function(e,log){ e.empoderado = true; e.moral += 8;
-        nota(log,'bueno','Empowered team: more morale and a better read on which bets matter.','inspired'); } },
-    { txt:'Keep deciding yourself: it\'s faster',
-      nota:'It\'s faster today and it\'s your ceiling tomorrow. A manager\'s output is the output of their organization.',
+        nota(log,'bueno','Equipo empoderado: más moral y mejor lectura de qué apuestas importan.','inspired'); } },
+    { txt:'Seguir decidiendo tú: es más rápido',
+      nota:'Es más rápido hoy y es tu techo mañana. La producción de un gerente es la producción de su organización.',
       libro:'grove',
       ef:function(e,log){ e.moral -= 6;
-        nota(log,'malo','You\'re the bottleneck. Morale drops and the ceiling is you.','grove'); } }
+        nota(log,'malo','Eres el cuello de botella. La moral baja y el techo eres tú.','grove'); } }
   ]},
 
 { id:'pivote', libro:'lean', prio:115, quien:'ceo',
   cuando:function(e){ return e.esFundador && e.mesPuesto > 6 && e.evidencia > 55 && Motor.fitMax(e) < 0.4; },
-  titulo:'The evidence says no',
-  texto:'You already know enough, and what you know is bad: nobody wants this the way it\'s framed.',
+  titulo:'La evidencia dice que no',
+  texto:'Ya sabes suficiente, y lo que sabes es malo: nadie quiere esto tal como está planteado.',
   opciones:[
-    { txt:'Pivot: same problem, different solution',
-      nota:'A pivot isn\'t failure: it\'s spending the learning you already paid for. You keep the lessons, not the plan.',
+    { txt:'Pivotar: mismo problema, otra solución',
+      nota:'Un pivote no es fracaso: es gastar el aprendizaje que ya pagaste. Te quedas con las lecciones, no con el plan.',
       libro:'lean',
       ef:function(e,log){ Motor.pivotar(e);
-        nota(log,'bueno','Pivot done. You lose the coverage you built and gain a hypothesis that might live.','lean'); } },
-    { txt:'Persevere: we\'re so close',
-      nota:'Persevering without new evidence is the most common way to spend an entire startup with great discipline.',
+        nota(log,'bueno','Pivote hecho. Pierdes la cobertura que construiste y ganas una hipótesis que quizás viva.','lean'); } },
+    { txt:'Perseverar: estamos tan cerca',
+      nota:'Perseverar sin evidencia nueva es la forma más común de gastarse una startup entera con mucha disciplina.',
       libro:'lean',
       ef:function(e,log){ e.moral -= 5;
-        nota(log,'malo','You press on. The cash keeps dropping too.','lean'); } }
+        nota(log,'malo','Sigues adelante. La caja también sigue bajando.','lean'); } }
   ]},
 
-/* ---------------- dramatic moments ---------------- */
+/* ---------------- momentos dramáticos ---------------- */
 
 { id:'adquisicion', libro:'deals', prio:118, quien:'board',
   cuando:function(e){ return e.esFundador && e.mesPuesto > 9 && e.mrr > Motor.burnMensual(e) * 0.8; },
-  titulo:'They want to buy the company',
-  texto:'"A firm offer landed: 3 years of revenue, half in cash. The board wants your recommendation."',
+  titulo:'Quieren comprar la empresa',
+  texto:'"Llegó una oferta en firme: 3 años de ingresos, la mitad en efectivo. El directorio quiere tu recomendación."',
   opciones:[
-    { txt:'Sell now',
-      nota:'A bird in the hand — after the liquidation waterfall. You\'re about to see exactly how much of it was yours.',
+    { txt:'Vender ahora',
+      nota:'Pájaro en mano — después de la cascada de liquidación. Estás por ver exactamente cuánto de eso era tuyo.',
       libro:'deals',
       ef:function(e,log){ e.ventaAcordada = Math.round(e.mrr * 36);
-        nota(log,'neutro','Agreed. The job ends and the waterfall decides how much reaches you.','deals'); } },
-    { txt:'Refuse and keep building',
-      nota:'Turning down a real exit is the biggest bet you\'ll ever make. Sometimes it works. Sometimes it gets told in past tense.',
+        nota(log,'neutro','Acordado. El puesto termina y la cascada decide cuánto te llega.','deals'); } },
+    { txt:'Rechazar y seguir construyendo',
+      nota:'Rechazar un exit real es la apuesta más grande que vas a hacer. A veces funciona. A veces se cuenta en pasado.',
       libro:'hard',
       ef:function(e,log){ e.moral += 6; e.marca += 5;
-        nota(log,'neutro','You said no. Now you have to be worth more than that offer.','hard'); } }
+        nota(log,'neutro','Dijiste que no. Ahora tienes que valer más que esa oferta.','hard'); } }
   ]},
 
 { id:'despidos', libro:'hard', prio:112, quien:'ceo',
   cuando:function(e){ return e.eraId === 'invierno' && Motor.runwayMeses(e) < 9 && (e.ing + e.prod + e.gtm) > 8; },
-  titulo:'The board wants cuts',
-  texto:'"In this market we won\'t be able to raise. We need 6 more months of runway. Tell me where it comes from."',
+  titulo:'El directorio quiere recortes',
+  texto:'"En este mercado no vamos a poder levantar. Necesitamos 6 meses más de runway. Dime de dónde salen."',
   opciones:[
-    { txt:'One deep cut, once',
-      nota:'If you have to cut, cut once and cut deep. Two rounds of layoffs kill morale twice.',
+    { txt:'Un corte profundo, una sola vez',
+      nota:'Si tienes que cortar, corta una vez y corta hondo. Dos rondas de despidos matan la moral dos veces.',
       libro:'hard',
       ef:function(e,log){
         var corte = Math.max(1, Math.round(e.ing * 0.25)); e.ing -= corte;
         var corteG = Math.max(0, Math.round(e.gtm * 0.4)); e.gtm -= corteG;
         e.moral -= 12;
-        nota(log,'neutro','You cut ' + (corte+corteG) + ' roles in one go. It hurts today; it recovers.','hard'); } },
-    { txt:'A soft cut, and we\'ll see',
-      nota:'The small cut promises it won\'t be enough. The team knows it and works waiting for the second one.',
+        nota(log,'neutro','Cortaste ' + (corte+corteG) + ' puestos de una vez. Hoy duele; se recupera.','hard'); } },
+    { txt:'Un corte suave, y vemos',
+      nota:'El corte chico promete no alcanzar. El equipo lo sabe y trabaja esperando el segundo.',
       libro:'hard',
       ef:function(e,log){ e.ing = Math.max(1, e.ing - 1); e.moral -= 8; e.riesgoDespidos = true;
-        nota(log,'malo','A cut that isn\'t enough. Everyone knows another one is coming.','hard'); } },
-    { txt:'No cuts: bet on the market coming back',
-      nota:'Sometimes the market comes back. The runway has no opinion: it counts.',
+        nota(log,'malo','Un corte que no alcanza. Todos saben que viene otro.','hard'); } },
+    { txt:'Sin recortes: apostar a que el mercado vuelve',
+      nota:'A veces el mercado vuelve. El runway no opina: cuenta.',
       libro:'lean',
       ef:function(e,log){ e.moral += 3;
-        nota(log,'neutro','No cuts. Watch the runway every month.','lean'); } }
+        nota(log,'neutro','Sin recortes. Vigila el runway todos los meses.','lean'); } }
   ]},
 
 { id:'caza', libro:'grove', prio:96, quien:'estrella',
   cuando:function(e){ return e.calor > 0 && e.mesPuesto > 3 && e.moral < 80; },
-  titulo:'She got an offer',
-  texto:'"They offered me double at another company in the space. I don\'t want to leave, but it\'s double."',
+  titulo:'Le hicieron una oferta',
+  texto:'"Me ofrecieron el doble en otra empresa del rubro. No me quiero ir, pero es el doble."',
   opciones:[
-    { txt:'Match the offer',
-      nota:'Retaining with money works once. What actually retains is the project and command over your own turf.',
+    { txt:'Igualar la oferta',
+      nota:'Retener con plata funciona una vez. Lo que retiene de verdad es el proyecto y el mando sobre tu propio terreno.',
       libro:'grove',
       ef:function(e,log){ e.caja -= 140000; e.moral += 3;
-        nota(log,'neutro','She stays. Very expensive, and the underlying reasons are still there.','grove'); } },
-    { txt:'Let her go, and spread her system across the team',
-      nota:'Losing the star hurts less than organizing around a single head. Bus factor is debt too.',
+        nota(log,'neutro','Se queda. Carísimo, y las razones de fondo siguen ahí.','grove'); } },
+    { txt:'Dejarla ir, y repartir su sistema en el equipo',
+      nota:'Perder a la estrella duele menos que organizarse alrededor de una sola cabeza. El factor bus también es deuda.',
       libro:'topologies',
       ef:function(e,log){ e.penalCap = 10; e.deuda += 6; e.moral -= 4;
-        nota(log,'neutro','She left. Three months of hangover and a system that no longer depends on one person.','topologies'); } },
-    { txt:'Counter with command: make her owner of the platform',
-      nota:'More command is usually worth more than more money, and it tidies your org as a bonus.',
+        nota(log,'neutro','Se fue. Tres meses de resaca y un sistema que ya no depende de una persona.','topologies'); } },
+    { txt:'Contraofertar con mando: hacerla dueña de la plataforma',
+      nota:'Más mando suele valer más que más plata, y de paso te ordena la organización.',
       libro:'grove',
       ef:function(e,log){ e.moral += 6; e.teamTopo = true;
-        nota(log,'bueno','She stays, with clear ownership of the platform. Two problems solved.','grove'); } }
+        nota(log,'bueno','Se queda, con dominio claro de la plataforma. Dos problemas resueltos.','grove'); } }
   ]},
 
 { id:'rival', libro:'zero', prio:84, quien:'ventas',
   cuando:function(e){ return e.mesPuesto > 4 && !e.rivalVisto && e.rivalNombre; },
-  titulo:'You know that name',
-  texto:'"The competitor hired new people to fight us for the big market. You know who\'s running product there now?"',
+  titulo:'Ese nombre lo conoces',
+  texto:'"El competidor contrató gente nueva para pelearnos el mercado grande. ¿Sabes quién lleva producto ahí ahora?"',
   opciones:[
-    { txt:'Speed up to get there before their plan does',
-      nota:'Running the rival\'s race means letting someone else pick the track. Sometimes you have to anyway.',
+    { txt:'Acelerar para llegar antes que su plan',
+      nota:'Correr la carrera del rival es dejar que otro elija la pista. A veces igual hay que hacerlo.',
       libro:'zero',
       ef:function(e,log){ e.rivalVisto = true; e.foco -= 4; e.competidor.atencion += 0.1;
-        var msg = e.rivalNombre + ' is going to play aggressive. So are you, now.';
+        var msg = e.rivalNombre + ' va a jugar agresivo. Tú también, ahora.';
         nota(log,'neutro',msg,'zero'); } },
-    { txt:'Ignore them and play your own game',
-      nota:'Competition is for losers, the book said. Your difference is worth more than their speed.',
+    { txt:'Ignorarlos y jugar tu propio juego',
+      nota:'La competencia es para perdedores, decía el libro. Tu diferencia vale más que su velocidad.',
       libro:'zero',
       ef:function(e,log){ e.rivalVisto = true; e.foco += 6;
-        nota(log,'bueno','Let them run. You\'ve got a game of your own.','zero'); } }
+        nota(log,'bueno','Que corran. Tú tienes un juego propio.','zero'); } }
   ]},
 
 { id:'downround', libro:'deals', prio:117, quien:'board',
   cuando:function(e){ return e.esFundador && e.eraId === 'invierno' && Motor.runwayMeses(e) < 7 && e.rondas.length > 0; },
-  titulo:'The round nobody wants',
-  texto:'"There\'s exactly one fund willing — at half the last valuation, with harsh terms. That, or a bridge from the board."',
+  titulo:'La ronda que nadie quiere',
+  texto:'"Hay exactamente un fondo dispuesto — a la mitad de la última valuación, con términos duros. Eso, o un puente del directorio."',
   opciones:[
-    { txt:'Take the down round',
-      nota:'Cutting the valuation hurts in the headlines. The alternative usually hurts on the balance sheet.',
+    { txt:'Aceptar la down round',
+      nota:'Recortar la valuación duele en los titulares. La alternativa suele doler en el balance.',
       libro:'deals',
       ef:function(e,log){ var monto = Motor.burnMensual(e)*10; Motor.ronda(e, monto, e.valoracion*0.5, 1.5, true, 0.1, true);
-        nota(log,'neutro','Money in the bank, pride on the floor, company alive.','deals'); } },
-    { txt:'Board bridge and a brutal cut',
-      nota:'The bridge buys months; it solves nothing. With the cut, it might just be enough to reach spring.',
+        nota(log,'neutro','Plata en el banco, orgullo en el piso, empresa viva.','deals'); } },
+    { txt:'Puente del directorio y un corte brutal',
+      nota:'El puente compra meses; no resuelve nada. Con el corte, quizás justo alcance para llegar a la primavera.',
       libro:'hard',
       ef:function(e,log){ e.caja += Motor.burnMensual(e)*5; e.ing = Math.max(1, Math.round(e.ing*0.6));
         e.gtm = Math.max(0, Math.round(e.gtm*0.5)); e.moral -= 15;
-        nota(log,'malo','Bridge + cuts. Half the team, twice the pressure.','hard'); } }
+        nota(log,'malo','Puente + cortes. La mitad del equipo, el doble de presión.','hard'); } }
   ]},
-/* ---------------- product craft: the hard calls ----------------
-   Harder by design: payoffs depend on your current state (the same choice
-   is right or wrong depending on the evidence you bring to it), and some
-   options are genuine gambles. */
+/* ---------------- oficio de producto: las decisiones duras ----------------
+   Más difíciles a propósito: los pagos dependen de tu estado actual (la misma
+   elección es correcta o incorrecta según la evidencia con la que llegues),
+   y algunas opciones son apuestas genuinas. */
 
 { id:'sandbag', libro:'thinkingbets', prio:66, quien:'estrella',
   cuando:function(e){ return e.mesPuesto > 2 && e.apuestasCompletadas >= 1; },
-  titulo:'The padded estimates',
-  texto:'"After last quarter\'s miss, engineering doubled every estimate. Nobody will ever be late again. Nothing will ever be early either."',
+  titulo:'Las estimaciones infladas',
+  texto:'"Después del fallo del trimestre pasado, ingeniería duplicó todas las estimaciones. Nadie va a llegar tarde nunca más. Nada va a llegar temprano tampoco."',
   opciones:[
-    { txt:'Accept the padding. Predictability has value',
-      nota:'You bought calm and paid in capacity: padded estimates become padded work. Parkinson collects.',
+    { txt:'Aceptar el colchón. La previsibilidad tiene valor',
+      nota:'Compraste calma y pagaste en capacidad: las estimaciones infladas se vuelven trabajo inflado. Parkinson cobra.',
       libro:'thinkingbets',
       ef:function(e,log){ e.penalCap = (e.penalCap||0) + 3; e.moral += 4;
-        nota(log,'neutro','Everything lands "on time" now. Your real capacity quietly shrank.','thinkingbets'); } },
-    { txt:'Cut every estimate in half, publicly',
-      nota:'You just taught the team that honest numbers get punished. Next time they pad deeper where you can\'t see.',
+        nota(log,'neutro','Ahora todo llega "a tiempo". Tu capacidad real se encogió en silencio.','thinkingbets'); } },
+    { txt:'Cortar todas las estimaciones a la mitad, en público',
+      nota:'Acabas de enseñarle al equipo que los números honestos se castigan. La próxima vez inflan más hondo, donde no ves.',
       libro:'grove',
       ef:function(e,log){ e.moral -= 8; e.deuda += 4; e.foco += 3;
-        nota(log,'malo','Faster on paper. The padding moved underground, into the code.','grove'); } },
-    { txt:'Flip it: fixed time, variable scope',
-      nota:'Shape Up\'s move — the deadline holds, the scope bends. It only works if you actually let scope drop.',
+        nota(log,'malo','Más rápido en el papel. El colchón se mudó bajo tierra, al código.','grove'); } },
+    { txt:'Darlo vuelta: tiempo fijo, alcance variable',
+      nota:'La jugada de Shape Up — la fecha se sostiene, el alcance cede. Solo funciona si de verdad dejas caer alcance.',
       libro:'shapeup',
       ef:function(e,log){
         var id2 = null, i2;
         for (i2 = 0; i2 < e.backlog.length; i2++) { id2 = e.backlog[i2]; break; }
         if (id2) { e.costos[id2] = Math.max(4, Math.round((e.costos[id2] || 10) * 0.7)); e.impactos[id2] = Math.max(2, Math.round(e.impactos[id2] * 0.85)); }
-        nota(log,'bueno','Appetite set. Your next project got cheaper and slightly smaller — on purpose.','shapeup'); } }
+        nota(log,'bueno','Apetito definido. Tu próximo proyecto salió más barato y un poco más chico — a propósito.','shapeup'); } }
   ]},
 
 { id:'peeking', libro:'analytics', prio:70, quien:'ceo',
   cuando:function(e){ return e.mesPuesto > 3 && Motor.usuarios(e) > 150; },
-  titulo:'The test that looks great on day 3',
-  texto:'"The experiment is up 12% after three days and the board meets tomorrow. Can we call it and ship?"',
+  titulo:'El test que se ve genial al día 3',
+  texto:'"El experimento va +12% a los tres días y el directorio se reúne mañana. ¿Lo damos por cerrado y lanzamos?"',
   opciones:[
-    { txt:'Call it. 12% is 12%',
-      nota:'Peeking at tests is how novelty effects become roadmap facts. Half the time this number was noise wearing a suit.',
+    { txt:'Cerrarlo. 12% es 12%',
+      nota:'Espiar los tests es como los efectos de novedad se vuelven hechos de roadmap. La mitad de las veces este número era ruido con traje.',
       libro:'analytics',
       ef:function(e,log){
-        if (Math.random() < 0.5) { e.retBonus = (e.retBonus||0) + 0.02; nota(log,'bueno','You got lucky: the effect was real. +2% retention. Remember it was a coin flip.','analytics'); }
+        if (Math.random() < 0.5) { e.retBonus = (e.retBonus||0) + 0.02; nota(log,'bueno','Tuviste suerte: el efecto era real. +2% de retención. Recuerda que fue un volado.','analytics'); }
         else { e.retBonus = (e.retBonus||0) - 0.02; e.evidencia = Math.max(0, e.evidencia - 8);
-          nota(log,'malo','Novelty effect. It decayed, retention dipped, and now you trust your own data less.','analytics'); } } },
-    { txt:'Run it to significance. Board gets the honest version',
-      nota:'A week of patience against a lifetime of knowing whether your numbers mean anything.',
+          nota(log,'malo','Efecto de novedad. Se desinfló, la retención cayó, y ahora confías menos en tus propios datos.','analytics'); } } },
+    { txt:'Correrlo hasta la significancia. El directorio recibe la versión honesta',
+      nota:'Una semana de paciencia contra una vida de saber si tus números significan algo.',
       libro:'analytics',
       ef:function(e,log){ e.politico -= 4; e.evidencia = Math.min(100, e.evidencia + 8);
-        nota(log,'bueno','The board frowned. The result held up — and now it\'s a fact, not a hope.','analytics'); } },
-    { txt:'Ship to half the users, keep a holdout',
-      nota:'The compromise that costs a little of both: some upside now, the truth in four weeks.',
+        nota(log,'bueno','El directorio frunció el ceño. El resultado aguantó — y ahora es un hecho, no una esperanza.','analytics'); } },
+    { txt:'Lanzar a la mitad de los usuarios, guardar un grupo de control',
+      nota:'El compromiso que cuesta un poco de ambos: algo de ganancia ahora, la verdad en cuatro semanas.',
       libro:'accelerate',
       ef:function(e,log){ e.retBonus = (e.retBonus||0) + 0.01; e.evidencia = Math.min(100, e.evidencia + 4);
-        nota(log,'neutro','Half rollout with a control group. Slower win, no lie.','accelerate'); } }
+        nota(log,'neutro','Despliegue a medias con grupo de control. Victoria más lenta, sin mentira.','accelerate'); } }
   ]},
 
 { id:'prfaq', libro:'workingback', prio:64, quien:'ceo',
   cuando:function(e){ return e.mesPuesto > 3 && e.backlog.length > 2; },
-  titulo:'The initiative with momentum',
-  texto:'"Everyone loves the big idea from the offsite. I want it greenlit this week while the energy is high."',
+  titulo:'La iniciativa con impulso',
+  texto:'"Todos aman la gran idea del offsite. Quiero luz verde esta semana mientras la energía está alta."',
   opciones:[
-    { txt:'Greenlight it on momentum',
-      nota:'Enthusiasm is not evidence. Amazon writes the press release first precisely because momentum lies.',
+    { txt:'Darle luz verde por el impulso',
+      nota:'El entusiasmo no es evidencia. Amazon escribe el comunicado de prensa primero precisamente porque el impulso miente.',
       libro:'workingback',
       ef:function(e,log){
         var id2 = e.backlog[0];
         if (id2) e.ruidos[id2] = (e.ruidos[id2] || 0) + 0.8;
-        nota(log,'malo','Greenlit blind: your read on that bet just got noisier, not better.','workingback'); } },
-    { txt:'One week to write the press release and FAQ first',
-      nota:'Working Backwards: if the fake press release doesn\'t excite anyone, the real one won\'t either. Cheapest test that exists.',
+        nota(log,'malo','Luz verde a ciegas: tu lectura de esa apuesta se volvió más ruidosa, no mejor.','workingback'); } },
+    { txt:'Una semana para escribir primero el comunicado y el FAQ',
+      nota:'Working Backwards: si el comunicado falso no emociona a nadie, el real tampoco. El test más barato que existe.',
       libro:'workingback',
       ef:function(e,log){
         var id2 = e.backlog[0];
-        if (id2) { e.ruidos[id2] = 0; nota(log,'bueno','The PR/FAQ exposed what this really is. That bet\'s estimate is now dead accurate.','workingback'); }
-        else nota(log,'bueno','The exercise killed the fog. You know what you\'re deciding now.','workingback'); } },
-    { txt:'Park it: the quarter is already committed',
-      nota:'Saying no to a shiny thing mid-quarter is unpopular and correct roughly 80% of the time.',
+        if (id2) { e.ruidos[id2] = 0; nota(log,'bueno','El PR/FAQ expuso qué es esto en realidad. La estimación de esa apuesta ahora es exacta.','workingback'); }
+        else nota(log,'bueno','El ejercicio mató la niebla. Ahora sabes qué estás decidiendo.','workingback'); } },
+    { txt:'Estacionarla: el trimestre ya está comprometido',
+      nota:'Decirle que no a algo brillante a mitad de trimestre es impopular y correcto un 80% de las veces.',
       libro:'rumelt',
       ef:function(e,log){ e.foco += 6; e.politico -= 5;
-        nota(log,'neutro','The energy deflated and the quarter survived. Strategy is what you say no to.','rumelt'); } }
+        nota(log,'neutro','La energía se desinfló y el trimestre sobrevivió. Estrategia es aquello a lo que le dices que no.','rumelt'); } }
   ]},
 
 { id:'northstar', libro:'analytics', prio:63, quien:'board',
   cuando:function(e){ return e.mesPuesto > 4 && e.mrr > 0; },
-  titulo:'Pick the north star',
-  texto:'"This company tracks forty numbers and manages none. Pick THE metric. One."',
+  titulo:'Elige la estrella del norte',
+  texto:'"Esta empresa mide cuarenta números y no gestiona ninguno. Elige LA métrica. Una."',
   opciones:[
-    { txt:'Weekly active usage',
-      nota:'Usage stars align the company around value delivered. Revenue follows — usually, eventually, if the model works.',
+    { txt:'Uso activo semanal',
+      nota:'Las estrellas de uso alinean a la empresa alrededor del valor entregado. El ingreso sigue — normalmente, tarde o temprano, si el modelo funciona.',
       libro:'analytics',
       ef:function(e,log){ e.retBonus = (e.retBonus||0) + 0.015; e.foco += 6;
-        nota(log,'bueno','Everyone optimizes for people coming back. Retention firms up.','analytics'); } },
-    { txt:'Monthly revenue',
-      nota:'Revenue stars focus wonderfully and cut corners invisibly: pressure flows to pricing and sales tactics, not value.',
+        nota(log,'bueno','Todos optimizan para que la gente vuelva. La retención se afirma.','analytics'); } },
+    { txt:'Ingreso mensual',
+      nota:'Las estrellas de ingreso enfocan de maravilla y recortan esquinas sin que se vea: la presión fluye a precios y tácticas de venta, no a valor.',
       libro:'analytics',
       ef:function(e,log){ e.precio = Math.round(e.precio * 1.05); e.marca -= 4; e.foco += 6;
-        nota(log,'neutro','Price crept up 5%, brand crept down. Efficient and a little corrosive.','analytics'); } },
-    { txt:'A balanced scorecard of six KPIs',
-      nota:'Six priorities is zero priorities wearing a spreadsheet. This is the trap option, and it always looks the most reasonable.',
+        nota(log,'neutro','El precio subió 5% a escondidas, la marca bajó. Eficiente y un poco corrosivo.','analytics'); } },
+    { txt:'Un tablero balanceado de seis KPIs',
+      nota:'Seis prioridades son cero prioridades vestidas de planilla. Esta es la opción trampa, y siempre parece la más razonable.',
       libro:'rumelt',
       ef:function(e,log){ e.foco -= 8;
-        nota(log,'malo','Everyone kept their favorite number. Nothing changed, which was the point of choosing.','rumelt'); } }
+        nota(log,'malo','Cada uno se quedó con su número favorito. Nada cambió, que era el punto de elegir.','rumelt'); } }
   ]},
 
 { id:'jobsegment', libro:'jtbd', prio:62, quien:'ventas',
   cuando:function(e){ return e.mesPuesto > 4; },
-  titulo:'The segmentation fight',
-  texto:'"Marketing wants personas. Sales wants industry verticals. You have one quarter of messaging budget and they\'re both in the room."',
+  titulo:'La pelea por la segmentación',
+  texto:'"Marketing quiere personas. Ventas quiere verticales por industria. Tienes un trimestre de presupuesto de mensajes y los dos están en la sala."',
   opciones:[
-    { txt:'Re-segment by the job people hire us for',
-      nota:'JTBD segmentation is the right answer WITH real interview data behind it. Without it, you\'re just inventing fancier personas.',
+    { txt:'Resegmentar por el trabajo para el que nos contratan',
+      nota:'La segmentación JTBD es la respuesta correcta CON datos reales de entrevistas detrás. Sin eso, solo estás inventando personas más elegantes.',
       libro:'jtbd',
       ef:function(e,log){
         if (e.evidencia >= 50) { e.cobertura.core += 6; e.marca += 5;
-          nota(log,'bueno','Your evidence held: the jobs were real, the messaging clicked, fit deepened.','jtbd'); }
+          nota(log,'bueno','Tu evidencia aguantó: los trabajos eran reales, el mensaje encajó, el fit se profundizó.','jtbd'); }
         else { e.foco -= 6; e.caja -= 15000;
-          nota(log,'malo','You segmented on guesses. The "jobs" were fiction and the quarter\'s messaging with them. Evidence first.','jtbd'); } } },
-    { txt:'Personas: keep marketing moving',
-      nota:'Demographic personas describe who buys, not why. Safe, familiar, and mostly decorative.',
+          nota(log,'malo','Segmentaste sobre conjeturas. Los "trabajos" eran ficción y el mensaje del trimestre se fue con ellos. Evidencia primero.','jtbd'); } } },
+    { txt:'Personas: que marketing siga andando',
+      nota:'Las personas demográficas describen quién compra, no por qué. Seguro, familiar y mayormente decorativo.',
       libro:'jtbd',
       ef:function(e,log){ e.marca += 2;
-        nota(log,'neutro','Pretty slides, mild lift. Nobody learned anything about causality.','jtbd'); } },
-    { txt:'Verticals: follow the sales pipeline',
-      nota:'Industry cuts help sales navigate and say nothing about the product. Fine for territory planning; sterile for product.',
+        nota(log,'neutro','Diapositivas bonitas, mejora tibia. Nadie aprendió nada sobre causalidad.','jtbd'); } },
+    { txt:'Verticales: seguir el pipeline de ventas',
+      nota:'Los cortes por industria ayudan a ventas a navegar y no dicen nada del producto. Bien para planificar territorios; estéril para producto.',
       libro:'positioning',
       ef:function(e,log){ e.gtmBonus = (e.gtmBonus||0) + 0.15; e.foco -= 3;
-        nota(log,'neutro','Sales got sharper maps. Product got nothing.','positioning'); } }
+        nota(log,'neutro','Ventas consiguió mapas más filosos. Producto no consiguió nada.','positioning'); } }
   ]},
 
 { id:'reposition', libro:'dunford', prio:65, quien:'ventas',
   cuando:function(e){ return e.mesPuesto > 5 && e.competidor.atencion > 0.25; },
-  titulo:'They took your category',
-  texto:'"The competitor just announced with OUR words. Analysts now describe us as \'a cheaper them\'. Prospects repeat it back to me."',
+  titulo:'Te quitaron la categoría',
+  texto:'"El competidor acaba de anunciar con NUESTRAS palabras. Los analistas ahora nos describen como \'un ellos más barato\'. Los prospectos me lo repiten a mí."',
   opciones:[
-    { txt:'Reposition into the niche where you win',
-      nota:'Dunford: change the context and you change the value. Smaller pond, but you\'re suddenly the obvious choice in it.',
+    { txt:'Reposicionarse en el nicho donde ganas',
+      nota:'Dunford: cambia el contexto y cambias el valor. Estanque más chico, pero de pronto eres la elección obvia adentro.',
       libro:'dunford',
       ef:function(e,log){ e.marca += 8; e.foco += 5; e.tam.visio = Math.round(e.tam.visio * 0.92);
-        nota(log,'bueno','New frame, tighter market, cleaner wins. You traded reach for obviousness.','dunford'); } },
-    { txt:'Fight for the category head-on',
-      nota:'Outspending the namer of the category to reclaim it is a rich company\'s game. Check your wallet.',
+        nota(log,'bueno','Marco nuevo, mercado más apretado, victorias más limpias. Cambiaste alcance por obviedad.','dunford'); } },
+    { txt:'Pelear la categoría de frente',
+      nota:'Gastar más que el que nombró la categoría para recuperarla es un juego de empresas ricas. Revisa tu billetera.',
       libro:'positioning',
       ef:function(e,log){ e.caja -= 40000; e.competidor.atencion = Math.min(0.95, e.competidor.atencion + 0.15);
-        nota(log,'malo','$40k of counter-messaging and now they consider you a threat worth watching.','positioning'); } },
-    { txt:'Ignore it. Product wins in the end',
-      nota:'Sometimes true. But positioning happens in the buyer\'s head with or without you — abstaining just means they write it.',
+        nota(log,'malo','$40.000 de contramensajes y ahora te consideran una amenaza que vale la pena vigilar.','positioning'); } },
+    { txt:'Ignorarlo. El producto gana al final',
+      nota:'A veces es cierto. Pero el posicionamiento ocurre en la cabeza del comprador contigo o sin ti — abstenerse solo significa que lo escriben ellos.',
       libro:'dunford',
       ef:function(e,log){ e.marca -= 5;
-        nota(log,'neutro','You stayed quiet. The market kept their version of the story.','dunford'); } }
+        nota(log,'neutro','Te quedaste callado. El mercado se quedó con la versión de ellos.','dunford'); } }
   ]},
 
 { id:'pricing2', libro:'pricing', prio:67, quien:'ventas',
   cuando:function(e){ return e.mesPuesto > 4 && e.mrr > Motor.burnMensual(e) * 0.15; },
-  titulo:'The quarter-end discount',
-  texto:'"Give me 40% off for these five deals and I close the quarter today. They\'ll all sign. That\'s the only thing they\'re waiting for."',
+  titulo:'El descuento de fin de trimestre',
+  texto:'"Dame 40% de descuento en estos cinco deals y cierro el trimestre hoy. Firman todos. Es lo único que están esperando."',
   opciones:[
-    { txt:'Approve the discounts',
-      nota:'Revenue today, anchor forever: those five will never pay list again, and they talk to each other.',
+    { txt:'Aprobar los descuentos',
+      nota:'Ingreso hoy, ancla para siempre: esos cinco no vuelven a pagar lista jamás, y hablan entre ellos.',
       libro:'pricing',
       ef:function(e,log){ e.mrr = Math.round(e.mrr * 1.08); e.precio = Math.round(e.precio * 0.93);
-        nota(log,'malo','Quarter saved, list price quietly dead: your real price just dropped 7% for everyone next.','pricing'); } },
-    { txt:'Hold price, offer a value bundle instead',
-      nota:'Works when you actually know what they value. Guessing at a bundle is a discount with extra steps.',
+        nota(log,'malo','Trimestre salvado, precio de lista muerto en silencio: tu precio real acaba de bajar 7% para todos los que siguen.','pricing'); } },
+    { txt:'Sostener el precio y ofrecer un paquete de valor',
+      nota:'Funciona cuando de verdad sabes qué valoran. Adivinar el paquete es un descuento con pasos extra.',
       libro:'pricing',
       ef:function(e,log){
         if (e.evidencia >= 55) { e.mrr = Math.round(e.mrr * 1.05); e.marca += 4;
-          nota(log,'bueno','You knew what to bundle because you knew what they valued. Price integrity intact.','pricing'); }
+          nota(log,'bueno','Supiste qué empaquetar porque sabías qué valoraban. Integridad de precio intacta.','pricing'); }
         else { e.mrr = Math.round(e.mrr * 0.97); e.politico -= 5;
-          nota(log,'malo','The bundle missed what they cared about — two deals walked. You were guessing.','pricing'); } } },
-    { txt:'Let the deals slip. Price is the product',
-      nota:'Brutal and clean. A company that never bends teaches the market to stop asking.',
+          nota(log,'malo','El paquete no tocó lo que les importaba — dos deals se fueron. Estabas adivinando.','pricing'); } } },
+    { txt:'Dejar caer los deals. El precio es el producto',
+      nota:'Brutal y limpio. Una empresa que nunca se dobla le enseña al mercado a dejar de pedir.',
       libro:'pricing',
       ef:function(e,log){ e.politico -= 7; e.marca += 3;
-        nota(log,'neutro','Sales is furious. Next quarter, nobody opens with "waiting for the discount".','pricing'); } }
+        nota(log,'neutro','Ventas está furiosa. El próximo trimestre, nadie abre con "estoy esperando el descuento".','pricing'); } }
   ]},
 
 { id:'delight', libro:'badass', prio:61, quien:'estrella',
   cuando:function(e){ return e.usabilidad < 55 && e.mesPuesto > 3; },
-  titulo:'The delighter vs. the basics',
-  texto:'"I designed something users will screenshot and share. I know onboarding is still rough, but THIS is what makes us lovable."',
+  titulo:'El deleite contra lo básico',
+  texto:'"Diseñé algo que los usuarios van a capturar y compartir. Sé que el onboarding sigue tosco, pero ESTO es lo que nos hace queribles."',
   opciones:[
-    { txt:'Ship the delighter',
-      nota:'Kano\'s curve is merciless: delighters on top of broken basics read as lipstick. The screenshot goes viral; the churn stays.',
+    { txt:'Lanzar el deleite',
+      nota:'La curva de Kano no perdona: deleites sobre básicos rotos se leen como maquillaje. La captura se hace viral; el churn se queda.',
       libro:'badass',
       ef:function(e,log){ e.marca += 6; e.usabilidad -= 2;
-        nota(log,'neutro','Lovely demo, warm tweets, same leaky funnel underneath.','badass'); } },
-    { txt:'Basics first: nobody loves what they can\'t use',
-      nota:'Users don\'t get better at your product until they get INTO your product. Badass users are built on boring foundations.',
+        nota(log,'neutro','Demo preciosa, tuits cálidos, el mismo embudo con fugas debajo.','badass'); } },
+    { txt:'Lo básico primero: nadie ama lo que no puede usar',
+      nota:'Los usuarios no mejoran con tu producto hasta que ENTRAN a tu producto. Los usuarios expertos se construyen sobre cimientos aburridos.',
       libro:'krug',
       ef:function(e,log){ e.usabilidad += 8; e.moral -= 3;
-        nota(log,'bueno','Unsexy month, +8 usability. Every future visitor converts better.','krug'); } },
-    { txt:'Both, half-time each',
-      nota:'The compromise that ships two halves of nothing. Splitting focus is how both bets lose.',
+        nota(log,'bueno','Mes sin brillo, +8 de usabilidad. Cada visitante futuro convierte mejor.','krug'); } },
+    { txt:'Los dos, medio tiempo cada uno',
+      nota:'El compromiso que entrega dos mitades de nada. Partir el foco es como pierden las dos apuestas.',
       libro:'grove',
       ef:function(e,log){ e.usabilidad += 2; e.marca += 1; e.foco -= 5;
-        nota(log,'malo','Two 50% things shipped. Neither moved its number. Focus paid the bill.','grove'); } }
+        nota(log,'malo','Salieron dos cosas al 50%. Ninguna movió su número. El foco pagó la cuenta.','grove'); } }
   ]},
 
 { id:'empowered2', libro:'empowered', prio:68, quien:'ceo',
   cuando:function(e){ return e.mesPuesto > 5 && e.rolN >= 2; },
-  titulo:'The spec from the dinner',
-  texto:'"I had dinner with our biggest customer\'s CEO. Here\'s exactly what we\'re building — I sketched it on the napkin. Don\'t overthink it."',
+  titulo:'La especificación de la cena',
+  texto:'"Cené con el CEO de nuestro cliente más grande. Esto es exactamente lo que vamos a construir — lo dibujé en la servilleta. No le des tantas vueltas."',
   opciones:[
-    { txt:'Build it as sketched',
-      nota:'A solution handed down skips the only questions that matter: is it valuable, is it usable, does it generalize. Napkins answer none.',
+    { txt:'Construirlo tal como está dibujado',
+      nota:'Una solución bajada de arriba se salta las únicas preguntas que importan: ¿es valiosa, es usable, generaliza? Las servilletas no responden ninguna.',
       libro:'empowered',
       ef:function(e,log){
         var id2 = e.backlog[0];
         if (id2) e.impactos[id2] = Math.max(2, Math.round(e.impactos[id2] * 0.5));
         e.politico += 6;
-        nota(log,'malo','The CEO beams. The napkin thing solves one dinner guest\'s problem, at half the value.','empowered'); } },
-    { txt:'Reframe: "what problem did he describe?" — then solve THAT',
-      nota:'Empowered teams take problems from above and evidence from below. It costs a hard conversation and pays in real solutions.',
+        nota(log,'malo','El CEO sonríe radiante. Lo de la servilleta resuelve el problema de un comensal, a la mitad del valor.','empowered'); } },
+    { txt:'Replantear: "¿qué problema describió?" — y resolver ESO',
+      nota:'Los equipos empoderados toman problemas de arriba y evidencia de abajo. Cuesta una conversación difícil y paga en soluciones reales.',
       libro:'empowered',
       ef:function(e,log){
         var id2 = e.backlog[0];
         if (id2) e.ruidos[id2] = 0;
         e.politico -= 5;
-        nota(log,'bueno','Awkward meeting, clean outcome: you now know exactly what that request was really about.','empowered'); } },
-    { txt:'Nod, then quietly build what you believe instead',
-      nota:'The gamble of gamblers: heroes get statues, corpses get case studies. Your evidence decides which one you are.',
+        nota(log,'bueno','Reunión incómoda, resultado limpio: ahora sabes exactamente de qué se trataba ese pedido.','empowered'); } },
+    { txt:'Asentir, y construir en silencio lo que tú crees',
+      nota:'La apuesta de los apostadores: los héroes reciben estatuas, los cadáveres reciben casos de estudio. Tu evidencia decide cuál eres.',
       libro:'hard',
       ef:function(e,log){
         if (e.evidencia >= 60) { e.politico += 10; e.foco += 4;
-          nota(log,'bueno','Your version worked. The CEO now tells the story like it was his idea. Statues for everyone.','hard'); }
+          nota(log,'bueno','Tu versión funcionó. El CEO ahora cuenta la historia como si hubiera sido idea suya. Estatuas para todos.','hard'); }
         else { e.politico -= 15; e.moral -= 4;
-          nota(log,'malo','Your version missed — and you disobeyed on a hunch. That meeting was very quiet.','hard'); } } }
+          nota(log,'malo','Tu versión falló — y desobedeciste por una corazonada. Esa reunión fue muy silenciosa.','hard'); } } }
   ]},
 
 { id:'sprint2', libro:'sprintk', prio:60, quien:'cto',
   cuando:function(e){ return e.mesPuesto > 2 && e.evidencia < 60; },
-  titulo:'Big decision, thin data',
-  texto:'"We\'ve been debating the core flow for three weeks. Every meeting ends where it started. Somebody decide something."',
+  titulo:'Decisión grande, datos flacos',
+  texto:'"Llevamos tres semanas debatiendo el flujo central. Cada reunión termina donde empezó. Que alguien decida algo."',
   opciones:[
-    { txt:'Run a design sprint: prototype by Thursday, five users Friday',
-      nota:'Five days to compress three months of argument. The prototype doesn\'t have to work; it has to make five people react.',
+    { txt:'Correr un design sprint: prototipo el jueves, cinco usuarios el viernes',
+      nota:'Cinco días para comprimir tres meses de discusión. El prototipo no tiene que funcionar; tiene que hacer reaccionar a cinco personas.',
       libro:'sprintk',
       ef:function(e,log){ e.evidencia = Math.min(100, e.evidencia + 9); e.foco += 4;
-        nota(log,'bueno','Friday\'s five users ended the debate in an hour. Nine points of evidence, one week.','sprintk'); } },
-    { txt:'Decide it yourself in the next meeting',
-      nota:'Fast, decisive, and exactly as good as your intuition — which is exactly as good as your evidence.',
+        nota(log,'bueno','Los cinco usuarios del viernes terminaron el debate en una hora. Nueve puntos de evidencia, una semana.','sprintk'); } },
+    { txt:'Decidirlo tú en la próxima reunión',
+      nota:'Rápido, decisivo, y exactamente tan bueno como tu intuición — que es exactamente tan buena como tu evidencia.',
       libro:'thinkingbets',
       ef:function(e,log){
-        if (e.evidencia >= 45) { e.foco += 5; nota(log,'neutro','Called it. Your accumulated evidence made it a fair bet.','thinkingbets'); }
+        if (e.evidencia >= 45) { e.foco += 5; nota(log,'neutro','Lo decidiste. Tu evidencia acumulada lo hizo una apuesta justa.','thinkingbets'); }
         else { e.sesgo = Math.min(1, (e.sesgo||0) + 0.2); e.foco += 3;
-          nota(log,'malo','Called it on vibes. The team moves — in a direction chosen by your loudest opinion.','thinkingbets'); } } },
-    { txt:'Copy what the market leader does',
-      nota:'Their flow encodes THEIR trade-offs for THEIR users at THEIR scale. You\'re importing conclusions without the reasoning.',
+          nota(log,'malo','Lo decidiste por sensaciones. El equipo se mueve — en una dirección elegida por tu opinión más ruidosa.','thinkingbets'); } } },
+    { txt:'Copiar lo que hace el líder del mercado',
+      nota:'Su flujo codifica SUS concesiones para SUS usuarios a SU escala. Estás importando conclusiones sin el razonamiento.',
       libro:'dunford',
       ef:function(e,log){ e.foco += 2; e.evidencia = Math.max(0, e.evidencia - 4);
-        nota(log,'malo','Shipped their answer to your question. Now your product argues with itself.','dunford'); } }
+        nota(log,'malo','Lanzaste la respuesta de ellos a tu pregunta. Ahora tu producto discute consigo mismo.','dunford'); } }
   ]},
 
 { id:'coldstart2', libro:'coldstart', prio:64, quien:'ventas', sectores:['banco','apuestas','devtools','datapol'],
   cuando:function(e){ return e.mesPuesto > 4 && Motor.usuarios(e) < e.tam.visio * 0.5; },
-  titulo:'Empty rooms',
-  texto:'"The network features are ghost towns. Every new user walks into an empty room, shrugs, and leaves. Growth wants to blast ads at it."',
+  titulo:'Salas vacías',
+  texto:'"Las funciones de red son pueblos fantasma. Cada usuario nuevo entra a una sala vacía, se encoge de hombros y se va. Growth quiere bombardearla con anuncios."',
   opciones:[
-    { txt:'Shrink to one atomic network and make IT dense',
-      nota:'Chen\'s law: a hundred people who all see each other beats ten thousand who see nobody. Painful, smaller, correct.',
+    { txt:'Encogerse a una red atómica y hacerla densa',
+      nota:'La ley de Chen: cien personas que se ven todas entre sí le ganan a diez mil que no ven a nadie. Doloroso, más chico, correcto.',
       libro:'coldstart',
       ef:function(e,log){
         var i2; for (i2 = 0; i2 < SEGMENTOS.length; i2++) e.usuarios[SEGMENTOS[i2].id] *= 0.92;
         e.viral += 0.35; e.retBonus = (e.retBonus||0) + 0.02;
-        nota(log,'bueno','You closed the empty rooms and packed one. It\'s alive in there — and alive spreads.','coldstart'); } },
-    { txt:'Blast ads: fill the rooms with volume',
-      nota:'Pouring strangers into empty rooms makes fuller empty rooms. They don\'t know each other; that was the problem.',
+        nota(log,'bueno','Cerraste las salas vacías y llenaste una. Ahí adentro hay vida — y la vida se contagia.','coldstart'); } },
+    { txt:'Bombardear con anuncios: llenar las salas con volumen',
+      nota:'Verter extraños en salas vacías produce salas vacías más llenas. No se conocen entre sí; ese era el problema.',
       libro:'coldstart',
       ef:function(e,log){ e.caja -= 30000; e.retBonus = (e.retBonus||0) - 0.015;
-        nota(log,'malo','$30k of arrivals into silence. They left slightly faster than organics do.','coldstart'); } },
-    { txt:'Seed the rooms with house activity',
-      nota:'Every marketplace did it; few admit it. It works until someone notices, and someone always notices.',
+        nota(log,'malo','$30.000 de llegadas al silencio. Se fueron un poco más rápido que los orgánicos.','coldstart'); } },
+    { txt:'Sembrar las salas con actividad de la casa',
+      nota:'Todos los marketplaces lo hicieron; pocos lo admiten. Funciona hasta que alguien lo nota, y alguien siempre lo nota.',
       libro:'hard',
       ef:function(e,log){ e.retBonus = (e.retBonus||0) + 0.015; e.lupa = Math.min(100, e.lupa + 10);
-        nota(log,'neutro','The rooms look alive. Some of the "people" are you. The Heat noticed.','hard'); } }
+        nota(log,'neutro','Las salas parecen vivas. Algunas de las "personas" eres tú. La Lupa lo notó.','hard'); } }
   ]},
 
 { id:'outcomes2', libro:'outcomes', prio:63, quien:'board',
   cuando:function(e){ return e.rolN >= 3 && e.mesPuesto > 5; },
-  titulo:'The twelve-month roadmap request',
-  texto:'"The board wants feature-level commitments for the next twelve months. Dates. Names. In writing."',
+  titulo:'El pedido del roadmap a doce meses',
+  texto:'"El directorio quiere compromisos a nivel de feature para los próximos doce meses. Fechas. Nombres. Por escrito."',
   opciones:[
-    { txt:'Give them the feature Gantt they asked for',
-      nota:'You just promised outputs a year out with quarter-one knowledge. Every future discovery is now a broken promise.',
+    { txt:'Darles el Gantt de features que pidieron',
+      nota:'Acabas de prometer entregables a un año con el conocimiento del primer trimestre. Cada descubrimiento futuro es ahora una promesa rota.',
       libro:'outcomes',
       ef:function(e,log){ e.politico += 6; e.fabrica = true;
-        nota(log,'malo','They loved the certainty. You\'re a feature factory with a deadline printer now.','outcomes'); } },
-    { txt:'Commit to outcomes with a now/next/later view',
-      nota:'Harder to sell, honest to run: commit to the problems and the metrics, keep the solutions negotiable.',
+        nota(log,'malo','Amaron la certeza. Ahora eres una fábrica de features con impresora de fechas límite.','outcomes'); } },
+    { txt:'Comprometerse a resultados con una vista ahora/después/luego',
+      nota:'Más difícil de vender, honesto de operar: comprométete con los problemas y las métricas, deja las soluciones negociables.',
       libro:'outcomes',
       ef:function(e,log){
         e.politico -= 6;
         e.pactoOutcomes = true;
-        nota(log,'bueno','Tense meeting. If your mandate lands, this becomes the smartest thing you did all year.','outcomes'); } },
-    { txt:'Gantt for the board, reality for the team',
-      nota:'Two roadmaps means two truths means one eventual reckoning, scheduled for the worst possible moment.',
+        nota(log,'bueno','Reunión tensa. Si tu mandato aterriza, esto se convierte en lo más inteligente que hiciste en el año.','outcomes'); } },
+    { txt:'Gantt para el directorio, realidad para el equipo',
+      nota:'Dos roadmaps son dos verdades, y eso es un ajuste de cuentas eventual, agendado para el peor momento posible.',
       libro:'hard',
       ef:function(e,log){ e.politico += 3; e.moral -= 6; e.lupa = Math.min(100, e.lupa + 4);
-        nota(log,'malo','The team knows the official plan is theater. Theater is corrosive.','hard'); } }
+        nota(log,'malo','El equipo sabe que el plan oficial es teatro. El teatro corroe.','hard'); } }
   ]},
 
 { id:'tornado', libro:'ousterhout', prio:62, quien:'cto',
   cuando:function(e){ return e.deuda > 30 && e.mesPuesto > 3; },
-  titulo:'The tactical tornado',
-  texto:'"Our fastest engineer ships in hours what takes others days. Sales loves him. Every file he touches, someone else rewrites within a month."',
+  titulo:'El tornado táctico',
+  texto:'"Nuestro ingeniero más rápido entrega en horas lo que a otros les toma días. Ventas lo ama. Cada archivo que toca, alguien más lo reescribe en un mes."',
   opciones:[
-    { txt:'Protect him. Speed like that is rare',
-      nota:'Ousterhout named this exact person: the tactical tornado — a hero to sales, a tax on everyone downstream.',
+    { txt:'Protegerlo. Esa velocidad es rara',
+      nota:'Ousterhout nombró exactamente a esta persona: el tornado táctico — héroe para ventas, impuesto para todos los que vienen detrás.',
       libro:'ousterhout',
       ef:function(e,log){ e.deudaPendiente = (e.deudaPendiente||0) + 6; e.moral -= 3;
-        nota(log,'malo','The demos keep wowing. The codebase keeps paying. The team keeps rewriting.','ousterhout'); } },
-    { txt:'Pair him with your best designer of systems',
-      nota:'Speed plus depth is the rarest package in the industry. Sometimes you can manufacture it from two people.',
+        nota(log,'malo','Las demos siguen deslumbrando. La base de código sigue pagando. El equipo sigue reescribiendo.','ousterhout'); } },
+    { txt:'Emparejarlo con tu mejor diseñador de sistemas',
+      nota:'Velocidad más profundidad es el paquete más raro de la industria. A veces se puede fabricar con dos personas.',
       libro:'ousterhout',
       ef:function(e,log){ e.penalCap = (e.penalCap||0) + 2; e.deuda = Math.max(0, e.deuda - 6);
-        nota(log,'bueno','Slower for a month. Then the tornado started leaving buildings standing.','ousterhout'); } },
-    { txt:'Channel him: prototypes and spikes only, never production',
-      nota:'Tornadoes are magnificent in open fields. The trick is keeping them out of town.',
+        nota(log,'bueno','Más lento por un mes. Después el tornado empezó a dejar edificios en pie.','ousterhout'); } },
+    { txt:'Encauzarlo: solo prototipos y pruebas, nunca producción',
+      nota:'Los tornados son magníficos en campo abierto. El truco es mantenerlos fuera del pueblo.',
       libro:'grove',
       ef:function(e,log){ e.evidencia = Math.min(100, e.evidencia + 5); e.moral -= 2;
-        nota(log,'neutro','He hates the lane and produces astonishing prototypes in it. Evidence up.','grove'); } }
+        nota(log,'neutro','Odia el carril y produce prototipos asombrosos adentro. La evidencia sube.','grove'); } }
   ]},
 
 { id:'contrainforme', libro:'justenough', prio:61, quien:'estrella',
   cuando:function(e){ return e.mesPuesto > 4 && e.evidencia >= 40; },
-  titulo:'The research that says you\'re wrong',
-  texto:'"The user study came back. It contradicts the roadmap. Not a little — the thing we\'re building next scored dead last on what users actually struggle with."',
+  titulo:'La investigación que dice que estás equivocado',
+  texto:'"Volvió el estudio de usuarios. Contradice el roadmap. No un poco — lo que vamos a construir ahora quedó último en lo que de verdad les cuesta a los usuarios."',
   opciones:[
-    { txt:'Change course now, mid-quarter',
-      nota:'Expensive, embarrassing, and cheaper than the alternative — IF the research is sound. Check the method before the courage.',
+    { txt:'Cambiar el rumbo ya, a mitad de trimestre',
+      nota:'Caro, vergonzoso y más barato que la alternativa — SI la investigación es sólida. Revisa el método antes que el coraje.',
       libro:'justenough',
       ef:function(e,log){
         e.backlog = []; rellenarBacklog(e);
         var i2; for (i2 in e.ruidos) if (e.ruidos.hasOwnProperty(i2)) e.ruidos[i2] *= 0.6;
         e.politico -= 6;
-        nota(log,'bueno','You turned the ship in open water. The new backlog reads truer — your estimates sharpened.','justenough'); } },
-    { txt:'Finish the quarter, revisit in planning',
-      nota:'Momentum is a real asset and so is being wrong efficiently for three more months. Pick your poison consciously.',
+        nota(log,'bueno','Giraste el barco en mar abierto. El nuevo backlog se lee más cierto — tus estimaciones se afinaron.','justenough'); } },
+    { txt:'Terminar el trimestre, revisarlo en la planificación',
+      nota:'El impulso es un activo real y también lo es equivocarse con eficiencia por tres meses más. Elige tu veneno a conciencia.',
       libro:'torres',
       ef:function(e,log){ e.evidencia = Math.max(0, e.evidencia - 8);
-        nota(log,'neutro','Steady as she goes — toward a destination the map says isn\'t there.','torres'); } },
-    { txt:'Question the methodology until it goes away',
-      nota:'Every inconvenient study has a flaw if you need one. This is how organizations install their own blindfolds.',
+        nota(log,'neutro','Rumbo firme — hacia un destino que el mapa dice que no existe.','torres'); } },
+    { txt:'Cuestionar la metodología hasta que desaparezca',
+      nota:'Todo estudio incómodo tiene una falla si la necesitas. Así es como las organizaciones se instalan sus propias vendas.',
       libro:'justenough',
       ef:function(e,log){ e.sesgo = Math.min(1, (e.sesgo||0) + 0.25); e.politico += 3;
-        nota(log,'malo','The study died in committee. Your estimates now optimize for being agreed with.','justenough'); } }
+        nota(log,'malo','El estudio murió en comité. Tus estimaciones ahora optimizan para que te den la razón.','justenough'); } }
   ]},
 
 { id:'olsen2', libro:'olsen', prio:59, quien:'ceo',
   cuando:function(e){ return e.faseCorta === 'PRE-PMF' && e.mesPuesto > 3 && Motor.fitMax(e) < 0.5; },
-  titulo:'The pyramid check',
-  texto:'"Investors keep asking what our product-market fit story is. I need a slide. What do I tell them we\'re optimizing?"',
+  titulo:'La revisión de la pirámide',
+  texto:'"Los inversionistas siguen preguntando cuál es nuestra historia de product-market fit. Necesito una diapositiva. ¿Qué les digo que estamos optimizando?"',
   opciones:[
-    { txt:'"Underserved needs" — we\'re still mapping the market layer',
-      nota:'Olsen\'s pyramid built bottom-up: market, needs, value prop, THEN features. Boring slide, correct sequence.',
+    { txt:'"Necesidades desatendidas" — seguimos mapeando la capa de mercado',
+      nota:'La pirámide de Olsen se construye de abajo hacia arriba: mercado, necesidades, propuesta de valor, DESPUÉS features. Diapositiva aburrida, secuencia correcta.',
       libro:'olsen',
       ef:function(e,log){ e.evidencia = Math.min(100, e.evidencia + 6); e.politico -= 3;
-        nota(log,'bueno','Unsexy honesty. The next investor question was sharper — and answerable.','olsen'); } },
-    { txt:'"UX polish" — show the beautiful new screens',
-      nota:'Optimizing the top of the pyramid before the base exists: gorgeous, load-bearing on nothing.',
+        nota(log,'bueno','Honestidad sin brillo. La siguiente pregunta del inversionista fue más filosa — y respondible.','olsen'); } },
+    { txt:'"Pulido de UX" — mostrar las pantallas nuevas y hermosas',
+      nota:'Optimizar la punta de la pirámide antes de que exista la base: precioso, cargando peso sobre nada.',
       libro:'olsen',
       ef:function(e,log){ e.usabilidad += 3; e.evidencia = Math.max(0, e.evidencia - 4);
-        nota(log,'malo','The screens got applause. The unanswered question underneath got bigger.','olsen'); } },
-    { txt:'"Growth" — traction answers everything',
-      nota:'Pouring growth on pre-fit product is renting users to impress people. They churn on schedule.',
+        nota(log,'malo','Las pantallas se llevaron aplausos. La pregunta sin responder de abajo se hizo más grande.','olsen'); } },
+    { txt:'"Crecimiento" — la tracción responde todo',
+      nota:'Verter crecimiento sobre un producto sin fit es alquilar usuarios para impresionar gente. Se van puntualmente.',
       libro:'seibel',
       ef:function(e,log){ e.caja -= 20000; e.retBonus = (e.retBonus||0) - 0.01;
-        nota(log,'malo','$20k of borrowed traction. The cohort curves will testify against you.','seibel'); } }
+        nota(log,'malo','$20.000 de tracción prestada. Las curvas de cohortes van a testificar en tu contra.','seibel'); } }
   ]},
 { id:'recruiter', libro:'hard', prio:58, quien:'board',
   cuando:function(e){ return e.mesPuesto >= 4 && e.mesPuesto < e.meses - 2 && Math.random() < 0.5; },
-  titulo:'The recruiter\'s call',
-  texto:'"I\'ll be brief. A company in another space wants you — same level, better equity, they move fast. They need an answer this week. Interested?"',
+  titulo:'La llamada del reclutador',
+  texto:'"Voy a ser breve. Una empresa de otro rubro te quiere — mismo nivel, mejor equity, se mueven rápido. Necesitan respuesta esta semana. ¿Interesa?"',
   opciones:[
-    { txt:'Take the meeting. If it\'s real, jump',
-      nota:'Leaving mid-mandate reads very differently depending on your numbers: on track it\'s ambition, behind plan it\'s escape.',
+    { txt:'Tomar la reunión. Si es real, saltar',
+      nota:'Irse a mitad de mandato se lee muy distinto según tus números: en plan es ambición, atrás del plan es huida.',
       libro:'hard',
       ef:function(e,log){ e.vivo = false; e.final = 'renuncia';
-        nota(log,'neutro','You took the call, then the offer. New offers land on your desk next week.','hard'); } },
-    { txt:'"I finish what I start." Hang up',
-      nota:'Loyalty is a compounding asset — IF you then actually deliver. Otherwise it was just a missed exit.',
+        nota(log,'neutro','Tomaste la llamada, después la oferta. Ofertas nuevas aterrizan en tu escritorio la próxima semana.','hard'); } },
+    { txt:'"Yo termino lo que empiezo." Colgar',
+      nota:'La lealtad es un activo que se compone — SI después entregas de verdad. Si no, fue solo una salida perdida.',
       libro:'grove',
       ef:function(e,log){ e.moral += 3; e.politico += 4;
-        nota(log,'bueno','Word of the rejected offer got around. Staying by choice reads as strength.','grove'); } },
-    { txt:'Use it: tell your CEO you\'re being hunted',
-      nota:'The oldest lever in compensation. It works once, marks you as a flight risk forever, and everyone does it anyway.',
+        nota(log,'bueno','La noticia de la oferta rechazada corrió. Quedarse por elección se lee como fuerza.','grove'); } },
+    { txt:'Usarla: decirle a tu CEO que te están cazando',
+      nota:'La palanca más vieja de la compensación. Funciona una vez, te marca como riesgo de fuga para siempre, y todos la usan igual.',
       libro:'48laws',
       ef:function(e,log){ e.politico += 6; e.moral -= 2;
         if (Math.random() < 0.3) { e.politico -= 14;
-          nota(log,'malo','The CEO called your bluff: "then take it." You stayed anyway. That conversation follows you.','48laws'); }
-        else nota(log,'neutro','A sudden equity refresh appeared. So did a note in someone\'s mental file: flight risk.','48laws'); } }
+          nota(log,'malo','El CEO te vio el farol: "entonces tómala." Te quedaste igual. Esa conversación te persigue.','48laws'); }
+        else nota(log,'neutro','Apareció un refresh de equity repentino. También una nota en el archivo mental de alguien: riesgo de fuga.','48laws'); } }
   ]},
 
-/* ---------------- the street: power plays ----------------
-   House of Cards inside the building. None of these options are clean;
-   the street teaches by invoice. */
+/* ---------------- la calle: jugadas de poder ----------------
+   House of Cards dentro del edificio. Ninguna de estas opciones es limpia;
+   la calle enseña con factura. */
 
 { id:'kompromat', libro:'hard', prio:72, quien:'estrella',
   cuando:function(e){ return e.mesPuesto > 3 && e.rolN >= 2; },
-  titulo:'What you found in the logs',
-  texto:'"Reviewing the expense system I found... something. The CTO has been billing personal trips as customer visits for a year. Nobody else knows. What do I do with this?"',
+  titulo:'Lo que encontraste en los registros',
+  texto:'"Revisando el sistema de gastos encontré... algo. El CTO lleva un año facturando viajes personales como visitas a clientes. Nadie más lo sabe. ¿Qué hago con esto?"',
   opciones:[
-    { txt:'Nothing. But keep the file',
-      nota:'You now own an insurance policy on your own job. Leverage protects you exactly once — and owning it changes you.',
+    { txt:'Nada. Pero guarda el archivo',
+      nota:'Ahora tienes una póliza de seguro sobre tu propio puesto. La palanca te protege exactamente una vez — y tenerla te cambia.',
       libro:'hard',
       ef:function(e,log){ e.palancaSecreta = true; e.moral -= 2;
-        nota(log,'neutro','The file exists. Nobody knows it exists. You check that it exists more often than you\'d admit.','hard'); } },
-    { txt:'Report it to the board, by the book',
-      nota:'Clean hands, public price: you just became the person who reports people. Useful reputation, cold lunches.',
+        nota(log,'neutro','El archivo existe. Nadie sabe que existe. Verificas que existe más seguido de lo que admitirías.','hard'); } },
+    { txt:'Reportarlo al directorio, según el manual',
+      nota:'Manos limpias, precio público: acabas de convertirte en la persona que reporta gente. Reputación útil, almuerzos fríos.',
       libro:'grove',
       ef:function(e,log){ e.politico -= 8; e.moral += 4; e.lupa = Math.max(e.lupaBase, e.lupa - 5);
-        nota(log,'bueno','The CTO "transitioned out". You did the right thing and everyone is very careful around you now.','grove'); } },
-    { txt:'Show it to the CTO. Privately',
-      nota:'The House of Cards move: not blackmail, just... clarity between colleagues. He\'ll never move against you. Probably.',
+        nota(log,'bueno','El CTO "transicionó afuera". Hiciste lo correcto y ahora todos son muy cuidadosos a tu alrededor.','grove'); } },
+    { txt:'Mostrárselo al CTO. En privado',
+      nota:'La jugada de House of Cards: no es chantaje, solo... claridad entre colegas. Nunca va a moverse en tu contra. Probablemente.',
       libro:'hard',
       ef:function(e,log){ e.politico += 10; e.lupa = Math.min(100, e.lupa + 8); e.moral -= 4;
-        nota(log,'malo','He understood immediately. You have an ally now — the kind held together by fear.','hard'); } }
+        nota(log,'malo','Entendió de inmediato. Ahora tienes un aliado — de los que se sostienen con miedo.','hard'); } }
   ]},
 
 { id:'palanca', libro:'deals', prio:74, quien:'board',
   cuando:function(e){ return e.rolN >= 3 && e.mesPuesto > 4; },
-  titulo:'The board member\'s coffee',
-  texto:'"This stays between us. Some of us have... questions about the CEO\'s numbers. You see everything from where you sit. Keep me informed, and I\'ll remember it when things change."',
+  titulo:'El café del miembro del directorio',
+  texto:'"Esto queda entre nosotros. Algunos tenemos... preguntas sobre los números del CEO. Tú ves todo desde donde estás. Mantenme informado, y lo voy a recordar cuando las cosas cambien."',
   opciones:[
-    { txt:'Become their eyes',
-      nota:'You\'re either backing the winning coup or documenting your own betrayal. There is no third outcome.',
+    { txt:'Convertirte en sus ojos',
+      nota:'O estás respaldando el golpe ganador o estás documentando tu propia traición. No hay tercer desenlace.',
       libro:'hard',
       ef:function(e,log){ e.palancaSecreta = true; e.moral -= 5;
-        nota(log,'neutro','You report monthly now. If the knives come out, you\'re covered. If they don\'t, you\'re the leak.','hard'); } },
-    { txt:'"I report to the CEO. Ask him"',
-      nota:'Loyalty, stated plainly, to the person who can hear about this coffee later. Old-fashioned and load-bearing.',
+        nota(log,'neutro','Ahora reportas mensualmente. Si salen los cuchillos, estás cubierto. Si no salen, eres la filtración.','hard'); } },
+    { txt:'"Yo le reporto al CEO. Pregúntale a él"',
+      nota:'Lealtad, dicha sin adornos, a la persona que puede enterarse de este café después. Anticuado y estructural.',
       libro:'grove',
       ef:function(e,log){ e.politico += 5; e.moral += 3;
-        nota(log,'bueno','The board member smiled thinly. The CEO heard about your answer within a week — as you knew he would.','grove'); } },
-    { txt:'Tell the CEO everything, today',
-      nota:'Now the CEO owes you — and knows the board is circling. You just picked a side in a war that hasn\'t started.',
+        nota(log,'bueno','El miembro del directorio sonrió apenas. El CEO se enteró de tu respuesta en una semana — como sabías que pasaría.','grove'); } },
+    { txt:'Contarle todo al CEO, hoy',
+      nota:'Ahora el CEO te debe una — y sabe que el directorio está rondando. Acabas de elegir bando en una guerra que no ha empezado.',
       libro:'hard',
       ef:function(e,log){ e.politico += 12; e.marca -= 3;
-        nota(log,'neutro','The CEO went pale, then grateful. You\'re inner circle now. Inner circles are where the shrapnel lands.','hard'); } }
+        nota(log,'neutro','El CEO palideció, después agradeció. Ahora eres círculo íntimo. Los círculos íntimos son donde cae la metralla.','hard'); } }
   ]},
 
 { id:'chivoexpiatorio', libro:'hard', prio:88, quien:'ceo',
   cuando:function(e){ return e.incidentesPuesto >= 1 && e.mesPuesto > 3; },
-  titulo:'Someone has to wear it',
-  texto:'"The board wants a name for the outage. Not a process — a name. Your infra lead signed the deploy. Give me him and this is over by Friday."',
+  titulo:'Alguien tiene que cargarla',
+  texto:'"El directorio quiere un nombre por la caída. No un proceso — un nombre. Tu líder de infraestructura firmó el deploy. Dámelo y esto se acaba el viernes."',
   opciones:[
-    { txt:'Give them the name',
-      nota:'The Prince, chapter seven: princes keep clean hands by renting dirty ones. It works. It also becomes what your team knows about you.',
+    { txt:'Darles el nombre',
+      nota:'El Príncipe, capítulo siete: los príncipes mantienen las manos limpias alquilando manos sucias. Funciona. También se convierte en lo que tu equipo sabe de ti.',
       libro:'hard',
       ef:function(e,log){ e.politico += 10; e.moral -= 12; e.penalCap = (e.penalCap||0) + 3;
-        nota(log,'malo','He cleared his desk by Friday. The board moved on. Your team now works with one eye on the exit.','hard'); } },
-    { txt:'"It was my call. Take me or drop it"',
-      nota:'Falling on the sword is expensive today and legendary forever. Teams follow people who\'ve done this.',
+        nota(log,'malo','Vació su escritorio antes del viernes. El directorio pasó de página. Tu equipo ahora trabaja con un ojo en la salida.','hard'); } },
+    { txt:'"Fue mi decisión. Tómenme a mí o suéltenlo"',
+      nota:'Caer sobre la espada es caro hoy y legendario para siempre. Los equipos siguen a la gente que ha hecho esto.',
       libro:'hard',
       ef:function(e,log){ e.politico -= 14; e.moral += 12;
-        nota(log,'bueno','The board grumbled and dropped it. Your team would now walk through walls for you.','hard'); } },
-    { txt:'Bury them in the post-mortem data',
-      nota:'The SRE defense: blameless post-mortems exist precisely for this. It only works if your evidence is real.',
+        nota(log,'bueno','El directorio refunfuñó y lo soltó. Tu equipo ahora atravesaría muros por ti.','hard'); } },
+    { txt:'Enterrarlos en los datos del post-mortem',
+      nota:'La defensa SRE: los post-mortems sin culpables existen precisamente para esto. Solo funciona si tu evidencia es real.',
       libro:'sre',
       ef:function(e,log){
         if (e.evidencia >= 45) { e.politico += 4; e.moral += 5;
-          nota(log,'bueno','Forty slides of causality later, the board was bored into fairness. Process 1, scapegoating 0.','sre'); }
+          nota(log,'bueno','Cuarenta diapositivas de causalidad después, el directorio se aburrió hasta la justicia. Proceso 1, chivo expiatorio 0.','sre'); }
         else { e.politico -= 8;
-          nota(log,'malo','Your post-mortem had opinions where data should be. The board smelled it. Now they want two names.','sre'); } } }
+          nota(log,'malo','Tu post-mortem tenía opiniones donde debía haber datos. El directorio lo olió. Ahora quieren dos nombres.','sre'); } } }
   ]},
 
 { id:'padrino', libro:'hard', prio:76, quien:'ventas', sectores:['banco','apuestas','biogen','saludgold'],
   cuando:function(e){ return e.mesPuesto > 4 && Motor.compuerta(e,'pragm') < 0.6; },
-  titulo:'The man who knows everyone',
-  texto:'"Your license file has been \'under review\' for months, no? I know the people who review it. A consulting engagement with my firm — $60k — and reviews have a way of... concluding."',
+  titulo:'El hombre que conoce a todos',
+  texto:'"Tu expediente de licencia lleva meses \'en revisión\', ¿no? Yo conozco a la gente que lo revisa. Una consultoría con mi firma — $60.000 — y las revisiones tienen una manera de... concluir."',
   opciones:[
-    { txt:'Hire the "consultant"',
-      nota:'It will work. It always works. That\'s exactly what makes it the most expensive $60k you\'ll ever spend.',
+    { txt:'Contratar al "consultor"',
+      nota:'Va a funcionar. Siempre funciona. Eso es exactamente lo que lo convierte en los $60.000 más caros que vas a gastar.',
       libro:'hard',
       ef:function(e,log){ e.caja -= 60000; e.cobertura.segur += 14; e.lupa = Math.min(100, e.lupa + 22);
-        nota(log,'malo','The review concluded favorably in eleven days. Somewhere, a ledger has your name in it now.','hard'); } },
-    { txt:'Decline. Loudly enough to be heard',
-      nota:'The refusal that gets around town: regulators talk, and "the one who didn\'t pay" is a reputation with compound interest.',
+        nota(log,'malo','La revisión concluyó favorablemente en once días. En alguna parte, un cuaderno ahora tiene tu nombre.','hard'); } },
+    { txt:'Rechazar. Lo bastante fuerte para que se oiga',
+      nota:'El rechazo que recorre la ciudad: los reguladores hablan, y "el que no pagó" es una reputación con interés compuesto.',
       libro:'hard',
       ef:function(e,log){ e.marca += 5; e.lupa = Math.max(e.lupaBase, e.lupa - 6);
-        nota(log,'bueno','Word traveled. Your file still crawls — but the people reviewing it treat you differently now.','hard'); } },
-    { txt:'Hire real regulatory counsel instead',
-      nota:'The legitimate version costs more, moves slower, and never shows up in anyone\'s testimony.',
+        nota(log,'bueno','La noticia viajó. Tu expediente sigue arrastrándose — pero la gente que lo revisa te trata distinto ahora.','hard'); } },
+    { txt:'Contratar asesoría regulatoria de verdad',
+      nota:'La versión legítima cuesta más, va más lento y nunca aparece en el testimonio de nadie.',
       libro:'hard',
       ef:function(e,log){ e.caja -= 90000; e.cobertura.segur += 8;
-        nota(log,'neutro','$90k of lawyers who bill by the hour and sleep at night. Progress, the boring way.','hard'); } }
+        nota(log,'neutro','$90.000 en abogados que facturan por hora y duermen de noche. Progreso, por la vía aburrida.','hard'); } }
   ]},
 
 { id:'rumor', libro:'artofwar', prio:69, quien:'ventas',
   cuando:function(e){ return e.mesPuesto > 5 && e.competidor.atencion > 0.3; },
-  titulo:'The whisper campaign',
-  texto:'"Three enterprise deals are stuck choosing between us and them. A friendly analyst would happily \'hear\' that their Series C fell through. It even might be true."',
+  titulo:'La campaña de rumores',
+  texto:'"Tres deals enterprise están trabados eligiendo entre nosotros y ellos. Un analista amigo \'escucharía\' con gusto que su Serie C se cayó. Hasta podría ser cierto."',
   opciones:[
-    { txt:'Make the call',
-      nota:'Sun Tzu approves of the method and stays silent on the invoice: markets remember who poisons wells.',
+    { txt:'Hacer la llamada',
+      nota:'Sun Tzu aprueba el método y guarda silencio sobre la factura: los mercados recuerdan quién envenena pozos.',
       libro:'artofwar',
       ef:function(e,log){
         if (Math.random() < 0.6) { e.usuarios.pragm += e.tam.pragm * 0.02; e.lupa = Math.min(100, e.lupa + 8);
-          nota(log,'neutro','Two of three deals broke your way. The rumor is now weather — nobody knows where it started. Almost nobody.','artofwar'); }
+          nota(log,'neutro','Dos de tres deals cayeron de tu lado. El rumor ya es clima — nadie sabe dónde empezó. Casi nadie.','artofwar'); }
         else { e.marca -= 12; e.lupa = Math.min(100, e.lupa + 14);
-          nota(log,'malo','The analyst named a source when pressed. Guess whose company. The three deals froze, on principle.','artofwar'); } } },
-    { txt:'Beat them in the bake-off instead',
-      nota:'Winning the evaluation is slower, costs real work, and produces a reference instead of a body.',
+          nota(log,'malo','El analista nombró una fuente cuando lo presionaron. Adivina qué empresa. Los tres deals se congelaron, por principio.','artofwar'); } } },
+    { txt:'Mejor ganarles en la comparativa',
+      nota:'Ganar la evaluación es más lento, cuesta trabajo real y produce una referencia en vez de un cadáver.',
       libro:'challenger',
       ef:function(e,log){ e.cobertura.soporte += 5; e.foco += 3;
-        nota(log,'bueno','You won one clean, lost one, and the third stalled. The one you won will testify for you for years.','challenger'); } },
-    { txt:'Say nothing, do nothing',
-      nota:'Sometimes the street-smart move is refusing to play at all. The deals fall where they fall.',
+        nota(log,'bueno','Ganaste uno limpio, perdiste uno y el tercero se estancó. El que ganaste va a testificar por ti durante años.','challenger'); } },
+    { txt:'No decir nada, no hacer nada',
+      nota:'A veces la jugada callejera es negarse a jugar. Los deals caen donde caen.',
       libro:'hard',
       ef:function(e,log){
-        nota(log,'neutro','The deals split on merit. You kept your hands in your pockets, which is where clean hands live.','hard'); } }
+        nota(log,'neutro','Los deals se repartieron por mérito. Mantuviste las manos en los bolsillos, que es donde viven las manos limpias.','hard'); } }
   ]},
 
 { id:'doblesueldo', libro:'hard', prio:71, quien:'board',
   cuando:function(e){ return e.rolN >= 3 && e.mesPuesto > 5 && !e.conflictoInteres; },
-  titulo:'The advisor offer',
-  texto:'An old colleague, now founding something "adjacent" to your space: "Advisory shares, 0.5%, one call a month. Nobody needs to know. You\'d be great."',
+  titulo:'La oferta de asesor',
+  texto:'Un viejo colega, ahora fundando algo "adyacente" a tu espacio: "Acciones de asesor, 0,5%, una llamada al mes. Nadie tiene que enterarse. Serías genial."',
   opciones:[
-    { txt:'Take it. Quietly',
-      nota:'0.5% of a maybe against a monthly dice roll on your reputation. The street calls this a side bet; compliance calls it something shorter.',
+    { txt:'Aceptar. En silencio',
+      nota:'0,5% de un quizás contra un dado mensual sobre tu reputación. La calle lo llama apuesta lateral; compliance lo llama con una palabra más corta.',
       libro:'hard',
       ef:function(e,log){ e.conflictoInteres = true; e.ventaSecundaria = (e.ventaSecundaria||0) + 15000;
-        nota(log,'malo','Shares signed, calls scheduled. Every month from now on, a die rolls that you never see.','hard'); } },
-    { txt:'Take it, disclosed and papered',
-      nota:'The boring version: legal reviews it, the CEO signs off, the upside shrinks and so does the bomb.',
+        nota(log,'malo','Acciones firmadas, llamadas agendadas. Cada mes desde ahora, rueda un dado que tú nunca ves.','hard'); } },
+    { txt:'Aceptar, declarado y por escrito',
+      nota:'La versión aburrida: legal lo revisa, el CEO lo firma, la ganancia se achica y la bomba también.',
       libro:'deals',
       ef:function(e,log){ e.politico -= 4; e.ventaSecundaria = (e.ventaSecundaria||0) + 8000;
-        nota(log,'bueno','Half the mystique, none of the fuse. The CEO raised an eyebrow and signed.','deals'); } },
-    { txt:'Pass. Your equity is here',
-      nota:'Focus is also a portfolio decision. One cap table at a time.',
+        nota(log,'bueno','La mitad de la mística, nada de la mecha. El CEO levantó una ceja y firmó.','deals'); } },
+    { txt:'Pasar. Tu equity está aquí',
+      nota:'El foco también es una decisión de portafolio. Una cap table a la vez.',
       libro:'psych',
       ef:function(e,log){ e.foco += 4;
-        nota(log,'neutro','You said no in one sentence. Your old colleague respected it. Your calendar thanked you.','psych'); } }
+        nota(log,'neutro','Dijiste que no en una frase. Tu viejo colega lo respetó. Tu calendario te lo agradeció.','psych'); } }
   ]},
 
 { id:'creditos', libro:'48laws', prio:67, quien:'estrella',
   cuando:function(e){ return e.rolN >= 1 && e.mesPuesto > 4 && e.apuestasCompletadas >= 2; },
-  titulo:'Your slide, their name',
-  texto:'"Did you see the QBR deck? The growth numbers from OUR launch are in the VP of Sales\' section. Titled \'Commercial excellence\'. He\'s presenting them tomorrow."',
+  titulo:'Tu diapositiva, el nombre de otro',
+  texto:'"¿Viste el deck del QBR? Los números de crecimiento de NUESTRO lanzamiento están en la sección del VP de Ventas. Titulada \'Excelencia comercial\'. Los presenta mañana."',
   opciones:[
-    { txt:'Correct it in the room, mid-presentation',
-      nota:'Publicly right, politically radioactive. Law 1: never outshine the master — especially not by fact-checking him live.',
+    { txt:'Corregirlo en la sala, a mitad de presentación',
+      nota:'Públicamente correcto, políticamente radiactivo. Ley 1: nunca opaques al maestro — menos verificándole los datos en vivo.',
       libro:'48laws',
       ef:function(e,log){ e.politico -= 10; e.moral += 6;
-        nota(log,'malo','You were correct in front of everyone. He was humiliated in front of everyone. Only one of those is remembered.','48laws'); } },
-    { txt:'Send the board the full data — beforehand, "for context"',
-      nota:'The quiet counter: by the time he presents, everyone in the room already knows whose work it is. He never learns how.',
+        nota(log,'malo','Tuviste razón frente a todos. Él fue humillado frente a todos. Solo una de esas dos cosas se recuerda.','48laws'); } },
+    { txt:'Mandarle al directorio los datos completos — antes, "para contexto"',
+      nota:'El contragolpe silencioso: para cuando presenta, todos en la sala ya saben de quién es el trabajo. Él nunca se entera cómo.',
       libro:'48laws',
       ef:function(e,log){ e.politico += 8; e.lupa = Math.min(100, e.lupa + 3);
-        nota(log,'bueno','He presented to a room of small knowing smiles. Your name never came up. It didn\'t need to.','48laws'); } },
-    { txt:'Let it go. The work speaks eventually',
-      nota:'Sometimes it does. In organizations, "eventually" is often measured in other people\'s promotions.',
+        nota(log,'bueno','Presentó ante una sala de pequeñas sonrisas cómplices. Tu nombre nunca salió. No hacía falta.','48laws'); } },
+    { txt:'Dejarlo pasar. El trabajo habla, tarde o temprano',
+      nota:'A veces habla. En las organizaciones, "tarde o temprano" suele medirse en ascensos ajenos.',
       libro:'grove',
       ef:function(e,log){ e.moral -= 5;
-        nota(log,'neutro','The team noticed you didn\'t fight for their credit. They\'ll remember it at the worst possible time.','grove'); } }
+        nota(log,'neutro','El equipo notó que no peleaste por su crédito. Lo van a recordar en el peor momento posible.','grove'); } }
   ]},
 
 { id:'cazatalentos', libro:'artofwar', prio:66, quien:'cto',
   cuando:function(e){ return e.mesPuesto > 4 && e.competidor.atencion > 0.2 && e.caja > Motor.burnMensual(e) * 4; },
-  titulo:'Their best engineer is "just curious"',
-  texto:'"The competitor\'s lead architect reached out. Wants to talk. She built their whole platform — she\'d arrive knowing everything about how they work. Everything."',
+  titulo:'Su mejor ingeniera está "solo curioseando"',
+  texto:'"La arquitecta principal del competidor nos contactó. Quiere hablar. Ella construyó toda su plataforma — llegaría sabiendo todo sobre cómo trabajan. Todo."',
   opciones:[
-    { txt:'Hire her fast, debrief everything',
-      nota:'The knowledge walks in the door and so does the lawsuit exposure. Trade secrets don\'t stop being secrets because someone changed badges.',
+    { txt:'Contratarla rápido, exprimirle todo',
+      nota:'El conocimiento entra por la puerta y la exposición a demandas también. Los secretos comerciales no dejan de ser secretos porque alguien cambió de credencial.',
       libro:'artofwar',
       ef:function(e,log){ Motor.contratar(e,'ing'); e.competidor.fuerza = Math.max(0.2, e.competidor.fuerza - 0.1);
         e.lupa = Math.min(100, e.lupa + 12);
-        nota(log,'malo','She drew their architecture on your whiteboard in week one. Their lawyers drew something too: a timeline.','artofwar'); } },
-    { txt:'Hire her clean: six-month cooling off, no debriefs',
-      nota:'You get the talent and forgo the loot. Slower, defensible, and she\'ll respect you for not asking.',
+        nota(log,'malo','Dibujó la arquitectura de ellos en tu pizarra en la primera semana. Sus abogados dibujaron algo también: una línea de tiempo.','artofwar'); } },
+    { txt:'Contratarla limpia: seis meses de cuarentena, sin interrogatorios',
+      nota:'Te llevas el talento y renuncias al botín. Más lento, defendible, y ella te va a respetar por no preguntar.',
       libro:'grove',
       ef:function(e,log){ Motor.contratar(e,'ing'); e.moral += 3;
-        nota(log,'bueno','She noticed you never asked about their internals. "That\'s why I came," she said.','grove'); } },
-    { txt:'Pass, and tell the competitor\'s CTO she\'s shopping',
-      nota:'The long-game move: you just banked a favor with your enemy. The street runs on debts like this.',
+        nota(log,'bueno','Notó que nunca preguntaste por los internos de ellos. "Por eso vine," dijo.','grove'); } },
+    { txt:'Pasar, y avisarle al CTO del competidor que ella se está ofreciendo',
+      nota:'La jugada a largo plazo: acabas de depositar un favor con tu enemigo. La calle funciona con deudas como esta.',
       libro:'48laws',
       ef:function(e,log){ e.competidor.atencion = Math.max(0, e.competidor.atencion - 0.15);
-        nota(log,'neutro','Their CTO owes you one and knows it. Somewhere in a future negotiation, this phone call is waiting.','48laws'); } }
+        nota(log,'neutro','Su CTO te debe una y lo sabe. En alguna negociación futura, esa llamada está esperando.','48laws'); } }
   ]},
 
 { id:'favores', libro:'hard', prio:70, quien:'ventas', sectores:['datapol','banco','renov','apuestas'],
   cuando:function(e){ return e.mesPuesto > 5 && Motor.compuerta(e,'pragm') < 0.8; },
-  titulo:'The community fund',
-  texto:'"The undersecretary loved the demo. Loved it. He also mentioned — twice — that the district\'s youth sports fund is short this year. He said you\'d understand each other."',
+  titulo:'El fondo comunitario',
+  texto:'"Al subsecretario le encantó la demo. Le encantó. También mencionó — dos veces — que el fondo de deportes juveniles del distrito anda corto este año. Dijo que ustedes se entenderían."',
   opciones:[
-    { txt:'Fund the little league',
-      nota:'It\'s not a bribe, it\'s philanthropy with a receipt and a wink. Prosecutors collect receipts.',
+    { txt:'Financiar la liga infantil',
+      nota:'No es un soborno, es filantropía con recibo y guiño. Los fiscales coleccionan recibos.',
       libro:'hard',
       ef:function(e,log){ e.caja -= 35000; e.cobertura.soporte += 8; e.lupa = Math.min(100, e.lupa + 15);
-        nota(log,'malo','The kids got uniforms, your file got unstuck, and a photo of you at the ceremony now exists forever.','hard'); } },
-    { txt:'Offer a transparent public partnership instead',
-      nota:'Same money, through the front door, with a press release. Slower magic, zero afterlife.',
+        nota(log,'malo','Los niños consiguieron uniformes, tu expediente se destrabó, y una foto tuya en la ceremonia ahora existe para siempre.','hard'); } },
+    { txt:'Ofrecer una alianza pública transparente',
+      nota:'La misma plata, por la puerta de adelante, con comunicado de prensa. Magia más lenta, cero vida después de la muerte.',
       libro:'hard',
       ef:function(e,log){ e.caja -= 35000; e.marca += 6;
-        nota(log,'bueno','A public program with your logo on it. The undersecretary was less warm and your lawyers slept fine.','hard'); } },
-    { txt:'"We don\'t do that." End of meeting',
-      nota:'Doors close. Some of them were doors you needed. Knowing which ones was the whole game.',
+        nota(log,'bueno','Un programa público con tu logo. El subsecretario fue menos cálido y tus abogados durmieron bien.','hard'); } },
+    { txt:'"Nosotros no hacemos eso." Fin de la reunión',
+      nota:'Se cierran puertas. Algunas eran puertas que necesitabas. Saber cuáles era todo el juego.',
       libro:'hard',
       ef:function(e,log){ e.politico -= 4; e.marca += 3;
-        nota(log,'neutro','The meeting ended politely and early. That file of yours found the bottom of a very tall pile.','hard'); } }
+        nota(log,'neutro','La reunión terminó con cortesía y temprano. Ese expediente tuyo encontró el fondo de una pila muy alta.','hard'); } }
   ]},
 
 { id:'exitintel', libro:'artofwar', prio:68, quien:'estrella',
   cuando:function(e){ return e.mesPuesto > 3 && e.competidor.atencion > 0.15; },
-  titulo:'The parting gift',
-  texto:'"My last day is Friday. One thing before I go — I interviewed at the competitor last month. I still have the pricing deck they walked me through. Want it on your desk or in the shredder?"',
+  titulo:'El regalo de despedida',
+  texto:'"Mi último día es el viernes. Una cosa antes de irme — entrevisté en el competidor el mes pasado. Todavía tengo el deck de precios que me mostraron. ¿Lo quieres en tu escritorio o en la trituradora?"',
   opciones:[
-    { txt:'On the desk',
-      nota:'Their entire pricing logic, gift-wrapped. Also: documented, timestamped, and yours now in every legal sense.',
+    { txt:'En el escritorio',
+      nota:'Toda su lógica de precios, envuelta para regalo. También: documentada, con fecha y hora, y tuya ahora en todo sentido legal.',
       libro:'artofwar',
       ef:function(e,log){ e.precio = Math.round(e.precio * 1.06); e.lupa = Math.min(100, e.lupa + 10);
-        nota(log,'malo','You repriced with perfect information. Perfect information has a paper trail.','artofwar'); } },
-    { txt:'The shredder. And thank them for asking',
-      nota:'What the team sees you do with free poison defines what they\'ll bring you in the future.',
+        nota(log,'malo','Reajustaste precios con información perfecta. La información perfecta deja rastro de papel.','artofwar'); } },
+    { txt:'La trituradora. Y agradécele por preguntar',
+      nota:'Lo que el equipo te ve hacer con veneno gratis define lo que te van a traer en el futuro.',
       libro:'grove',
       ef:function(e,log){ e.moral += 4;
-        nota(log,'bueno','Shredded unread, in front of them. The story traveled internally within a day — the version of you it tells is worth more than the deck.','grove'); } }
+        nota(log,'bueno','Triturado sin leer, frente a ellos. La historia viajó por dentro en un día — la versión de ti que cuenta vale más que el deck.','grove'); } }
   ]},
 
-/* ---------------- the gray zone ---------------- */
+/* ---------------- la zona gris ---------------- */
 
 { id:'canal', libro:'zero', prio:92, quien:'ventas',
   cuando:function(e){ return e.mesPuesto > 3 && e.competidor.atencion > 0.2; },
-  titulo:'The envelope',
-  texto:'"A friend at a fund sent me the competitor\'s entire data room. Roadmap, numbers, everything. Nobody will ever know."',
+  titulo:'El sobre',
+  texto:'"Un amigo en un fondo me mandó el data room completo del competidor. Roadmap, números, todo. Nadie lo va a saber jamás."',
   opciones:[
-    { txt:'Open it. It would be stupid not to',
-      nota:'Stolen information earns compound interest: today it saves you a quarter, tomorrow someone remembers who gave it to you and what you owe them.',
+    { txt:'Abrirlo. Sería estúpido no hacerlo',
+      nota:'La información robada gana interés compuesto: hoy te ahorra un trimestre, mañana alguien recuerda quién te la dio y qué le debes.',
       libro:'zero',
       ef:function(e,log){ e.foco += 8; e.cobertura.core += 5; e.lupa = Math.min(100, e.lupa + 18);
-        nota(log,'malo','You read the whole thing. You gained a quarter and a debt that shows up on no balance sheet. Heat climbs.','zero'); } },
-    { txt:'Delete it and tell legal',
-      nota:'Boring, correct, and the only version of this story that doesn\'t wake you up at night two years from now.',
+        nota(log,'malo','Leíste todo. Ganaste un trimestre y una deuda que no aparece en ningún balance. La Lupa sube.','zero'); } },
+    { txt:'Borrarlo y avisar a legal',
+      nota:'Aburrido, correcto, y la única versión de esta historia que no te despierta de noche en dos años.',
       libro:'hard',
       ef:function(e,log){ e.moral += 3;
-        nota(log,'bueno','Deleted, with witnesses. The day that fund gets investigated, your name isn\'t there.','hard'); } },
-    { txt:'Return it... after a little peek at the price sheet',
-      nota:'There\'s no such thing as looking a little. There\'s only having looked.',
+        nota(log,'bueno','Borrado, con testigos. El día que investiguen a ese fondo, tu nombre no está ahí.','hard'); } },
+    { txt:'Devolverlo... después de una miradita a la hoja de precios',
+      nota:'No existe mirar un poco. Solo existe haber mirado.',
       libro:'hard',
       ef:function(e,log){ e.foco += 3; e.lupa = Math.min(100, e.lupa + 8);
-        nota(log,'neutro','"Just the prices." Sure. Heat climbs anyway, because whoever sent it knows now.','hard'); } }
+        nota(log,'neutro','"Solo los precios." Claro. La Lupa sube igual, porque quien lo mandó ahora lo sabe.','hard'); } }
   ]},
 
 { id:'cocinar', libro:'analytics', prio:108, quien:'ceo',
   cuando:function(e){ return e.mesPuesto > 4 && Motor.progresoMandato(e) < (e.mesPuesto / e.meses) * 0.8; },
-  titulo:'The numbers for the round',
-  texto:'"I need the churned accounts listed as \'paused\' until the round closes. Everyone does it. It\'s presentation, not fraud."',
+  titulo:'Los números para la ronda',
+  texto:'"Necesito que las cuentas perdidas figuren como \'pausadas\' hasta que cierre la ronda. Todos lo hacen. Es presentación, no fraude."',
   opciones:[
-    { txt:'Cook them. Just until it closes',
-      nota:'The first problem isn\'t getting caught: it\'s that the cooked number becomes the real number behind your own decisions. Now you\'re lying to yourself too.',
+    { txt:'Cocinarlos. Solo hasta que cierre',
+      nota:'El primer problema no es que te atrapen: es que el número cocinado se vuelve el número real detrás de tus propias decisiones. Ahora también te mientes a ti.',
       libro:'analytics',
       ef:function(e,log){ e.caja += Motor.burnMensual(e) * 4; e.lupa = Math.min(100, e.lupa + 25);
         e.evidencia = Math.max(0, e.evidencia - 15); e.politico += 8;
-        nota(log,'malo','The round closed on made-up numbers. Money came in, Heat climbs 25, and your real evidence is worth less: even you don\'t know the true number anymore.','analytics'); } },
-    { txt:'Refuse, and keep the email',
-      nota:'Saying no to the CEO costs political capital today. Signing fake metrics costs the entire career, with interest.',
+        nota(log,'malo','La ronda cerró sobre números inventados. Entró plata, la Lupa sube 25, y tu evidencia real vale menos: ni tú sabes ya el número verdadero.','analytics'); } },
+    { txt:'Negarte, y guardar el correo',
+      nota:'Decirle que no al CEO cuesta capital político hoy. Firmar métricas falsas cuesta la carrera entera, con intereses.',
       libro:'hard',
       ef:function(e,log){ e.politico -= 12; e.moral += 4;
-        nota(log,'bueno','You said no, in writing. The CEO won\'t forget. Neither will the prosecutors — in your favor.','hard'); } },
-    { txt:'Pitch the real story, told well',
-      nota:'An ugly cohort with a credible plan raises more money than a doctored total, at half the criminal risk.',
+        nota(log,'bueno','Dijiste que no, por escrito. El CEO no lo va a olvidar. Los fiscales tampoco — a tu favor.','hard'); } },
+    { txt:'Presentar la historia real, bien contada',
+      nota:'Una cohorte fea con un plan creíble levanta más plata que un total maquillado, a la mitad del riesgo penal.',
       libro:'analytics',
       ef:function(e,log){ e.politico -= 4; e.evidencia = Math.min(100, e.evidencia + 6);
-        nota(log,'bueno','You built the honest version, with a narrative. Less shine, zero court case.','analytics'); } }
+        nota(log,'bueno','Armaste la versión honesta, con narrativa. Menos brillo, cero juicio.','analytics'); } }
   ]},
 
 { id:'clubcompradores', libro:'hard', prio:106, quien:'ventas',
   cuando:function(e){ return (e.sectorId === 'biogen' || e.sectorId === 'saludgold') && e.mesPuesto > 5 && Motor.compuerta(e,'pragm') < 0.6; },
-  titulo:'The desperate buyers club',
-  texto:'"There are patients who can\'t wait for approval. They\'ll pay anything, outside the system. A private buyers club. The list already exists."',
+  titulo:'El club de los compradores desesperados',
+  texto:'"Hay pacientes que no pueden esperar la aprobación. Pagarían lo que sea, fuera del sistema. Un club privado de compradores. La lista ya existe."',
   opciones:[
-    { txt:'Set up the club. Regulation is slow and people are dying',
-      nota:'Dallas Buyers Club is a great movie because it ends badly AND well. In your version, the regulator writes the ending.',
+    { txt:'Armar el club. La regulación es lenta y hay gente muriéndose',
+      nota:'Dallas Buyers Club es una gran película porque termina mal Y bien. En tu versión, el final lo escribe el regulador.',
       libro:'hard',
       ef:function(e,log){ e.caja += Motor.burnMensual(e) * 3; e.marca += 6;
         e.lupa = Math.min(100, e.lupa + 30); e.riesgoExtra = (e.riesgoExtra||0) + 0.1;
-        nota(log,'malo','The club works and the money flows. So did you — straight onto the regulator\'s list. Heat +30.','hard'); } },
-    { txt:'A compassionate-access program, with paperwork',
-      nota:'There\'s a legal instrument for exactly this. It\'s slower, covers fewer people, and doesn\'t end with your name in a case file.',
+        nota(log,'malo','El club funciona y la plata fluye. Tú también fluiste — directo a la lista del regulador. Lupa +30.','hard'); } },
+    { txt:'Un programa de acceso compasivo, con papeleo',
+      nota:'Existe un instrumento legal para exactamente esto. Es más lento, cubre a menos gente, y no termina con tu nombre en un expediente.',
       libro:'hard',
       ef:function(e,log){ e.marca += 8; e.cobertura.soporte += 6; e.politico += 4;
-        nota(log,'bueno','Compassionate access approved. Less epic, more patients in the long run.','hard'); } },
-    { txt:'No. We wait for approval',
-      nota:'Defensible, cold, and someone is going to write a furious thread about your company. They\'ll be half right.',
+        nota(log,'bueno','Acceso compasivo aprobado. Menos épico, más pacientes a la larga.','hard'); } },
+    { txt:'No. Esperamos la aprobación',
+      nota:'Defendible, frío, y alguien va a escribir un hilo furioso sobre tu empresa. Va a tener la mitad de la razón.',
       libro:'lean',
       ef:function(e,log){ e.marca -= 5;
-        nota(log,'neutro','You wait. The furious thread went out anyway. The approval, still nowhere.','lean'); } }
+        nota(log,'neutro','Esperas. El hilo furioso salió igual. La aprobación, todavía en ninguna parte.','lean'); } }
   ]},
 
 { id:'lado', libro:'grove', prio:94, quien:'cto',
   cuando:function(e){ return e.mesPuesto > 4 && (e.ing + e.prod) > 4 && !e.eventosVistos.caza; },
-  titulo:'The side business',
-  texto:'"I found out why the infra bill doesn\'t add up: your best engineer has had a business of her own running on our servers for months."',
+  titulo:'El negocio paralelo',
+  texto:'"Descubrí por qué la cuenta de infraestructura no cuadra: tu mejor ingeniera lleva meses corriendo un negocio propio en nuestros servidores."',
   opciones:[
-    { txt:'Cover it up in exchange for total loyalty',
-      nota:'Now you have a brilliant employee who owes you one and a secret that works for her. Secrets charge interest.',
+    { txt:'Taparlo a cambio de lealtad total',
+      nota:'Ahora tienes una empleada brillante que te debe una y un secreto que trabaja para ella. Los secretos cobran interés.',
       libro:'grove',
       ef:function(e,log){ e.moral -= 4; e.lupa = Math.min(100, e.lupa + 15); e.penalCap = 0; e.foco += 4;
-        nota(log,'malo','Deal sealed. She delivers like crazy, and now two people in the company are lying to everyone else.','grove'); } },
-    { txt:'Fire her on the spot, with a full audit',
-      nota:'Very expensive today: you lose your best mind and take three months of hangover. Cheap compared to explaining this to an investor in due diligence.',
+        nota(log,'malo','Trato sellado. Ella entrega como loca, y ahora dos personas en la empresa le mienten al resto.','grove'); } },
+    { txt:'Despedirla en el acto, con auditoría completa',
+      nota:'Carísimo hoy: pierdes tu mejor cabeza y te comes tres meses de resaca. Barato comparado con explicarle esto a un inversionista en due diligence.',
       libro:'grove',
       ef:function(e,log){ e.penalCap = 10; e.deuda += 6; e.moral += 5;
-        nota(log,'bueno','She left with a small scandal. The message to the rest of the team was worth every point of capacity.','grove'); } },
-    { txt:'Buy the business and fold it into the company',
-      nota:'The Breaking Bad play: instead of killing the shady business, you put it on the balance sheet. Now the problem is officially yours.',
+        nota(log,'bueno','Se fue con un pequeño escándalo. El mensaje al resto del equipo valió cada punto de capacidad.','grove'); } },
+    { txt:'Comprar el negocio y meterlo en la empresa',
+      nota:'La jugada de Breaking Bad: en vez de matar el negocio turbio, lo pones en el balance. Ahora el problema es oficialmente tuyo.',
       libro:'hard',
       ef:function(e,log){ e.caja -= 80000; e.mrr += 9000; e.lupa = Math.min(100, e.lupa + 10);
-        nota(log,'neutro','The company now has a revenue line nobody can explain to the board. Heat +10.','hard'); } }
+        nota(log,'neutro','La empresa ahora tiene una línea de ingresos que nadie puede explicarle al directorio. Lupa +10.','hard'); } }
   ]},
 
 { id:'wolf', libro:'analytics', prio:90, quien:'ventas', sectores:['banco','apuestas','devtools','datapol'],
   cuando:function(e){ return e.mesPuesto > 5 && e.mandatoId === 'crecer' && Motor.progresoMandato(e) < 0.6; },
-  titulo:'Wolf users',
-  texto:'"I know an install farm. Ten thousand users in two weeks. The board looks at the total; it doesn\'t look at where it came from."',
+  titulo:'Usuarios lobo',
+  texto:'"Conozco una granja de instalaciones. Diez mil usuarios en dos semanas. El directorio mira el total; no mira de dónde salió."',
   opciones:[
-    { txt:'Buy the users. The mandate is the mandate',
-      nota:'Bought users don\'t use, don\'t pay and don\'t come back — but they do enter the average, and they rot every metric you decide with.',
+    { txt:'Comprar los usuarios. El mandato es el mandato',
+      nota:'Los usuarios comprados no usan, no pagan y no vuelven — pero sí entran al promedio, y pudren cada métrica con la que decides.',
       libro:'analytics',
       ef:function(e,log){
         e.usuarios.innov += e.tam.innov * 0.3; e.usuarios.visio += e.tam.visio * 0.15;
         e.retBonus = (e.retBonus||0) - 0.10; e.lupa = Math.min(100, e.lupa + 15);
         e.evidencia = Math.max(0, e.evidencia - 10);
-        nota(log,'malo','The total exploded. Retention collapsed, your evidence is worth less and Heat climbs: funds know how to read cohorts too.','analytics'); } },
-    { txt:'No. Show the real growth and take the meeting on the chin',
-      nota:'The uncomfortable real number ages well. The inflated number ages like milk in the sun.',
+        nota(log,'malo','El total explotó. La retención colapsó, tu evidencia vale menos y la Lupa sube: los fondos también saben leer cohortes.','analytics'); } },
+    { txt:'No. Mostrar el crecimiento real y aguantar la reunión',
+      nota:'El número real incómodo envejece bien. El número inflado envejece como leche al sol.',
       libro:'analytics',
       ef:function(e,log){ e.politico -= 6; e.evidencia = Math.min(100, e.evidencia + 5);
-        nota(log,'bueno','Rough meeting, clean metrics. You still know what\'s true in your own company.','analytics'); } }
+        nota(log,'bueno','Reunión dura, métricas limpias. Todavía sabes qué es verdad en tu propia empresa.','analytics'); } }
   ]},
 
 { id:'socio', libro:'deals', prio:104, quien:'board',
   cuando:function(e){ return e.esFundador && e.mesPuesto > 8 && e.rondas.length > 0; },
-  titulo:'The ghost partner',
-  texto:'"Your cofounder hasn\'t shown up in six months and holds 30%. The lawyers say there\'s a window to dilute him down to 5% before the next round. It\'s... legal."',
+  titulo:'El socio fantasma',
+  texto:'"Tu cofundador no aparece hace seis meses y tiene el 30%. Los abogados dicen que hay una ventana para diluirlo al 5% antes de la próxima ronda. Es... legal."',
   opciones:[
-    { txt:'Execute the dilution. Let him fight it in court',
-      nota:'The Zuckerberg play. It works, it\'s legal on paper, and you\'ll hear the story retold in a lawsuit with email discovery included.',
+    { txt:'Ejecutar la dilución. Que la pelee en tribunales',
+      nota:'La jugada de Zuckerberg. Funciona, es legal en el papel, y vas a oír la historia recontada en una demanda con descubrimiento de correos incluido.',
       libro:'deals',
       ef:function(e,log){ e.capTable.fund = Math.min(1, e.capTable.fund + 0.12); e.moral -= 10;
         e.marca -= 6; e.lupa = Math.min(100, e.lupa + 10);
-        nota(log,'malo','You own 12 more points of the company and a lawsuit in gestation. The team took note of how you treat partners.','deals'); } },
-    { txt:'Buy his stake at a fair price',
-      nota:'More expensive today, and it buys something no market lists: nobody on your team thinking they could be next.',
+        nota(log,'malo','Tienes 12 puntos más de la empresa y una demanda en gestación. El equipo tomó nota de cómo tratas a los socios.','deals'); } },
+    { txt:'Comprarle su parte a un precio justo',
+      nota:'Más caro hoy, y compra algo que ningún mercado cotiza: que nadie en tu equipo piense que podría ser el próximo.',
       libro:'deals',
       ef:function(e,log){ e.caja -= Motor.burnMensual(e) * 4; e.capTable.fund = Math.min(1, e.capTable.fund + 0.08); e.moral += 4;
-        nota(log,'bueno','Clean, signed exit. It cost cash; it didn\'t cost reputation.','deals'); } },
-    { txt:'Leave it as is. A 30% sleeping partner',
-      nota:'Dead equity on the cap table scares investors almost as much as a lawsuit. Almost.',
+        nota(log,'bueno','Salida limpia y firmada. Costó caja; no costó reputación.','deals'); } },
+    { txt:'Dejarlo como está. Un socio dormido con 30%',
+      nota:'El equity muerto en la cap table asusta a los inversionistas casi tanto como una demanda. Casi.',
       libro:'deals',
       ef:function(e,log){
-        nota(log,'neutro','It stays as is. Next round, someone is going to ask who he is and why he holds 30%.','deals'); } }
+        nota(log,'neutro','Queda como está. En la próxima ronda, alguien va a preguntar quién es y por qué tiene el 30%.','deals'); } }
   ]},
 
 { id:'fiscal', libro:'hard', prio:119, quien:'board',
   cuando:function(e){ return e.lupa >= 55 && !e.eventosVistos.allanamiento; },
-  titulo:'The prosecutor wants to talk',
-  texto:'"Off the record: they have a file on the company. On the record: whoever cooperates now walks clean. The meeting is tomorrow."',
+  titulo:'El fiscal quiere hablar',
+  texto:'"Extraoficialmente: tienen un expediente sobre la empresa. Oficialmente: el que coopere ahora sale limpio. La reunión es mañana."',
   opciones:[
-    { txt:'Cooperate and hand over what you know',
-      nota:'You walk clean. The company, the team and your name in the industry absorb the hit. Deals with prosecutors are exactly that: deals.',
+    { txt:'Cooperar y entregar lo que sabes',
+      nota:'Tú sales limpio. La empresa, el equipo y tu nombre en la industria absorben el golpe. Los tratos con fiscales son exactamente eso: tratos.',
       libro:'hard',
       ef:function(e,log){ e.lupa = e.lupaBase + 20; e.politico -= 25; e.moral -= 12; e.marca -= 10;
-        nota(log,'neutro','You cooperated. Heat drops, but that file never fully closes. Nobody at the office holds your gaze anymore.','hard'); } },
-    { txt:'Expensive lawyers and silence',
-      nota:'The classic defense: costly, slow, and it sometimes works. Heat doesn\'t drop; the bill goes up.',
+        nota(log,'neutro','Cooperaste. La Lupa baja, pero ese expediente nunca se cierra del todo. Nadie en la oficina te sostiene la mirada ya.','hard'); } },
+    { txt:'Abogados caros y silencio',
+      nota:'La defensa clásica: costosa, lenta, y a veces funciona. La Lupa no baja; la cuenta sube.',
       libro:'hard',
       ef:function(e,log){ e.caja -= Motor.burnMensual(e) * 2; e.infraExtra = (e.infraExtra||0) + 15000;
-        nota(log,'neutro','The lawyers bill monthly and the file stays open. At least nobody talked.','hard'); } },
-    { txt:'Actually clean house: cut everything gray, now',
-      nota:'The only way out that fixes the case AND the cause of the case. It costs growth today.',
+        nota(log,'neutro','Los abogados facturan cada mes y el expediente sigue abierto. Al menos nadie habló.','hard'); } },
+    { txt:'Limpiar la casa de verdad: cortar todo lo gris, ya',
+      nota:'La única salida que arregla el caso Y la causa del caso. Cuesta crecimiento hoy.',
       libro:'grove',
       ef:function(e,log){ e.lupa = Math.max(e.lupaBase, e.lupa - 30); e.gtmBonus = -0.3; e.foco += 5;
-        nota(log,'bueno','You cut everything that wouldn\'t survive an inspection. You grow less this quarter and you sleep at night.','grove'); } }
+        nota(log,'bueno','Cortaste todo lo que no sobreviviría una inspección. Creces menos este trimestre y duermes de noche.','grove'); } }
   ]},
 
 { id:'allanamiento', libro:'hard', prio:130, quien:'cto',
   cuando:function(e){ return e.lupa >= 85; },
-  titulo:'They\'re downstairs',
-  texto:'"There are six people with folders in the lobby and a warrant. They\'re cloning the servers. Right now."',
+  titulo:'Están abajo',
+  texto:'"Hay seis personas con carpetas en el lobby y una orden judicial. Están clonando los servidores. Ahora mismo."',
   opciones:[
-    { txt:'Cooperate fully and call the lawyers',
-      nota:'When they show up with a warrant, the hiding game is already over. The only move left is procedural dignity.',
+    { txt:'Cooperar del todo y llamar a los abogados',
+      nota:'Cuando llegan con una orden, el juego de esconderse ya terminó. La única jugada que queda es la dignidad procesal.',
       libro:'hard',
       ef:function(e,log){
         if (e.cobertura.segur >= 55 && Math.random() < 0.6) {
           e.lupa = e.lupaBase + 10; e.zafo = true; e.marca -= 8;
-          nota(log,'bueno','They took everything and found nothing that wouldn\'t survive a trial. You got away with it. This time.','hard');
+          nota(log,'bueno','Se llevaron todo y no encontraron nada que no sobreviviera un juicio. Zafaste. Esta vez.','hard');
         } else {
           e.imputado = true;
-          nota(log,'malo','They found what there was to find. There\'s an indictment, and your name is on it.','hard');
+          nota(log,'malo','Encontraron lo que había que encontrar. Hay una imputación, y tu nombre está en ella.','hard');
         }
       } },
-    { txt:'"Delete what you know how to delete." Now. Right now',
-      nota:'Obstruction: the only crime committed in front of the witnesses who came looking for it.',
+    { txt:'"Borra lo que sepas borrar." Ya. Ahora mismo',
+      nota:'Obstrucción: el único delito que se comete frente a los testigos que vinieron a buscarlo.',
       libro:'hard',
       ef:function(e,log){
         if (Math.random() < 0.25) {
           e.lupa = 70; e.zafo = true;
-          nota(log,'malo','Unbelievably, it worked. You live with that now.','hard');
+          nota(log,'malo','Increíblemente, funcionó. Ahora vives con eso.','hard');
         } else {
           e.imputado = true;
-          nota(log,'malo','They saw everything. Obstruction got added to the original charge. The end.','hard');
+          nota(log,'malo','Vieron todo. La obstrucción se sumó al cargo original. El final.','hard');
         }
       } }
   ]},
 
 { id:'whale', libro:'analytics', prio:98, quien:'ventas',
   cuando:function(e){ return e.sectorId === 'apuestas' && e.mesPuesto > 3; },
-  titulo:'The whale',
-  texto:'"Our top VIP lost a fortune this month. He says if we don\'t give half of it back, he tells a newspaper how we treated him: the bonuses, the 3 AM pushes, the limits we never enforced."',
+  titulo:'La ballena',
+  texto:'"Nuestro VIP número uno perdió una fortuna este mes. Dice que si no le devolvemos la mitad, le cuenta a un periódico cómo lo tratamos: los bonos, las notificaciones a las 3 AM, los límites que nunca aplicamos."',
   opciones:[
-    { txt:'Refund half and keep him playing',
-      nota:'You\'re paying him to stay the problem. Whales don\'t leave: they sink, and they make waves.',
+    { txt:'Devolverle la mitad y mantenerlo jugando',
+      nota:'Le estás pagando para que siga siendo el problema. Las ballenas no se van: se hunden, y hacen olas.',
       libro:'analytics',
       ef:function(e,log){ e.caja -= Math.max(40000, e.mrr * 0.8); e.lupa = Math.min(100, e.lupa + 8);
-        nota(log,'malo','You paid. He\'ll lose again, he\'ll threaten again, and now he knows it works.','analytics'); } },
-    { txt:'Ban him and apply the self-exclusion you never applied',
-      nota:'You lose your best account and the story he can tell gets worse... unless the controls are finally real.',
+        nota(log,'malo','Pagaste. Va a perder de nuevo, va a amenazar de nuevo, y ahora sabe que funciona.','analytics'); } },
+    { txt:'Vetarlo y aplicar la autoexclusión que nunca aplicaste',
+      nota:'Pierdes tu mejor cuenta y la historia que puede contar empeora... salvo que los controles por fin sean reales.',
       libro:'sre',
       ef:function(e,log){ e.mrr = Math.round(e.mrr * 0.93); e.marca += 4; e.cobertura.segur += 6;
-        nota(log,'bueno','Banned, by protocol and in writing. You lost revenue and bought a defense argument.','sre'); } },
-    { txt:'Let him talk to the paper. What are they going to print — that he gambled?',
-      nota:'They\'ll print exactly that, with screenshots of your 3 AM notifications. And the regulator reads that paper.',
+        nota(log,'bueno','Vetado, por protocolo y por escrito. Perdiste ingresos y compraste un argumento de defensa.','sre'); } },
+    { txt:'Que hable con el periódico. ¿Qué van a publicar — que apostó?',
+      nota:'Van a publicar exactamente eso, con capturas de tus notificaciones de las 3 AM. Y el regulador lee ese periódico.',
       libro:'hard',
       ef:function(e,log){ e.marca -= 15; e.lupa = Math.min(100, e.lupa + 20);
-        nota(log,'malo','The story ran, screenshots included. Heat climbs 20 and the headline will be read back to you at the next round.','hard'); } }
+        nota(log,'malo','La historia salió, capturas incluidas. La Lupa sube 20 y el titular te lo van a leer en voz alta en la próxima ronda.','hard'); } }
   ]},
 
 { id:'imperio', libro:'hard', prio:102, quien:'board',
   cuando:function(e){ return e.esFundador && e.mesPuesto > 12 && e.mrr > Motor.burnMensual(e); },
-  titulo:'How much is enough?',
-  texto:'"There\'s a fund ready to buy 15% of YOUR shares, from you, today, in cash. You can secure your entire life and stay founder. Or is this not about the money anymore?"',
+  titulo:'¿Cuánto es suficiente?',
+  texto:'"Hay un fondo listo para comprar el 15% de TUS acciones, a ti, hoy, en efectivo. Puedes asegurar tu vida entera y seguir de fundador. ¿O esto ya no es por la plata?"',
   opciones:[
-    { txt:'Sell the 15%. Family first',
-      nota:'The founder secondary is the most underrated tool in the industry: playing without the fear of going broke makes you better, not worse.',
+    { txt:'Vender el 15%. La familia primero',
+      nota:'La secundaria del fundador es la herramienta más subestimada de la industria: jugar sin el miedo a quebrar te hace mejor, no peor.',
       libro:'hard',
       ef:function(e,log){ var venta = e.valoracion * 0.15 * e.capTable.fund * 0.85;
         e.capTable.fund *= 0.85; e.ventaSecundaria = (e.ventaSecundaria||0) + venta;
-        nota(log,'bueno','You sold a piece of your own stake at a discount. Less company, zero fear. It shows in how you decide.','hard'); } },
-    { txt:'No. I\'m in the empire business',
-      nota:'That line is Walter White\'s, and it didn\'t end well for him. Some pull it off. You\'ll find out which one you are.',
+        nota(log,'bueno','Vendiste un pedazo de tu propia participación con descuento. Menos empresa, cero miedo. Se nota en cómo decides.','hard'); } },
+    { txt:'No. Estoy en el negocio de los imperios',
+      nota:'Esa frase es de Walter White, y a él no le terminó bien. Algunos lo logran. Vas a descubrir cuál de los dos eres.',
       libro:'hard',
       ef:function(e,log){ e.foco += 6; e.moral -= 3;
-        nota(log,'neutro','All or nothing, then. The board wrote the line down to quote it later, whoever wins.','hard'); } }
+        nota(log,'neutro','Todo o nada, entonces. El directorio anotó la frase para citarla después, gane quien gane.','hard'); } }
   ]}
 ];
 
-/* Dilemmas that can honestly repeat across jobs: they're situational,
-   not one-time lessons. Everything else gets heavily deprioritized once
-   you've lived it in a previous company. */
-/* per-career caps: conversational evergreens get a few appearances;
-   situational ones (incidents, the prosecutor, raids) stay unlimited */
+/* Dilemas que honestamente pueden repetirse entre puestos: son situacionales,
+   no lecciones de una sola vez. Todo lo demás se despriorizará fuerte una vez
+   que lo viviste en una empresa anterior. */
+/* topes por carrera: los evergreen conversacionales tienen pocas apariciones;
+   los situacionales (incidentes, el fiscal, allanamientos) siguen sin límite */
 var EVERGREEN = { okr:3, roadmap:2, discovery:3, errorbudget:99, escala:99, recruiter:2,
                   fiscal:99, allanamiento:99, ronda:99, caza:2, despidos:99 };
 
@@ -1517,8 +1516,9 @@ function eventoAplicable(e, c) {
     if (e.eventosVistos[ev.id]) continue;
     if (ev.sectores && ev.sectores.indexOf(e.sectorId) < 0) continue;
     var repes = vistosCarrera[ev.id] || 0;
-    /* one-time lessons never repeat; skinned ones may return once with a
-       different scene; situational (evergreen) ones can always come back */
+    /* las lecciones de una vez no se repiten; las que tienen variantes pueden
+       volver una vez con otra escena; las situacionales (evergreen) siempre
+       pueden volver */
     var tope = EVERGREEN[ev.id] || (ev.variantes ? 2 : 1);
     if (repes >= tope) continue;
     var ok = false;
@@ -1528,10 +1528,11 @@ function eventoAplicable(e, c) {
   if (!cand.length) return null;
   cand.sort(function(a,b){ return b.prio - a.prio; });
 
-  /* Dilemmas are OCCASIONAL, not a monthly tax. Critical ones (prio >= 100:
-     raids, error-budget freezes, the opening interview call) always fire.
-     The rest respect a cooldown: rare right after one, likely after a few
-     quiet months. Decisions land harder when they're not routine. */
+  /* Los dilemas son OCASIONALES, no un impuesto mensual. Los críticos
+     (prio >= 100: allanamientos, congelamientos por presupuesto de error, la
+     llamada inicial de entrevistas) siempre disparan. El resto respeta un
+     enfriamiento: raro justo después de uno, probable tras unos meses
+     tranquilos. Las decisiones pegan más fuerte cuando no son rutina. */
   var elegido = cand[0];
   if (elegido.ev.prio < 100) {
     var desde = e.mesPuesto - (e.ultimoDilema === undefined ? -9 : e.ultimoDilema);
@@ -1542,8 +1543,9 @@ function eventoAplicable(e, c) {
   return elegido.ev;
 }
 
-/* Company-flavored skins: same dilemma, different scene, so job 2 never
-   reads like job 1. Picked deterministically from the company id. */
+/* Variantes con sabor a empresa: el mismo dilema, otra escena, para que el
+   puesto 2 nunca se lea como el puesto 1. Se elige de forma determinista a
+   partir del id de la empresa. */
 function eventoTexto(ev, e) {
   if (!ev.variantes || !ev.variantes.length) return { titulo:ev.titulo, texto:ev.texto };
   var h = 0, s = (e.empresaId || '') + ev.id, i;

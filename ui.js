@@ -1,12 +1,12 @@
-/* Career mode interface. Strict ES5 for Safari 9.
-   A single delegated click handler. Motor/Carrera/Mundo never touch the DOM. */
+/* Interfaz del modo carrera. ES5 estricto para Safari 9.
+   Un solo manejador de clicks delegado. Motor/Carrera/Mundo nunca tocan el DOM. */
 (function () {
   'use strict';
 
   var CLAVE = 'fundadores.carrera.v2';
-  var C = null;        /* career */
-  var M = null;        /* world */
-  var J = null;        /* current job */
+  var C = null;        /* carrera */
+  var M = null;        /* mundo */
+  var J = null;        /* puesto actual */
   var R = Logros.cargar();
   var plan = null, evActual = null, notasEvento = [], ofertaSel = -1;
   var hudPrev = {};
@@ -22,7 +22,7 @@
     n = Math.round(n);
     var neg = n < 0; n = Math.abs(n);
     var s = String(n), out = '', c = 0, i;
-    for (i = s.length - 1; i >= 0; i--) { out = s.charAt(i) + out; if (++c % 3 === 0 && i > 0) out = ',' + out; }
+    for (i = s.length - 1; i >= 0; i--) { out = s.charAt(i) + out; if (++c % 3 === 0 && i > 0) out = '.' + out; }
     return (neg ? '-' : '') + out;
   }
   function money(n) {
@@ -38,20 +38,20 @@
   function ov(id, on) { $(id).className = 'ov' + (on ? ' on' : ''); }
   var escalaActual = 1;
 
-  /* ================= GUIDED FIRST MONTH =================
-     Not a lecture — a spotlight. The screen dims except the active zone,
-     the coach tells you what to DO, and action steps advance themselves. */
+  /* ================= PRIMER MES GUIADO =================
+     No es una clase — es un reflector. La pantalla se oscurece salvo la zona
+     activa, el coach te dice qué HACER, y los pasos de acción avanzan solos. */
   var TOUR = [
-    { el:'hud', texto:'This is the company\'s pulse. <b>Retention</b> is the number that decides everything: of 100 users this month, how many are still here next month.', accion:null },
-    { el:'mandato', texto:'You were hired to do <b>one thing</b> — this bar is your job. <b>Political capital</b> is your oxygen: it drains when you work off-mandate. At zero, you\'re out.', accion:null },
-    { el:'capa', texto:'Your team produces <b>points</b> every month. Points you place on stations produce evidence, less debt, reliability or reach. <b>Whatever you don\'t station goes on projects below.</b>', accion:'estacion',
-      textoAccion:'Try it: tap <b>+</b> on a station.' },
-    { el:'backlog', texto:'The core of the job: <b>tap a project</b> to place your remaining points on it. Read the cards first — <b>prob</b> (how much to trust the estimate), <b>impact</b> (payoff if true), <b>size</b> (S ~3 days... XL ~a month).', accion:'proyecto',
-      textoAccion:'Tap a project to add it.' },
-    { el:'backlog', texto:'Green is built, <b>amber is this month\'s push</b>. When a project says SHIPS THIS MONTH, it delivers now — and grants the company a permanent capability.', accion:null },
-    { el:'panel', texto:'The company\'s vitals. <b>Evidence</b> feeds every estimate you see. <b>Debt</b> eats capacity monthly. <b>Morale</b> multiplies everything. More panels unlock as you climb.', accion:null },
-    { el:'barra', texto:'That\'s the whole loop: place points, pick bets, close the month. The game won\'t stop your mistakes — <b>it bills them</b>, then tells you which book had it written down.', accion:'cerrar',
-      textoAccion:'Close your first month.' }
+    { el:'hud', texto:'Este es el pulso de la empresa. <b>Retención</b> es el número que lo decide todo: de 100 usuarios este mes, cuántos siguen aquí el próximo.', accion:null },
+    { el:'mandato', texto:'Te contrataron para hacer <b>una sola cosa</b> — esta barra es tu trabajo. El <b>capital político</b> es tu oxígeno: se gasta cuando trabajas fuera del mandato. En cero, estás fuera.', accion:null },
+    { el:'capa', texto:'Tu equipo produce <b>puntos</b> cada mes. Los puntos que pones en estaciones producen evidencia, menos deuda, fiabilidad o alcance. <b>Lo que no estaciones va a los proyectos de abajo.</b>', accion:'estacion',
+      textoAccion:'Pruébalo: toca <b>+</b> en una estación.' },
+    { el:'backlog', texto:'El corazón del trabajo: <b>toca un proyecto</b> para poner ahí tus puntos restantes. Lee las tarjetas primero — <b>prob</b> (cuánto confiar en la estimación), <b>impacto</b> (lo que paga si es cierta), <b>tamaño</b> (S ~3 días... XL ~un mes).', accion:'proyecto',
+      textoAccion:'Toca un proyecto para sumarlo.' },
+    { el:'backlog', texto:'Verde es lo construido, <b>ámbar es el empuje de este mes</b>. Cuando un proyecto dice SALE ESTE MES, entrega ahora — y le da a la empresa una capacidad permanente.', accion:null },
+    { el:'panel', texto:'Los signos vitales de la empresa. La <b>evidencia</b> alimenta cada estimación que ves. La <b>deuda</b> come capacidad cada mes. La <b>moral</b> lo multiplica todo. Más paneles se desbloquean al subir.', accion:null },
+    { el:'barra', texto:'Ese es todo el ciclo: coloca puntos, elige apuestas, cierra el mes. El juego no frena tus errores — <b>te los cobra</b>, y luego te dice qué libro lo tenía escrito.', accion:'cerrar',
+      textoAccion:'Cierra tu primer mes.' }
   ];
   var tourPaso = -1;
 
@@ -98,11 +98,11 @@
     coach.innerHTML = '<div class="cpaso">' + (tourPaso + 1) + ' / ' + TOUR.length + '</div>' +
       '<div class="ctx">' + paso.texto + '</div>' +
       (paso.accion ? '<div class="chace">' + paso.textoAccion + '</div>' :
-        '<div style="margin-top:10px"><span class="btn chico pri" data-act="tour-sigo">Got it</span></div>') +
-      '<div class="csalir" data-act="tour-salir">skip the tour</div>';
+        '<div style="margin-top:10px"><span class="btn chico pri" data-act="tour-sigo">Entendido</span></div>') +
+      '<div class="csalir" data-act="tour-salir">saltar el tour</div>';
   }
 
-  /* action steps advance when the player actually does the thing */
+  /* los pasos de acción avanzan cuando el jugador de verdad hace la cosa */
   function tourEvento(tipo) {
     if (!tourActivo()) return;
     var paso = TOUR[tourPaso];
@@ -112,56 +112,56 @@
     else tourRender();
   }
 
-  /* an Analyst has no stations yet: step 3 becomes informational */
+  /* un Analista aún no tiene estaciones: el paso 3 se vuelve informativo */
   function tourAjustarRol() {
     if (!J) return;
     var alguna = false, i;
     for (i = 0; i < ESTACIONES.length; i++) if (J.palancas.indexOf(ESTACIONES[i].req) >= 0) alguna = true;
     if (!alguna) {
       TOUR[2].accion = null;
-      TOUR[2].texto = 'Stations produce evidence, less debt, reliability or reach — <b>they unlock as you get promoted</b>. For now, your whole month goes on projects.';
+      TOUR[2].texto = 'Las estaciones producen evidencia, menos deuda, fiabilidad o alcance — <b>se desbloquean con cada ascenso</b>. Por ahora, todo tu mes va a proyectos.';
     }
   }
 
-  /* touch tooltips: tap a dotted label, get a one-line explainer */
+  /* tooltips táctiles: toca una etiqueta punteada y sale una explicación de una línea */
   var TIPS = {
-    ret:'Of every 100 users you have this month, how many are still around next month. The single most honest number in the game.',
-    runway:'Months of cash left at the current burn rate. Under 4 and everything else stops mattering.',
-    mrr:'Monthly recurring revenue. What customers actually pay, every month.',
-    pol:'Your credit with the organization. Spending your points off-mandate drains it - even when you are right. At zero, you are out.',
-    heat:'Regulator attention. Dirty shortcuts raise it. From 40: surprise inspections and fines. At 85: they show up with a warrant.',
-    compro:'Project slots: how many builds this company can keep open at once. Ship one to free its slot.',
-    prob:'How much to trust the estimate. Fills up as you talk to users; drops in hard-to-estimate companies.',
-    impact:'How much this moves things if the estimate is right. Bets marked with the stage arrow hit x1.3.',
-    evid:'How much you actually know about your users. It shapes every estimate you see - and it decays every month.',
-    debt:'Technical debt. Charges interest: eats a share of your team\'s capacity every single month.',
-    morale:'How the team is doing. Low morale quietly shrinks everything you try.',
-    fit:'How well you solve what this group needs. The bar IS the fit; conversion and retention follow it.',
-    load:'Users versus what the architecture can carry. Past ~85% the crash odds grow non-linearly.',
-    ebudget:'Error budget for the quarter. Incidents drain it; at zero the next month is a feature freeze.',
-    focus:'How aligned the org is on few things. Drifts down on its own; leadership choices push it up.',
-    usab:'How little users need to think. Multiplies the conversion of ALL traffic you bring.',
-    esf:'Size is time, for your team, this month: XS ~a day, S ~3 days, M ~a week, L ~2 weeks, XL ~the whole month.',
-    vec:'Expected impact per product metric (ACQ acquisition, ACT activation, RET retention, REV revenue, REL reliability). Negative chips are real side effects. The glowing chip is YOUR mandate\'s metric. Estimates sharpen with evidence.',
-    funnel:'The pirate funnel (AARRR): acquisition brings them, activation converts them, retention keeps them, revenue charges them, referral multiplies them. Profit = revenue minus burn.',
-    capfondeo:'Company capabilities compound from funded initiatives: they need raised capital behind them to grow, and quietly erode without it. Each one has a matching skill on your profile that accelerates its growth.',
-    cap_prod:'The company\'s own product/discovery muscle. Compounds discovery gains beyond what you do this month. Your Product skill accelerates it.',
-    cap_tec:'Engineering maturity that compounds over time: it slows debt growth and speeds up paydown. Your Tech skill accelerates it.',
-    cap_gtm:'How efficiently the org turns growth spend into reach, beyond this month\'s push. Your Business skill accelerates it.',
-    cap_gente:'How much team the org can carry before cognitive load and politics bite. Your Leadership skill accelerates it.',
-    cap_cap:'Fundraising savvy: it only grows when you close a round, and better terms follow on the next one.',
-    st_desc:'Points here become Evidence — talking to users, testing assumptions. More evidence sharpens every probability you see on your bets and reveals your real product-market fit.',
-    st_plat:'Points here pay down Technical debt. Debt eats a share of your team\'s capacity every month, so this is how you buy capacity back.',
-    st_fiab:'Points here raise Reliability (uptime and error budget). Skip it and incidents get more likely — and pricier — as your load grows.',
-    st_crec:'Points here buy Reach: paid spend and channels that bring more users in. It moves acquisition directly, at a cash cost.',
-    st_build:'Whatever you don\'t station goes here, on your backlog bets — this is what actually ships this month.'
+    ret:'De cada 100 usuarios que tienes este mes, cuántos siguen el mes que viene. El número más honesto de todo el juego.',
+    runway:'Meses de caja que quedan al ritmo de gasto actual. Bajo 4, todo lo demás deja de importar.',
+    mrr:'Ingreso recurrente mensual. Lo que los clientes pagan de verdad, cada mes.',
+    pol:'Tu crédito con la organización. Gastar tus puntos fuera del mandato lo drena - incluso cuando tienes razón. En cero, estás fuera.',
+    heat:'Atención del regulador. Los atajos sucios la suben. Desde 40: inspecciones sorpresa y multas. En 85: llegan con una orden judicial.',
+    compro:'Slots de proyecto: cuántas construcciones puede mantener abiertas esta empresa a la vez. Entrega una para liberar su slot.',
+    prob:'Cuánto confiar en la estimación. Se llena al hablar con usuarios; baja en empresas difíciles de estimar.',
+    impact:'Cuánto mueve las cosas si la estimación es correcta. Las apuestas marcadas con la flecha de etapa pegan x1,3.',
+    evid:'Cuánto sabes de verdad sobre tus usuarios. Da forma a cada estimación que ves - y decae cada mes.',
+    debt:'Deuda técnica. Cobra intereses: se come una parte de la capacidad de tu equipo todos los meses.',
+    morale:'Cómo está el equipo. La moral baja encoge en silencio todo lo que intentas.',
+    fit:'Qué tan bien resuelves lo que este grupo necesita. La barra ES el encaje; la conversión y la retención la siguen.',
+    load:'Usuarios versus lo que aguanta la arquitectura. Pasado ~85% las probabilidades de caída crecen de forma no lineal.',
+    ebudget:'Presupuesto de error del trimestre. Los incidentes lo drenan; en cero, el mes siguiente es un congelamiento de features.',
+    focus:'Qué tan alineada está la organización en pocas cosas. Baja sola con el tiempo; las decisiones de liderazgo la empujan hacia arriba.',
+    usab:'Qué tan poco necesitan pensar los usuarios. Multiplica la conversión de TODO el tráfico que traes.',
+    esf:'El tamaño es tiempo, para tu equipo, este mes: XS ~un día, S ~3 días, M ~una semana, L ~2 semanas, XL ~el mes entero.',
+    vec:'Impacto esperado por métrica de producto (ACQ adquisición, ACT activación, RET retención, REV ingresos, REL fiabilidad). Los chips negativos son efectos secundarios reales. El chip que brilla es la métrica de TU mandato. Las estimaciones se afinan con evidencia.',
+    funnel:'El embudo pirata (AARRR): adquisición los trae, activación los convierte, retención los mantiene, ingresos les cobra, referidos los multiplican. Ganancia = ingresos menos gasto.',
+    capfondeo:'Las capacidades de la empresa se componen desde iniciativas fondeadas: necesitan capital levantado detrás para crecer, y sin él se erosionan en silencio. Cada una tiene una habilidad gemela en tu perfil que acelera su crecimiento.',
+    cap_prod:'El músculo propio de producto/discovery de la empresa. Compone las ganancias de descubrimiento más allá de lo que hagas este mes. Tu habilidad de Producto lo acelera.',
+    cap_tec:'Madurez de ingeniería que se compone con el tiempo: frena el crecimiento de la deuda y acelera su pago. Tu habilidad de Tecnología la acelera.',
+    cap_gtm:'Qué tan eficiente es la organización convirtiendo gasto de crecimiento en alcance, más allá del empuje de este mes. Tu habilidad de Negocio la acelera.',
+    cap_gente:'Cuánto equipo puede cargar la organización antes de que muerdan la carga cognitiva y la política. Tu habilidad de Liderazgo la acelera.',
+    cap_cap:'Oficio para levantar capital: solo crece cuando cierras una ronda, y los mejores términos llegan en la siguiente.',
+    st_desc:'Los puntos aquí se vuelven Evidencia — hablar con usuarios, probar supuestos. Más evidencia afina cada probabilidad que ves en tus apuestas y revela tu verdadero encaje producto-mercado.',
+    st_plat:'Los puntos aquí pagan Deuda técnica. La deuda se come una parte de la capacidad de tu equipo cada mes, así que así recompras capacidad.',
+    st_fiab:'Los puntos aquí suben la Fiabilidad (uptime y presupuesto de error). Sáltala y los incidentes se vuelven más probables — y más caros — a medida que crece tu carga.',
+    st_crec:'Los puntos aquí compran Alcance: gasto pagado y canales que traen más usuarios. Mueve la adquisición directamente, a costo de caja.',
+    st_build:'Lo que no estacionas va aquí, a tus apuestas del backlog — esto es lo que de verdad sale este mes.'
   };
   var tipTimer = null;
   function mostrarTip(clave) {
     var t = TIPS[clave];
     if (!t) return;
     var el = $('tipbar');
-    el.innerHTML = '<div class="tipt">What is this?</div>' + esc(t);
+    el.innerHTML = '<div class="tipt">¿Qué es esto?</div>' + esc(t);
     el.className = 'on';
     if (tipTimer) clearTimeout(tipTimer);
     tipTimer = setTimeout(function () { el.className = ''; }, 5000);
@@ -188,26 +188,26 @@
       if (!s) return false;
       var o = JSON.parse(s);
       C = o.c; M = o.m; J = o.j;
-      if (J) Motor.capacidad(J); /* migrates older saves: seeds J.capacidades/capFondeo if missing */
+      if (J) Motor.capacidad(J); /* migra partidas viejas: siembra J.capacidades/capFondeo si faltan */
       return !!(C && M);
     } catch (e) { return false; }
   }
 
-  /* ================= START ================= */
+  /* ================= INICIO ================= */
 
-  /* Optional personalized start: paste a LinkedIn URL and/or your title.
-     The URL gives us your name (the /in/ slug); the title text maps to a
-     rung on the product ladder. Every product position we know lands
-     somewhere on the 0-7 scale. Starting from zero is always an option. */
+  /* Inicio personalizado opcional: pega una URL de LinkedIn y/o tu cargo.
+     La URL nos da tu nombre (el slug /in/); el texto del cargo mapea a un
+     escalón de la escalera de producto. Cada posición de producto que
+     conocemos cae en la escala 0-7. Empezar de cero siempre es una opción. */
   var TITULOS = [
-    { re:/(co-?founder|founder|ceo|chief executive)/i, n:7, rol:'Founder' },
+    { re:/(co-?founder|founder|ceo|chief executive|fundador|fundadora|cofundador)/i, n:7, rol:'Fundador/a' },
     { re:/(cpo|chief product)/i, n:6, rol:'CPO' },
-    { re:/(vp|vice ?president).*(product)|product.*(vp|vice ?president)/i, n:5, rol:'VP of Product' },
-    { re:/(head of product|director.*product|product.*director)/i, n:4, rol:'Director of Product' },
-    { re:/(group product manager|gpm|principal product|product lead|lead product manager|staff product)/i, n:3, rol:'Group PM' },
-    { re:/(senior|sr\.?)\s*(product manager|pm)/i, n:2, rol:'Senior PM' },
-    { re:/(product manager|product owner|\bpm\b)/i, n:1, rol:'Product Manager' },
-    { re:/(associate product|apm|product analyst|analista|intern.*product|junior.*product|product designer|ux|business analyst|data analyst)/i, n:0, rol:'Product Analyst' }
+    { re:/(vp|vice ?president|vicepresidente).*(product|producto)|(product|producto).*(vp|vice ?president|vicepresidente)/i, n:5, rol:'VP de Producto' },
+    { re:/(head of product|director.*product|product.*director|director[a]? de producto|jefe de producto)/i, n:4, rol:'Director de Producto' },
+    { re:/(group product manager|gpm|principal product|product lead|lead product manager|staff product|l[ií]der de producto)/i, n:3, rol:'Group PM' },
+    { re:/(senior|sr\.?)\s*(product manager|pm|gerente de producto)/i, n:2, rol:'Senior PM' },
+    { re:/(product manager|product owner|\bpm\b|gerente de producto|due[ñn][oa] de producto)/i, n:1, rol:'Product Manager' },
+    { re:/(associate product|apm|product analyst|analista|intern.*product|junior.*product|product designer|ux|business analyst|data analyst|dise[ñn]ador de producto|practicante)/i, n:0, rol:'Analista de Producto' }
   ];
 
   function parsearPerfil(texto) {
@@ -224,20 +224,20 @@
     for (var k = 0; k < TITULOS.length; k++) {
       if (TITULOS[k].re.test(texto)) { out.nivel = TITULOS[k].n; out.rol = TITULOS[k].rol; break; }
     }
-    if (/design|ux|\bui\b/i.test(texto)) out.bg = 'design';
-    else if (/engineer|developer|cto|software|swe/i.test(texto)) out.bg = 'eng';
-    else if (/sales|marketing|mba|business|growth|commercial|finance/i.test(texto)) out.bg = 'biz';
-    else if (/data|analytics|scientist/i.test(texto)) out.bg = 'data';
+    if (/design|ux|\bui\b|dise[ñn]/i.test(texto)) out.bg = 'design';
+    else if (/engineer|developer|cto|software|swe|ingenier|desarrollador/i.test(texto)) out.bg = 'eng';
+    else if (/sales|marketing|mba|business|growth|commercial|finance|ventas|negocio|comercial|finanzas/i.test(texto)) out.bg = 'biz';
+    else if (/data|analytics|scientist|datos|anal[ií]tica/i.test(texto)) out.bg = 'data';
     else if (out.nivel !== null) out.bg = 'product';
     return out;
   }
 
-  var inicioSel = { nivel:0, rol:'Product Analyst', nombre:null, deLinkedin:null, buscando:false };
+  var inicioSel = { nivel:0, rol:'Analista de Producto', nombre:null, deLinkedin:null, buscando:false };
 
-  /* On the public deploy, the server can read the PUBLIC LinkedIn page and
-     hand us name + headline (/api/perfil). On the iPad's LAN server that
-     endpoint doesn't exist: the XHR fails and we quietly keep the local
-     slug + title parsing. Best-effort by design. */
+  /* En el deploy público, el servidor puede leer la página PÚBLICA de LinkedIn
+     y darnos nombre + titular (/api/perfil). En el servidor LAN del iPad ese
+     endpoint no existe: el XHR falla y nos quedamos, en silencio, con el parseo
+     local de slug + cargo. Mejor esfuerzo por diseño. */
   function consultarLinkedin(url) {
     if (!window.XMLHttpRequest || inicioSel.buscando) return;
     inicioSel.buscando = true;
@@ -256,7 +256,7 @@
           var p = parsearPerfil(r.titular);
           if (p.nivel !== null) { inicioSel.nivel = p.nivel; inicioSel.rol = p.rol; }
         } else {
-          inicioSel.deLinkedin = 'profile found';
+          inicioSel.deLinkedin = 'perfil encontrado';
         }
       }
       var pantalla = document.getElementById('p-inicio');
@@ -265,10 +265,10 @@
     try { x.send(null); } catch (e2) { inicioSel.buscando = false; }
   }
 
-  /* one layer of the landing explainer: indent = nesting depth */
-  /* one step of "how it works": same numbered-line pattern as the in-game
-     intro ("Four things. That's it.") — proven readable, so reused as-is
-     instead of a new one-off layout. */
+  /* una capa del explicador de la portada: indentación = profundidad */
+  /* un paso de "cómo funciona": el mismo patrón de líneas numeradas que la
+     intro del juego ("Cuatro cosas. Nada más.") — probadamente legible, así
+     que se reusa tal cual en vez de inventar un layout nuevo. */
   function pasoHtml(n, col, tit, txt) {
     return '<div class="linea"><div class="ic" style="color:' + col + '">' + n + '</div>' +
       '<div class="tx"><b>' + tit + '.</b> ' + txt + '</div></div>';
@@ -283,10 +283,10 @@
     return h;
   }
 
-  /* The hero visual: a skyline that grows with the ladder, from a one-desk
-     garage to a tower with your own flag on top. Every building is a big,
-     tappable hit target wired to the same data-rol the role chips use, so
-     picking a rung and reading the story are the same motion. */
+  /* El visual héroe: un skyline que crece con la escalera, de un garaje con
+     un escritorio a una torre con tu propia bandera arriba. Cada edificio es
+     un blanco táctil grande cableado al mismo data-rol que usan los chips de
+     rol, así que elegir escalón y leer la historia son el mismo gesto. */
   function skylineSvg(sel) {
     var n = ESCALAFON.length, vw = 320, vh = 210, baseY = 178, topPad = 34;
     var colW = vw / n, barW = 24, maxH = baseY - topPad, minH = 28, i;
@@ -349,65 +349,65 @@
     var hay = false;
     try { hay = !!localStorage.getItem(CLAVE); } catch (e) {}
 
-    /* ---- hero: title, skyline, pick a rung, go. always in view, never scrolls ---- */
+    /* ---- héroe: título, skyline, elige escalón, arranca. siempre a la vista, nunca hace scroll ---- */
     var h = '<div class="landhero"><div class="landtop">';
     h += '<div class="landleft">';
     h += '<div class="h1">Founder Mode</div>' +
-      '<div class="hook" style="margin-top:8px;max-width:520px">Can you make CPO without breaking the ' +
-      'product or burning out your team?</div>' +
-      '<div class="pq mut" style="margin-top:6px;max-width:500px">Make real calls. Survive CEOs, crises ' +
-      'and competitors. Then see how your career stacks up against everyone else who played.</div>';
-    h += '<div class="rot" style="margin:16px 0 6px 0">Start as</div><div>' + rungChipsHtml() + '</div>';
+      '<div class="hook" style="margin-top:8px;max-width:520px">¿Puedes llegar a CPO sin romper el ' +
+      'producto ni quemar a tu equipo?</div>' +
+      '<div class="pq mut" style="margin-top:6px;max-width:500px">Toma decisiones reales. Sobrevive a CEOs, crisis ' +
+      'y competidores. Después mira cómo queda tu carrera contra todos los que jugaron.</div>';
+    h += '<div class="rot" style="margin:16px 0 6px 0">Empieza como</div><div>' + rungChipsHtml() + '</div>';
     h += '<div class="pq mut" style="margin-top:8px" id="perfil-eco">' +
-      (inicioSel.buscando ? '<span class="azul">Reading your LinkedIn profile…</span> · ' : '') +
-      (inicioSel.deLinkedin ? '<span class="verde">From LinkedIn:</span> ' + esc(inicioSel.deLinkedin) + ' · ' : '') +
-      (inicioSel.nombre ? 'Starting as <b>' + esc(inicioSel.nombre) + '</b> · ' : '') +
-      'You start the career as <b>' + esc(nivelPorN(inicioSel.nivel).rol) + '</b>' +
-      (inicioSel.nivel > 0 ? ' — your real rung. Or tap APM to run the whole ladder.' : ' — the full climb, from the bottom.') +
+      (inicioSel.buscando ? '<span class="azul">Leyendo tu perfil de LinkedIn…</span> · ' : '') +
+      (inicioSel.deLinkedin ? '<span class="verde">De LinkedIn:</span> ' + esc(inicioSel.deLinkedin) + ' · ' : '') +
+      (inicioSel.nombre ? 'Juegas como <b>' + esc(inicioSel.nombre) + '</b> · ' : '') +
+      'Empiezas la carrera como <b>' + esc(nivelPorN(inicioSel.nivel).rol) + '</b>' +
+      (inicioSel.nivel > 0 ? ' — tu escalón real. O toca APM para correr toda la escalera.' : ' — la escalada completa, desde abajo.') +
       '</div>';
     h += '<div style="margin-top:16px">' +
-      '<span class="btn pri xl" data-act="nueva">New career</span>' +
-      (hay ? ' <span class="btn" data-act="continuar">Continue</span>' : '') + '</div>';
+      '<span class="btn pri xl" data-act="nueva">Nueva carrera</span>' +
+      (hay ? ' <span class="btn" data-act="continuar">Continuar</span>' : '') + '</div>';
     h += '<div class="pq mut" style="margin-top:10px">' +
-      '<span class="linklike" data-act="semanal">Weekly challenge</span>' +
+      '<span class="linklike" data-act="semanal">Desafío semanal</span>' +
       '<span class="mut"> · </span>' +
-      '<span class="linklike" data-act="biblio">Library</span></div>';
+      '<span class="linklike" data-act="biblio">Biblioteca</span></div>';
     h += '</div>'; /* landleft */
 
     h += '<div class="landright"><div class="skycard">' + skylineSvg(inicioSel.nivel) +
-      '<div class="skyhint">Tap a building to pick your rung</div></div></div>';
+      '<div class="skyhint">Toca un edificio para elegir tu escalón</div></div></div>';
     h += '</div></div>'; /* landtop, landhero */
 
-    /* ---- everything else: depth, personalization, the hall of fame. scrolls on its own ---- */
+    /* ---- todo lo demás: profundidad, personalización, el salón de la fama. hace scroll por su cuenta ---- */
     h += '<div class="landmore scroll"><div class="landchevron">⌄</div>';
     h += '<div class="landcols">';
 
     h += '<div class="lcL">';
-    h += '<div class="h2">How it works</div>' +
-      '<div class="pq mut" style="margin-bottom:6px">Five things happening at once, every month.</div>';
-    h += pasoHtml(1, '#5aa9f0', 'The month, your turn',
-      'Place the team\'s points on stations — Discover, Platform, Reliability, Growth — or on ' +
-      'backlog bets: probability × impact ÷ effort.');
-    h += pasoHtml(2, '#35c46a', 'The job, one mandate',
-      'Move one number by a deadline. The stage — pre-PMF, validating, scaling — decides what pays; ' +
-      'political capital, how far off-script you can go.');
-    h += pasoHtml(3, '#e8a33d', 'The career, the ladder',
-      'Eight rungs, Product Analyst to Founder. Rungs unlock levers, reputation opens tables, and ' +
-      'equity — worth something or nothing — makes the fortune.');
-    h += pasoHtml(4, '#a98ff0', 'The world, the board',
-      'Eras rewrite the rules without warning: bubbles, winters, regulators. Sectors heat and freeze. ' +
-      'A rival climbs the same ladder, on the same clock.');
-    h += pasoHtml(5, '#7fa8d8', 'The library, the receipts',
-      LIBROS.length + ' real product books power the rules. Every mistake gets charged first — ' +
-      'then the exact card that predicted it opens.');
+    h += '<div class="h2">Cómo funciona</div>' +
+      '<div class="pq mut" style="margin-bottom:6px">Cinco cosas pasando a la vez, cada mes.</div>';
+    h += pasoHtml(1, '#5aa9f0', 'El mes, tu turno',
+      'Coloca los puntos del equipo en estaciones — Descubrir, Plataforma, Fiabilidad, Crecimiento — o en ' +
+      'apuestas del backlog: probabilidad × impacto ÷ esfuerzo.');
+    h += pasoHtml(2, '#35c46a', 'El puesto, un mandato',
+      'Mueve un número antes de una fecha límite. La etapa — pre-PMF, validando, escalando — decide qué paga; ' +
+      'el capital político, qué tanto puedes salirte del guion.');
+    h += pasoHtml(3, '#e8a33d', 'La carrera, la escalera',
+      'Ocho escalones, de Analista de Producto a Fundador. Los escalones desbloquean palancas, la reputación abre mesas, y ' +
+      'el equity — que vale algo o nada — hace la fortuna.');
+    h += pasoHtml(4, '#a98ff0', 'El mundo, el tablero',
+      'Las eras reescriben las reglas sin aviso: burbujas, inviernos, reguladores. Los sectores se calientan y se congelan. ' +
+      'Un rival sube la misma escalera, con el mismo reloj.');
+    h += pasoHtml(5, '#7fa8d8', 'La biblioteca, los recibos',
+      LIBROS.length + ' libros reales de producto alimentan las reglas. Cada error se cobra primero — ' +
+      'y después se abre la tarjeta exacta que lo predijo.');
 
-    h += '<div class="caja2" style="margin-top:14px"><div class="rot" style="margin-bottom:5px">Who are you? <span class="mut" style="text-transform:none;letter-spacing:0">(optional — you can always start from zero)</span></div>' +
-      '<input type="text" id="perfil-in" placeholder="Paste your LinkedIn URL or your current title..." ' +
+    h += '<div class="caja2" style="margin-top:14px"><div class="rot" style="margin-bottom:5px">¿Quién eres? <span class="mut" style="text-transform:none;letter-spacing:0">(opcional — siempre puedes empezar de cero)</span></div>' +
+      '<input type="text" id="perfil-in" placeholder="Pega tu URL de LinkedIn o tu cargo actual..." ' +
       'value="' + esc(inicioSel.texto || '') + '">' +
-      '<input type="text" id="nombre-in" placeholder="Your name (or we\'ll take it from the URL)" ' +
+      '<input type="text" id="nombre-in" placeholder="Tu nombre (o lo tomamos de la URL)" ' +
       'style="margin-top:7px" value="' + esc(inicioSel.nombreManual ? (inicioSel.nombre || '') : '') + '">' +
-      '<div class="rot" style="margin:9px 0 4px 0">Where do you come from?</div><div>' + (function () {
-        var BGS = [['product','Product'],['design','Design'],['eng','Engineering'],['biz','Business'],['data','Data']];
+      '<div class="rot" style="margin:9px 0 4px 0">¿De dónde vienes?</div><div>' + (function () {
+        var BGS = [['product','Producto'],['design','Diseño'],['eng','Ingeniería'],['biz','Negocio'],['data','Datos']];
         var hb = '';
         for (var bi = 0; bi < BGS.length; bi++) {
           hb += '<span class="rolchip' + ((inicioSel.bg || 'product') === BGS[bi][0] ? ' sel' : '') + '" data-bg="' + BGS[bi][0] + '">' + BGS[bi][1] + '</span>';
@@ -416,36 +416,36 @@
       })() + '</div></div>';
 
     var fac = Ranking.faccion();
-    h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:5px">Pick a side</div>' +
-      '<span class="rolchip' + (fac === 'growth' ? ' sel' : '') + '" data-fac="growth">Growth Legion</span>' +
-      '<span class="rolchip' + (fac === 'craft' ? ' sel' : '') + '" data-fac="craft">Craft Guild</span>' +
-      '<div class="pq mut" style="margin-top:6px">Every finished career — yours included — adds its delivered ' +
-      'mandates to your faction\'s total on the public ranking.</div></div>';
+    h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:5px">Elige un bando</div>' +
+      '<span class="rolchip' + (fac === 'growth' ? ' sel' : '') + '" data-fac="growth">Legión del Crecimiento</span>' +
+      '<span class="rolchip' + (fac === 'craft' ? ' sel' : '') + '" data-fac="craft">Gremio del Oficio</span>' +
+      '<div class="pq mut" style="margin-top:6px">Cada carrera terminada — la tuya incluida — suma sus mandatos ' +
+      'cumplidos al total de tu facción en el ranking público.</div></div>';
 
-    h += '<div class="pq mut" style="margin-top:10px;max-width:540px">Weekly challenge: everyone plays the same ' +
-      'world this week (' + esc(Ranking.semana()) + ') — same eras, same storms, same rival timing. One public ' +
-      'table, seven days, no edge but the calls you make.</div>';
+    h += '<div class="pq mut" style="margin-top:10px;max-width:540px">Desafío semanal: todos juegan el mismo ' +
+      'mundo esta semana (' + esc(Ranking.semana()) + ') — mismas eras, mismas tormentas, mismo timing del rival. Una tabla ' +
+      'pública, siete días, sin más ventaja que tus decisiones.</div>';
     h += '</div>'; /* lcL */
 
     h += '<div class="lcR">';
-    h += '<div class="h2">Hall of Fame</div>' +
-      '<div class="pq mut" style="margin-bottom:6px">Your best runs, everyone\'s achievements, one public leaderboard.</div>';
+    h += '<div class="h2">Salón de la Fama</div>' +
+      '<div class="pq mut" style="margin-bottom:6px">Tus mejores partidas, los logros de todos, una tabla pública.</div>';
 
-    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Your records</div>';
+    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Tus récords</div>';
     if (R.records.carreras > 0) {
-      h += '<div class="req"><span class="mut">Careers played</span> <b class="num"> ' + R.records.carreras + '</b></div>' +
-           '<div class="req"><span class="mut">Best net worth</span> <b class="num verde"> ' + money(R.records.patrimonio) + '</b></div>' +
-           '<div class="req"><span class="mut">Best role reached</span> <b> ' + esc(nivelPorN(R.records.nivel).rol) + '</b></div>';
+      h += '<div class="req"><span class="mut">Carreras jugadas</span> <b class="num"> ' + R.records.carreras + '</b></div>' +
+           '<div class="req"><span class="mut">Mejor patrimonio</span> <b class="num verde"> ' + money(R.records.patrimonio) + '</b></div>' +
+           '<div class="req"><span class="mut">Mejor rol alcanzado</span> <b> ' + esc(nivelPorN(R.records.nivel).rol) + '</b></div>';
       var i;
       for (i = 0; i < Math.min(3, R.historia.length); i++) {
         var hh = R.historia[i];
         h += '<div class="req mut" style="font-size:12px">· ' + esc(hh.nombre) + ' — ' + money(hh.patrimonio) +
-             ', ' + esc(hh.nivel) + ' · rival: ' + esc(hh.rival) + ' (level ' + hh.rivalNivel + ')</div>';
+             ', ' + esc(hh.nivel) + ' · rival: ' + esc(hh.rival) + ' (nivel ' + hh.rivalNivel + ')</div>';
       }
     } else {
-      h += '<div class="pq mut">Nobody\'s played yet. Records live here.</div>';
+      h += '<div class="pq mut">Nadie ha jugado todavía. Los récords viven aquí.</div>';
     }
-    h += '<div class="pq" style="margin-top:8px"><span class="linklike" data-act="ranking">See the public ranking →</span></div>';
+    h += '<div class="pq" style="margin-top:8px"><span class="linklike" data-act="ranking">Ver el ranking público →</span></div>';
     h += '</div>';
 
     var items = '', k, n = 0;
@@ -455,8 +455,8 @@
       items += '<div class="req ' + (ok ? 'verde' : 'mut') + '" style="' + (ok ? '' : 'opacity:0.45') + '">' +
            (ok ? '★ ' : '☆ ') + esc(d.n) + ' <span class="mut" style="font-size:11px">— ' + esc(d.d) + '</span></div>';
     }
-    h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:6px">Achievements · ' +
-      n + ' of ' + Logros.DEFS.length + '</div>' + items + '</div>';
+    h += '<div class="caja2" style="margin-top:10px"><div class="rot" style="margin-bottom:6px">Logros · ' +
+      n + ' de ' + Logros.DEFS.length + '</div>' + items + '</div>';
     h += '</div>'; /* lcR */
 
     h += '</div>'; /* landcols */
@@ -465,98 +465,107 @@
     $('p-inicio').innerHTML = h;
   }
 
-  /* ================= OFFERS ================= */
+  /* ================= OFERTAS ================= */
 
   function renderOfertas(cierreExtra) {
     var era = Mundo.era(M), ofs = C.ofertas, i;
-    var h = '<div class="rot">Month ' + M.mes + ' of your career · ' + esc(nivelPorN(C.nivel).rol) +
-            ' · reputation ' + Math.round(C.reputacion) +
-            (C.semana ? ' · <span class="lila">weekly challenge ' + esc(C.semana) + '</span>' : '') + '</div>' +
-            '<div class="h1" style="margin-top:2px">On the table</div>';
+    var h = '<div class="rot">Mes ' + M.mes + ' de tu carrera · ' + esc(nivelPorN(C.nivel).rol) +
+            ' · reputación ' + Math.round(C.reputacion) +
+            (C.semana ? ' · <span class="lila">desafío semanal ' + esc(C.semana) + '</span>' : '') + '</div>' +
+            '<div class="h1" style="margin-top:2px">Sobre la mesa</div>';
 
     h += '<div class="era-banner"><span class="nombre-era">' + esc(era.nombre) + '</span>' +
          '<div class="pq mut">' + esc(era.desc) + '</div>' +
          (M.noticias.length ? '<div class="pq" style="margin-top:5px;color:#767f8d">◈ ' + esc(M.noticias[0].txt) + '</div>' : '') +
          '</div>';
 
+    /* Age track: la progresión del jugador (ESCALAFON/C.nivel), separada de
+       la Era del mundo de arriba. Un pip por nivel, relleno hasta donde llegaste. */
+    var pips = '', sig2 = siguienteDesbloqueo(C.nivel);
+    for (i = 0; i < ESCALAFON.length; i++) pips += '<i class="' + (i <= C.nivel ? 'on' : '') + '"></i>';
+    h += '<div class="age-banner"><span class="rot">Edad · <b>' + esc(ESCALAFON[C.nivel].rol) + '</b></span>' +
+         '<span class="agepips">' + pips + '</span>' +
+         (sig2 ? '<div class="pq mut" style="margin-top:4px">La próxima Edad desbloquea <b>' + esc(NOMBRE_PALANCA[sig2.palanca] || sig2.palanca) + '</b></div>' : '') +
+         '</div>';
+
     h += '<div class="tarjetas">';
     for (i = 0; i < ofs.length; i++) {
       var o = ofs[i];
-      var calor = o.calor > 0 ? '<span class="pill hot">hot sector</span>' :
-                  o.calor < 0 ? '<span class="pill frio">cold sector</span>' : '';
+      var calor = o.calor > 0 ? '<span class="pill hot">sector caliente</span>' :
+                  o.calor < 0 ? '<span class="pill frio">sector frío</span>' : '';
       h += '<div class="oferta' + (ofertaSel === i ? ' sel' : '') + '" data-oferta="' + i + '">' +
         '<div class="cab ' + (o.fundar ? 'lila' : 'azul') + '">' + esc(o.sectorCorto) + ' · ' + esc(o.etapaNombre) + calor + '</div>' +
         '<h3>' + esc(o.nombre) + '</h3>' +
         '<div class="rolof">' + esc(o.rol) + ' · control ' + Math.round(o.mando * 100) + '%</div>' +
         '<div class="desc">' + esc(o.pitch) + '<br><br><i>' + esc(o.eje) + '</i></div>' +
-        '<div class="mandato"><div class="rot">Contract · ' + o.meses + ' months</div><span class="mut">The mandate is revealed on day one — they never tell you the real job in the interview.</span></div>' +
-        '<div class="fila">Salary <b>' + money(o.sueldo) + '/yr</b> · Equity <b>' +
-          (o.fundar ? 'yours' : o.equity + '%') + '</b></div>' +
-        '<div class="fila">Risk <b>' + esc(o.riesgoTxt) + '</b> · Project slots <b>' + (o.slots || 3) + '</b></div>' +
-        '<div class="fila">Bets: <b>' + (o.perfil === 'grandes' ? 'few and big' : o.perfil === 'chicas' ? 'many and small' : o.perfil === 'incierto' ? 'hard to estimate' : 'balanced portfolio') + '</b></div>' +
+        '<div class="mandato"><div class="rot">Contrato · ' + o.meses + ' meses</div><span class="mut">El mandato se revela el día uno — el trabajo real nunca te lo dicen en la entrevista.</span></div>' +
+        '<div class="fila">Sueldo <b>' + money(o.sueldo) + '/año</b> · Equity <b>' +
+          (o.fundar ? 'tuyo' : o.equity + '%') + '</b></div>' +
+        '<div class="fila">Riesgo <b>' + esc(o.riesgoTxt) + '</b> · Slots de proyecto <b>' + (o.slots || 3) + '</b></div>' +
+        '<div class="fila">Apuestas: <b>' + (o.perfil === 'grandes' ? 'pocas y grandes' : o.perfil === 'chicas' ? 'muchas y chicas' : o.perfil === 'incierto' ? 'difíciles de estimar' : 'cartera pareja') + '</b></div>' +
         '</div>';
     }
     h += '</div>';
 
     h += '<div style="margin-top:18px">' +
-      '<span class="btn pri' + (ofertaSel >= 0 ? '' : ' off') + '" data-act="aceptar">Take the job</span> ' +
-      '<span class="btn sec" data-act="biblio">Library ' + Object.keys(C.codex).length + '/' + LIBROS.length + '</span> ' +
-      '<span class="btn" data-act="volver-inicio">Back</span></div>';
+      '<span class="btn pri' + (ofertaSel >= 0 ? '' : ' off') + '" data-act="aceptar">Aceptar el puesto</span> ' +
+      '<span class="btn sec" data-act="biblio">Biblioteca ' + Object.keys(C.codex).length + '/' + LIBROS.length + '</span> ' +
+      '<span class="btn" data-act="volver-inicio">Volver</span></div>';
     $('p-ofertas').innerHTML = h;
     ir('p-ofertas');
   }
 
-  /* ================= BRIEFING (day one) ================= */
+  /* ================= BRIEFING (día uno) ================= */
 
   function faseClase(fc) {
-    return fc === 'PRE-PMF' ? 'ambar' : fc === 'VALIDATING PMF' ? 'azul' : 'verde';
+    return fc === 'PRE-PMF' ? 'ambar' : fc === 'VALIDANDO PMF' ? 'azul' : 'verde';
   }
   function faseIcono(fc) {
-    return fc === 'PRE-PMF' ? 'validating' : fc === 'VALIDATING PMF' ? 'pmf' : 'scaling';
+    return fc === 'PRE-PMF' ? 'validating' : fc === 'VALIDANDO PMF' ? 'pmf' : 'scaling';
   }
 
   function indBarra(nombre, valor, objetivo, mayorMejor) {
     var pasa = mayorMejor ? valor >= objetivo : valor <= objetivo;
     var cls = pasa ? 'ok' : 'no';
-    var estado = pasa ? 'On track' : 'Not there yet';
-    var meta = mayorMejor ? ('needs ' + Math.round(objetivo) + '%') : ('must stay under ' + Math.round(objetivo) + '%');
+    var estado = pasa ? 'En camino' : 'Todavía no';
+    var meta = mayorMejor ? ('necesita ' + Math.round(objetivo) + '%') : ('debe quedar bajo ' + Math.round(objetivo) + '%');
     return '<div class="indicador">' +
       '<div class="ind-cab"><span class="ind-nom">' + esc(nombre) + '</span>' +
       '<span class="ind-badge ' + cls + '">' + estado + '</span></div>' +
       '<div class="ind-track"><i class="ind-fill ' + cls + '" style="width:' + Math.max(0, Math.min(100, valor)) + '%"></i>' +
       '<i class="ind-obj" style="left:' + Math.max(0, Math.min(100, objetivo)) + '%"></i></div>' +
-      '<div class="ind-meta"><b class="' + cls + '">' + Math.round(valor) + '%</b> now · ' + meta + ' to clear this stage</div></div>';
+      '<div class="ind-meta"><b class="' + cls + '">' + Math.round(valor) + '%</b> ahora · ' + meta + ' para superar esta etapa</div></div>';
   }
 
   function mostrarBrief() {
     var era = Mundo.era(M);
-    var calorTxt = J.calor > 0 ? '<span class="hot2">hot</span>' :
-                   J.calor < 0 ? '<span class="frio2">cold</span>' : 'steady';
+    var calorTxt = J.calor > 0 ? '<span class="hot2">caliente</span>' :
+                   J.calor < 0 ? '<span class="frio2">frío</span>' : 'estable';
     var m2 = mandatoPorId(J.mandatoId);
     var fclase = faseClase(J.faseCorta);
-    var h = '<div class="mision-cinta ' + fclase + '"><span class="raya"></span><b>Mission briefing</b></div>' +
-      '<div class="rot">' + esc(J.sector) + ' · ' + esc(ETAPAS[J.etapa].nombre) + ' · your day one as ' + esc(J.rol) + '</div>' +
+    var h = '<div class="mision-cinta ' + fclase + '"><span class="raya"></span><b>Briefing de misión</b></div>' +
+      '<div class="rot">' + esc(J.sector) + ' · ' + esc(ETAPAS[J.etapa].nombre) + ' · tu día uno como ' + esc(J.rol) + '</div>' +
       '<div class="h1">' + esc(J.empresa) + '</div>';
 
-    var calorSit = J.calor > 0 ? 'a hot sector everyone is chasing' : J.calor < 0 ? 'a cold sector nobody wants to fund' : 'a sector that isn\'t moving either way';
-    h += '<div class="situacion ' + fclase + '">You\'re parachuted in as <b>' + esc(J.rol) + '</b> at <b>' + esc(J.empresa) +
-      '</b>: ' + mil(Motor.usuarios(J)) + ' users, a team of ' + (J.ing + J.prod + J.gtm) + ', sitting in ' + calorSit +
-      ' during ' + esc(era.nombre) + '. You have <b>' + J.meses + ' months</b> on the clock. ' + esc(m2.txt) + '</div>';
+    var calorSit = J.calor > 0 ? 'un sector caliente que todos persiguen' : J.calor < 0 ? 'un sector frío que nadie quiere fondear' : 'un sector que no se mueve para ningún lado';
+    h += '<div class="situacion ' + fclase + '">Caes en paracaídas como <b>' + esc(J.rol) + '</b> en <b>' + esc(J.empresa) +
+      '</b>: ' + mil(Motor.usuarios(J)) + ' usuarios, un equipo de ' + (J.ing + J.prod + J.gtm) + ', parado en ' + calorSit +
+      ' durante ' + esc(era.nombre) + '. Tienes <b>' + J.meses + ' meses</b> en el reloj. ' + esc(m2.txt) + '</div>';
 
     h += '<div class="fasebox"><span class="fasechip ' + fclase + '">' + svgIc(faseIcono(J.faseCorta)) + esc(J.faseCorta) + '</span>' +
          '<div class="faseobj">' + esc(J.objetivo) + '</div></div>';
 
     h += '<div class="notas" style="margin-top:14px">';
-    h += '<div class="nota" style="width:170px"><div class="nk">Users</div><div class="nv" style="font-size:30px">' + mil(Motor.usuarios(J)) + '</div></div>';
-    h += '<div class="nota" style="width:170px"><div class="nk">Team</div><div class="nv" style="font-size:30px">' + (J.ing + J.prod + J.gtm) + '</div></div>';
+    h += '<div class="nota" style="width:170px"><div class="nk">Usuarios</div><div class="nv" style="font-size:30px">' + mil(Motor.usuarios(J)) + '</div></div>';
+    h += '<div class="nota" style="width:170px"><div class="nk">Equipo</div><div class="nv" style="font-size:30px">' + (J.ing + J.prod + J.gtm) + '</div></div>';
     h += '<div class="nota" style="width:170px"><div class="nk">Sector</div><div class="nv" style="font-size:22px;margin-top:8px">' + calorTxt + '</div><div class="pq mut" style="font-size:10.5px">' + esc(era.nombre) + '</div></div>';
-    h += '<div class="nota" style="width:280px"><div class="nk">Your mandate · ' + J.meses + ' months</div><div class="nv" style="font-size:17px;margin-top:8px;line-height:1.3">' + esc(m2.txt) + '</div></div>';
+    h += '<div class="nota" style="width:280px"><div class="nk">Tu mandato · ' + J.meses + ' meses</div><div class="nv" style="font-size:17px;margin-top:8px;line-height:1.3">' + esc(m2.txt) + '</div></div>';
     h += '</div>';
 
     var i, k, nec;
     h += '<div style="display:-webkit-flex;display:flex;margin-top:8px">';
     h += '<div style="width:470px;padding-right:26px">';
-    h += '<div class="rot" style="margin-bottom:6px">Bets that count double toward your mandate</div><div>';
+    h += '<div class="rot" style="margin-bottom:6px">Apuestas que cuentan doble para tu mandato</div><div>';
     for (i = 0; i < J.prima.length; i++) {
       nec = null;
       for (k = 0; k < NECESIDADES.length; k++) if (NECESIDADES[k].id === J.prima[i]) nec = NECESIDADES[k];
@@ -564,7 +573,7 @@
     }
     h += '</div>';
     if (J.castiga.length) {
-      h += '<div class="rot" style="margin:10px 0 6px 0">Bets that barely count right now</div><div>';
+      h += '<div class="rot" style="margin:10px 0 6px 0">Apuestas que apenas cuentan ahora mismo</div><div>';
       for (i = 0; i < J.castiga.length; i++) {
         nec = null;
         for (k = 0; k < NECESIDADES.length; k++) if (NECESIDADES[k].id === J.castiga[i]) nec = NECESIDADES[k];
@@ -573,58 +582,58 @@
       h += '</div>';
     }
 
-    /* indicators you actually have to move to clear this stage */
-    h += '<div class="rot" style="margin-top:16px;margin-bottom:2px">What clears this stage</div>';
+    /* indicadores que de verdad tienes que mover para superar esta etapa */
+    h += '<div class="rot" style="margin-top:16px;margin-bottom:2px">Qué supera esta etapa</div>';
     h += '<div class="indicadores">';
     if (J.faseCorta === 'PRE-PMF') {
-      h += indBarra('Product-market fit', Motor.fitMax(J) * 100, 50, true);
-      h += indBarra('Evidence gathered', J.evidencia, 70, true);
-    } else if (J.faseCorta === 'VALIDATING PMF') {
-      h += indBarra('Monthly retention', Motor.retencionMedia(J) * 100, 90, true);
-      h += indBarra('Evidence gathered', J.evidencia, 85, true);
+      h += indBarra('Encaje producto-mercado', Motor.fitMax(J) * 100, 50, true);
+      h += indBarra('Evidencia reunida', J.evidencia, 70, true);
+    } else if (J.faseCorta === 'VALIDANDO PMF') {
+      h += indBarra('Retención mensual', Motor.retencionMedia(J) * 100, 90, true);
+      h += indBarra('Evidencia reunida', J.evidencia, 85, true);
     } else {
       var rg2 = Motor.requisitosGate(J), okg2 = 0, gi2;
       for (gi2 = 0; gi2 < rg2.length; gi2++) if (rg2[gi2].ok) okg2++;
-      h += indBarra('"' + esc(J.gateNombre) + '" requirements met', rg2.length ? (okg2 / rg2.length * 100) : 100, 100, true);
-      h += indBarra('System load', Motor.carga(J) * 100, 90, false);
+      h += indBarra('Requisitos de "' + esc(J.gateNombre) + '" cumplidos', rg2.length ? (okg2 / rg2.length * 100) : 100, 100, true);
+      h += indBarra('Carga del sistema', Motor.carga(J) * 100, 90, false);
     }
     h += '</div>';
 
-    /* the theory behind the stage, and the verdict on THIS company */
+    /* la teoría detrás de la etapa, y el veredicto sobre ESTA empresa */
     var teo = '', caso = '';
     if (J.faseCorta === 'PRE-PMF') {
-      teo = 'Steve Blank: before fit, a startup isn\'t a small company — it\'s a search. The Startup Genome ' +
-        'study measured the number one cause of death: scaling too early (hiring, growing, hardening ' +
-        'processes before validating that the problem burns). That\'s why here the game rewards Core and Flow and punishes Scale.';
+      teo = 'Steve Blank: antes del encaje, una startup no es una empresa chica — es una búsqueda. El estudio ' +
+        'Startup Genome midió la causa número uno de muerte: escalar demasiado pronto (contratar, crecer, endurecer ' +
+        'procesos antes de validar que el problema arde). Por eso aquí el juego premia Core y Flow y castiga Scale.';
       var fx = Math.round(Motor.fitMax(J) * 100);
-      caso = esc(J.empresa) + ' today: ' + mil(Motor.usuarios(J)) + ' users, evidence ' + Math.round(J.evidencia) +
-        ', best fit ' + fx + '%. ' + (fx < 50 ? 'Translation: you still don\'t know if anyone wants this. Discover before you build.' :
-        'Fit is showing: validate it with retention before you hit the gas.');
-    } else if (J.faseCorta === 'VALIDATING PMF') {
-      teo = 'Andy Rachleff (coined the term): product-market fit isn\'t declared, it shows — the retention curve ' +
-        'flattens instead of falling to zero, and growth starts arriving on its own, without buying it. The flat curve is THE ' +
-        'proof; cumulative totals are theater. That\'s why Flow (activate better) and Data (see the cohorts) rule here.';
+      caso = esc(J.empresa) + ' hoy: ' + mil(Motor.usuarios(J)) + ' usuarios, evidencia ' + Math.round(J.evidencia) +
+        ', mejor encaje ' + fx + '%. ' + (fx < 50 ? 'Traducción: todavía no sabes si alguien quiere esto. Descubre antes de construir.' :
+        'El encaje asoma: valídalo con retención antes de pisar el acelerador.');
+    } else if (J.faseCorta === 'VALIDANDO PMF') {
+      teo = 'Andy Rachleff (acuñó el término): el encaje producto-mercado no se declara, se nota — la curva de retención ' +
+        'se aplana en vez de caer a cero, y el crecimiento empieza a llegar solo, sin comprarlo. La curva plana es LA ' +
+        'prueba; los acumulados son teatro. Por eso aquí mandan Flow (activar mejor) y Data (ver las cohortes).';
       var rr = Math.round(Motor.retencionMedia(J) * 100);
-      caso = esc(J.empresa) + ' retains ' + rr + '% per month. ' + (rr >= 90 ? 'The curve is flattening: this is starting to be real fit.' :
-        'Of every 100 who come in, after 6 months ' + Math.round(Math.pow(Motor.retencionMedia(J), 6) * 100) + ' remain. That curve still falls: fit isn\'t proven.');
+      caso = esc(J.empresa) + ' retiene ' + rr + '% al mes. ' + (rr >= 90 ? 'La curva se está aplanando: esto empieza a ser encaje real.' :
+        'De cada 100 que entran, a los 6 meses quedan ' + Math.round(Math.pow(Motor.retencionMedia(J), 6) * 100) + '. Esa curva todavía cae: el encaje no está probado.');
     } else {
-      teo = 'Geoffrey Moore: the big market doesn\'t buy promises — it buys the whole product: integrations, ' +
-        'support, guarantees, references. And Accelerate adds the other half: at scale, speed and stability get ' +
-        'built together or lost together. That\'s why Integrations, Support, Security and Scale rule here.';
+      teo = 'Geoffrey Moore: el mercado grande no compra promesas — compra el producto completo: integraciones, ' +
+        'soporte, garantías, referencias. Y Accelerate suma la otra mitad: a escala, velocidad y estabilidad se ' +
+        'construyen juntas o se pierden juntas. Por eso aquí mandan Integr., Support, Security y Scale.';
       var rg = Motor.requisitosGate(J), okg = 0, gi;
       for (gi = 0; gi < rg.length; gi++) if (rg[gi].ok) okg++;
-      caso = esc(J.empresa) + ' meets ' + okg + ' of ' + rg.length + ' requirements of "' + esc(J.gateNombre) +
-        '" and system load is at ' + Math.round(Motor.carga(J) * 100) + '%. Whatever\'s missing from that list IS your roadmap.';
+      caso = esc(J.empresa) + ' cumple ' + okg + ' de ' + rg.length + ' requisitos de "' + esc(J.gateNombre) +
+        '" y la carga del sistema está en ' + Math.round(Motor.carga(J) * 100) + '%. Lo que falte de esa lista ES tu roadmap.';
     }
     h += '<div class="teoria-caso" style="margin-top:10px">' +
-         '<div class="rot" style="margin-bottom:4px">The playbook this stage follows</div>' +
+         '<div class="rot" style="margin-bottom:4px">El manual que sigue esta etapa</div>' +
          '<div class="pq" style="line-height:1.5">' + teo + '</div>' +
-         '<div class="rot" style="margin:10px 0 4px 0">' + esc(J.empresa) + ', right now</div>' +
+         '<div class="rot" style="margin:10px 0 4px 0">' + esc(J.empresa) + ', ahora mismo</div>' +
          '<div class="pq caso-linea" style="border-top:none;margin-top:0;padding-top:0">' + caso + '</div></div>';
     h += '</div>';
 
-    h += '<div style="width:400px"><div class="rot" style="margin-bottom:4px">Who you\'ll be working with</div>' +
-      '<div class="pq mut" style="margin-bottom:10px">They can help you land the ▲ bets above — or block them.</div>';
+    h += '<div style="width:400px"><div class="rot" style="margin-bottom:4px">Con quiénes vas a trabajar</div>' +
+      '<div class="pq mut" style="margin-bottom:10px">Pueden ayudarte a aterrizar las apuestas ▲ de arriba — o bloquearlas.</div>';
     var elencoKeys = ['ceo','cto','ventas','estrella'];
     for (i = 0; i < elencoKeys.length; i++) {
       var per = J.elenco[elencoKeys[i]];
@@ -633,17 +642,17 @@
     }
     h += '</div></div>';
 
-    h += '<div style="margin-top:16px"><span class="btn pri" data-act="empezar-puesto">' + (J.briefVisto ? 'Back to the month' : 'Start month 1') + '</span>' +
-      (!J.briefVisto ? ' <span class="btn" data-act="volver-ofertas">Back to offers</span>' : '') + '</div>';
+    h += '<div style="margin-top:16px"><span class="btn pri" data-act="empezar-puesto">' + (J.briefVisto ? 'Volver al mes' : 'Empezar el mes 1') + '</span>' +
+      (!J.briefVisto ? ' <span class="btn" data-act="volver-ofertas">Volver a las ofertas</span>' : '') + '</div>';
     $('p-brief').innerHTML = h;
     ir('p-brief');
   }
 
-  /* ================= GAME ================= */
+  /* ================= JUEGO ================= */
 
   function nuevoMes() {
     plan = { desc:0, plat:0, fiab:0, crec:0, asig:{}, orden:[] };
-    /* projects already in flight come pre-loaded with points, in order */
+    /* los proyectos ya en vuelo llegan precargados con puntos, en orden */
     var idsVuelo = [], iv;
     for (iv in J.enVuelo) if (J.enVuelo.hasOwnProperty(iv)) idsVuelo.push(iv);
     var libres = Motor.capacidadPropia(J);
@@ -670,19 +679,19 @@
     var u2 = Motor.usuarios(J), run = Motor.runwayMeses(J);
     var h = '';
     h += '<div class="hudi"><div class="k">' + esc(J.empresa) + '</div><div class="v num">' +
-         'Month ' + (J.mesPuesto + 1) + '<span class="mut" style="font-size:13px"> of ' + J.meses + '</span></div></div>';
-    h += '<div class="hudi"><div class="k">Users</div>' + vHud('u', Math.round(u2 / 10), mil(u2), '') + '</div>';
-    h += '<div class="hudi"><div class="k">' + tip('ret','Retention') + '</div>' + vHud('ret', Math.round(Motor.retencionMedia(J) * 100), pct(Motor.retencionMedia(J)), '') + '</div>';
+         'Mes ' + (J.mesPuesto + 1) + '<span class="mut" style="font-size:13px"> de ' + J.meses + '</span></div></div>';
+    h += '<div class="hudi"><div class="k">Usuarios</div>' + vHud('u', Math.round(u2 / 10), mil(u2), '') + '</div>';
+    h += '<div class="hudi"><div class="k">' + tip('ret','Retención') + '</div>' + vHud('ret', Math.round(Motor.retencionMedia(J) * 100), pct(Motor.retencionMedia(J)), '') + '</div>';
     if (J.rolN >= 1) {
-      h += '<div class="hudi"><div class="k">' + tip('mrr','Revenue/mo') + '</div>' + vHud('mrr', Math.round(J.mrr / 1000), money(J.mrr), '') + '</div>';
+      h += '<div class="hudi"><div class="k">' + tip('mrr','Ingresos/mes') + '</div>' + vHud('mrr', Math.round(J.mrr / 1000), money(J.mrr), '') + '</div>';
     }
     if (J.rolN >= 3) {
-      h += '<div class="hudi"><div class="k">Cash</div>' + vHud('caja', Math.round(J.caja / 10000), money(J.caja), J.caja < Motor.burnMensual(J) * 3 ? 'rojo' : '') + '</div>';
-      h += '<div class="hudi"><div class="k">' + tip('runway','Runway') + '</div>' + vHud('run', Math.round(run), run > 90 ? '∞' : run.toFixed(1) + ' mo', run < 4 ? 'rojo' : run < 8 ? 'ambar' : '') + '</div>';
+      h += '<div class="hudi"><div class="k">Caja</div>' + vHud('caja', Math.round(J.caja / 10000), money(J.caja), J.caja < Motor.burnMensual(J) * 3 ? 'rojo' : '') + '</div>';
+      h += '<div class="hudi"><div class="k">' + tip('runway','Runway') + '</div>' + vHud('run', Math.round(run), run > 90 ? '∞' : run.toFixed(1) + ' meses', run < 4 ? 'rojo' : run < 8 ? 'ambar' : '') + '</div>';
     } else if (run < 5) {
-      h += '<div class="hudi"><div class="k">&nbsp;</div><div class="v rojo" style="font-size:13px">The hallways are talking about cash</div></div>';
+      h += '<div class="hudi"><div class="k">&nbsp;</div><div class="v rojo" style="font-size:13px">En los pasillos se habla de la caja</div></div>';
     }
-    h += '<div class="hudi der"><span class="btn chico" data-act="biblio">Library ' + Object.keys(C.codex).length + '/' + LIBROS.length + '</span></div>';
+    h += '<div class="hudi der"><span class="btn chico" data-act="biblio">Biblioteca ' + Object.keys(C.codex).length + '/' + LIBROS.length + '</span></div>';
     $('hud').innerHTML = h;
   }
 
@@ -695,34 +704,98 @@
     var lupa = Math.round(J.lupa || 0);
     var lupaCls = lupa >= 60 ? 'rojo' : 'ambar';
     var h = '<span class="fasechip mini ' + faseClase(J.faseCorta) + '" data-act="ver-objetivo">' + svgIc(faseIcono(J.faseCorta)) + esc(J.faseCorta) + '</span>' +
-      '<span class="mut">Mandate:</span>&nbsp;<b>' + esc(m.txt) + '</b>' +
+      '<span class="mut">Mandato:</span>&nbsp;<b>' + esc(m.txt) + '</b>' +
       '<div class="track"><i class="' + cls + '" style="width:' + Math.round(Math.min(1, prog) * 100) + '%"></i></div>' +
-      '<span class="num ' + (pol < 25 ? 'rojo' : pol < 45 ? 'ambar' : 'mut') + '">' + tip('pol','Political capital ' + pol) + '</span>' +
-      (lupa >= 25 ? '<span class="num ' + lupaCls + '" style="margin-left:14px">◉ They\'re watching you</span>' : '');
+      '<span class="num ' + (pol < 25 ? 'rojo' : pol < 45 ? 'ambar' : 'mut') + '">' + tip('pol','Capital político ' + pol) + '</span>' +
+      (lupa >= 25 ? '<span class="num ' + lupaCls + '" style="margin-left:14px">◉ Te están mirando</span>' : '');
+    var sig = siguienteDesbloqueo(C.nivel);
+    h += '<span class="mut" style="margin-left:14px">Edad: <b>' + esc(ESCALAFON[C.nivel].corto) + '</b>' +
+      (sig ? ' → la siguiente desbloquea ' + esc(NOMBRE_PALANCA[sig.palanca] || sig.palanca) : '') + '</span>';
     $('mandato').innerHTML = h;
+  }
+
+  /* ritmo vs. runway: ¿el mandato se cumple antes del plazo — y antes que la caja? */
+  function renderRitmo() {
+    var r = Motor.ritmoMandato(J);
+    var runTxt = r.runway > 90 ? '∞' : r.runway.toFixed(1) + ' meses';
+    var h, cls;
+    if (r.cumplido) {
+      h = '<span class="verde">✓ Mandato cumplido.</span> <span class="mut">Asegúralo — runway ' + runTxt + '.</span>';
+    } else {
+      var mesesTxt = isFinite(r.mesesMeta) ? ('~' + Math.max(1, Math.ceil(r.mesesMeta)) + ' meses') : 'nunca';
+      if (r.ritmo <= 0.0005) {
+        cls = 'rojo';
+        h = '<span class="' + cls + '">A este ritmo: no estás moviendo la aguja — esto no se cumple nunca por sí solo.</span>';
+      } else if (!r.llegaAntesDeCash) {
+        cls = 'rojo';
+        h = '<span class="' + cls + '">A este ritmo: te quedas sin caja antes de lograrlo (necesitas ' + mesesTxt + ', runway ' + runTxt + ').</span>';
+      } else if (!r.llegaEnPlazo) {
+        cls = 'ambar';
+        h = '<span class="' + cls + '">A este ritmo: la caja no es el problema — el tiempo sí. Lo logras en ' + mesesTxt +
+          ', pasado tu plazo de ' + r.restantesPuesto + ' meses.</span>';
+      } else {
+        cls = 'verde';
+        h = '<span class="' + cls + '">A este ritmo: lo logras en ' + mesesTxt + ' — la caja aguanta ' + runTxt + '.</span>';
+      }
+      h += ' ' + chip('pgdefault');
+    }
+    $('ritmo').innerHTML = h;
   }
 
   function renderEra() {
     var era = Mundo.era(M);
     var not = M.noticias.length ? M.noticias[0].txt : '';
-    var calor = J.calor > 0 ? ' <span class="pill hot">your sector is hot</span>' :
-                J.calor < 0 ? ' <span class="pill frio">your sector is cold</span>' : '';
+    var calor = J.calor > 0 ? ' <span class="pill hot">tu sector está caliente</span>' :
+                J.calor < 0 ? ' <span class="pill frio">tu sector está frío</span>' : '';
     $('era').innerHTML = '<span class="nombre-era">' + esc(era.nombre) + '</span>' + calor +
       (not ? '<span class="noticia" style="margin-left:14px">◈ ' + esc(not) + '</span>' : '');
   }
 
-  /* The month as a resource, Age-of-Empires style: your team produces
-     points; you station them. Whatever you don't station goes to BUILD and
-     pushes your selected projects. Every point is visible and accounted. */
+  /* Age track: el ESCALAFON de carrera (8 niveles, cada uno desbloquea una
+     Iniciativa) es, sin tocarlo, exactamente la progresión estilo Age of
+     Empires que pide el diseño — solo hacía falta mostrarla como tal. Esto
+     es progresión del JUGADOR (C.nivel), distinta de la Era del mundo
+     (exógena, arriba en #era). */
+  var NOMBRE_PALANCA = { desc:'Descubrir', plat:'Plataforma', fiab:'Fiabilidad', crec:'Crecimiento' };
+  function siguienteDesbloqueo(nivel) {
+    for (var k = nivel + 1; k < ESCALAFON.length; k++) {
+      var nuevas = ESCALAFON[k].palancas.filter(function (p) { return ESCALAFON[nivel].palancas.indexOf(p) < 0; });
+      if (nuevas.length) return { nivel:k, palanca:nuevas[0] };
+    }
+    return null;
+  }
+
+  function renderRetos() {
+    if (!J.retos || !J.retos.length) { $('retos').innerHTML = ''; return; }
+    var h = '', i;
+    for (i = 0; i < J.retos.length; i++) {
+      var reto = J.retos[i], m = mandatoPorId(reto.id);
+      if (!m) continue;
+      var prog = reto.hecho ? 1 : Motor.progresoDe(J, reto.id);
+      var cls = reto.hecho ? 'v' : prog >= 0.66 ? 'a' : 'r';
+      h += '<span class="reto' + (reto.hecho ? ' hecho' : '') + '">' +
+        (reto.hecho ? '✓ ' : '◇ ') + '<span class="mut">Reto:</span> ' + esc(m.txt) +
+        '<span class="track mini"><i class="' + cls + '" style="width:' + Math.round(Math.min(1, prog) * 100) + '%"></i></span>' +
+        '</span>';
+    }
+    if (J.fichasCap > 0) {
+      h += '<span class="reto ficha">🏅 ' + J.fichasCap + ' ficha' + (J.fichasCap > 1 ? 's' : '') + ' de capacidad para gastar ↓</span>';
+    }
+    $('retos').innerHTML = h;
+  }
+
+  /* El mes como recurso, estilo Age of Empires: tu equipo produce puntos;
+     tú los estacionas. Lo que no estaciones va a CONSTRUIR y empuja tus
+     proyectos elegidos. Cada punto es visible y está contado. */
   var ESTACIONES = [
-    { k:'desc', n:'Discover', svg:'discover', col:'#5aa9f0', req:'desc', lib:'torres', tipk:'st_desc',
+    { k:'desc', n:'Descubrir', svg:'discover', col:'#5aa9f0', req:'desc', lib:'torres', tipk:'st_desc',
       rinde:function (v) { return '+' + Math.round(v * 1.1 * J.calidadDesc * (1 + J.hab.producto / 200)) + ' evid'; } },
-    { k:'plat', n:'Platform', svg:'platform', col:'#35c46a', req:'plat', lib:'fowler', tipk:'st_plat',
-      rinde:function (v) { return '−' + Math.round(v * 0.55 * (1 + J.hab.tecnologia / 150)) + ' debt'; } },
-    { k:'fiab', n:'Reliability', svg:'reliability', col:'#4ecdc4', req:'fiab', lib:'sre', tipk:'st_fiab',
+    { k:'plat', n:'Plataforma', svg:'platform', col:'#35c46a', req:'plat', lib:'fowler', tipk:'st_plat',
+      rinde:function (v) { return '−' + Math.round(v * 0.55 * (1 + J.hab.tecnologia / 150)) + ' deuda'; } },
+    { k:'fiab', n:'Fiabilidad', svg:'reliability', col:'#4ecdc4', req:'fiab', lib:'sre', tipk:'st_fiab',
       rinde:function (v) { return '+' + Math.round(v * 0.45) + ' uptime'; } },
-    { k:'crec', n:'Growth', svg:'growth', col:'#e86ba3', req:'crec', lib:'chasm', tipk:'st_crec',
-      rinde:function (v) { return '+reach · $' + Math.round(v * 0.9) + 'k'; } }
+    { k:'crec', n:'Crecimiento', svg:'growth', col:'#e86ba3', req:'crec', lib:'chasm', tipk:'st_crec',
+      rinde:function (v) { return '+alcance · $' + Math.round(v * 0.9) + 'k'; } }
   ];
 
   function svgIc(id, cls) {
@@ -739,8 +812,8 @@
 
   function renderAsignacion() {
     var mio = Motor.capacidadPropia(J), ocio = sinUsar();
-    var h = '<div class="rot" style="margin-bottom:6px">1 · Place your team\'s ' +
-            '<b class="num">' + mio + ' points</b> · stations first, the rest goes on projects below</div>';
+    var h = '<div class="rot" style="margin-bottom:6px">1 · Coloca los ' +
+            '<b class="num">' + mio + ' puntos</b> de tu equipo · primero estaciones, el resto va a los proyectos de abajo</div>';
 
     h += '<div class="ebar">';
     var i;
@@ -778,14 +851,14 @@
     }
     h += '<div class="stcard viva build">' +
       '<div class="sticon" style="background:#e8a33d26;color:#e8a33d">' + svgIc('build') + '</div>' +
-      '<div class="stn">' + tip('st_build', 'On projects') + '</div>' +
+      '<div class="stn">' + tip('st_build', '⚒ En proyectos') + '</div>' +
       '<div class="n num" style="font-size:19px;margin-top:1px">' + enProyectos() + '</div>' +
-      '<div class="strinde">' + (ocio > 0 ? '<span class="ambar">' + ocio + ' idle</span>' : 'all busy') + '</div></div>';
+      '<div class="strinde">' + (ocio > 0 ? '<span class="ambar">' + ocio + ' ociosos</span>' : 'todos ocupados') + '</div></div>';
     h += '</div>';
     $('capa').innerHTML = h;
   }
 
-  /* the through-line: your mandate IS one of the pirate metrics */
+  /* el hilo conductor: tu mandato ES una de las métricas pirata */
   var MET_MANDATO = { retencion:'ret', crecer:'adq', ingresos:'rev',
                       activacion:'act', estabilidad:'rel', deuda:'rel', abismo:'adq' };
   var MET_NOMBRE = { adq:'ACQ', act:'ACT', ret:'RET', rev:'REV', rel:'REL' };
@@ -826,12 +899,12 @@
   function renderBacklog() {
     var usados = slotsUsados(), i2, cajas = '';
     for (i2 = 0; i2 < J.slots; i2++) cajas += '<span class="slot' + (i2 < usados ? ' lleno' : '') + '"></span>';
-    var h = '<div class="rot" style="margin:8px 0 7px 0">2 · Put points on your projects · slots ' + cajas +
-      ' <span class="pill libro" data-lib="momtest">confidence ' + Motor.confianza(J) + '</span></div>';
+    var h = '<div class="rot" style="margin:8px 0 7px 0">2 · Pon puntos en tus proyectos · slots ' + cajas +
+      ' <span class="pill libro" data-lib="momtest">confianza ' + Motor.confianza(J) + '</span></div>';
 
     var id, i, a, d;
 
-    /* your board: projects taking points this month */
+    /* tu tablero: los proyectos que reciben puntos este mes */
     for (i = 0; i < plan.orden.length; i++) {
       id = plan.orden[i]; a = Motor.apuesta(id);
       var cst = Motor.costoDe(J, id);
@@ -843,10 +916,10 @@
       var pPrev = Math.min(100 - pDone, Math.round(pts / cst * 100));
       h += '<div class="ap tuyo' + (sale ? ' sale' : '') + '">' +
         '<div class="t"><div class="n2">' + esc(a.n) +
-        (sale ? '<span class="shiptag">SHIPS THIS MONTH</span>' :
-          (pts === 0 ? '<span class="pill">paused</span>' : '')) + '</div>' +
+        (sale ? '<span class="shiptag">SALE ESTE MES</span>' :
+          (pts === 0 ? '<span class="pill">en pausa</span>' : '')) + '</div>' +
         '<div class="prog"><i class="pdone" style="width:' + pDone + '%"></i><i class="pprev" style="width:' + pPrev + '%"></i></div>' +
-        '<div class="d2">' + falta + ' of ' + cst + ' pts left</div></div>' +
+        '<div class="d2">faltan ' + falta + ' de ' + cst + ' pts</div></div>' +
         '<div class="ctrl">' +
         '<div class="b' + (pts <= 0 ? ' off' : '') + '" data-pmenos="' + id + '">−</div>' +
         '<div class="n num">' + pts + '</div>' +
@@ -855,7 +928,7 @@
         (J.enVuelo[id] === undefined ? '<div class="quitar" data-quitar="' + id + '">✕</div>' : '<div class="quitar mut" style="visibility:hidden">✕</div>') +
         '</div>';
     }
-    if (plan.orden.length) h += '<div class="rot" style="margin:10px 0 6px 0">Backlog · tap to add</div>';
+    if (plan.orden.length) h += '<div class="rot" style="margin:10px 0 6px 0">Backlog · toca para sumar</div>';
 
     for (i = 0; i < J.backlog.length; i++) {
       id = J.backlog[i]; a = Motor.apuesta(id);
@@ -872,7 +945,7 @@
         '<div class="d2" style="margin-top:2px">' + esc(a.d) + '</div>' +
         '<div class="viz">' +
           '<span class="vlbl">' + tip('prob','prob') + '</span>' + dots(d.prob) +
-          '<span class="vlbl">' + tip('vec','expected') + '</span>' + chipsVec(d.vec, metaMet) +
+          '<span class="vlbl">' + tip('vec','esperado') + '</span>' + chipsVec(d.vec, metaMet) +
         '</div></div>' +
         '<div class="c"><span class="tipped" data-tip="esf"><span class="esf e' + d.esf + '">' + d.esf + '</span></span>' +
         '<div class="cst num">' + d.tiempo + ' · ' + d.costo + ' pts</div></div></div>';
@@ -900,59 +973,96 @@
   function renderPanel() {
     var h = '', i;
 
-    /* the pirate funnel: the numbers you decide with */
+    /* Recursos: todo lo que antes vivía repartido entre el HUD, el embudo y
+       la barra de mandato, ahora junto en un solo lugar — plata, presión
+       política y reputación de carrera son todos "recursos" del mismo tipo. */
+    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Recursos</div>';
+    h += '<div class="fun"><span class="fk">Caja</span><span class="fv num">' + money(J.caja) + '</span></div>';
+    h += '<div class="fun"><span class="fk">Runway</span><span class="fv num">' + (Motor.runwayMeses(J) > 90 ? '∞' : Motor.runwayMeses(J).toFixed(1) + ' meses') + '</span></div>';
+    h += '<div class="fun"><span class="fk">Valoración</span><span class="fv num">' + money(J.valoracion) + '</span></div>';
+    h += '<div class="fun"><span class="fk">' + tip('pol','Capital político') + '</span><span class="fv num ' + (J.politico < 25 ? 'rojo' : J.politico < 45 ? 'ambar' : '') + '">' + Math.round(J.politico) + '</span></div>';
+    if ((J.lupa || 0) >= 10) h += '<div class="fun"><span class="fk">' + tip('heat','la Lupa') + '</span><span class="fv num ' + (J.lupa >= 60 ? 'rojo' : 'ambar') + '">' + Math.round(J.lupa) + '</span></div>';
+    h += '<div class="fun"><span class="fk">Reputación</span><span class="fv num">' + Math.round(C.reputacion) + '</span></div>';
+    if (J.fichasCap > 0) h += '<div class="fun"><span class="fk">🏅 Fichas de capacidad</span><span class="fv num ambar">' + J.fichasCap + '</span></div>';
+    h += '</div>';
+
+    /* el embudo pirata: los números con los que decides */
     var actPct = Math.round((0.35 + (J.usabilidad / 100) * 0.65) * 100);
     var retPct = Math.round(Motor.retencionMedia(J) * 100);
     var profit = J.mrr - Motor.burnMensual(J);
     var refCoef = Math.round(J.viral * Motor.fitMax(J) * 100) / 100;
     var funIc = function (id, cls) { return '<span class="funic' + (cls ? ' ' + cls : '') + '">' + svgIc(id) + '</span>'; };
-    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">' + tip('funnel','Funnel') + ' · AARRR</div>';
-    h += '<div class="fun"><span class="fk">' + funIc('acquisition') + 'Acquisition</span><span class="fv num">+' + mil(J.adqMes || 0) + '<span class="mut fsub"> new/mo</span></span></div>';
-    h += '<div class="fun"><span class="fk">' + funIc('activation') + 'Activation</span><span class="fv num">' + actPct + '%</span></div>';
-    h += '<div class="fun"><span class="fk">' + funIc('retention', retPct >= 88 ? 'verde' : retPct >= 80 ? '' : 'rojo') + 'Retention</span><span class="fv num ' + (retPct >= 88 ? 'verde' : retPct >= 80 ? '' : 'rojo') + '">' + retPct + '%</span></div>';
+    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">' + tip('funnel','Embudo') + ' · AARRR</div>';
+    h += '<div class="fun"><span class="fk">' + funIc('acquisition') + 'Adquisición</span><span class="fv num">+' + mil(J.adqMes || 0) + '<span class="mut fsub"> nuevos/mes</span></span></div>';
+    h += '<div class="fun"><span class="fk">' + funIc('activation') + 'Activación</span><span class="fv num">' + actPct + '%</span></div>';
+    h += '<div class="fun"><span class="fk">' + funIc('retention', retPct >= 88 ? 'verde' : retPct >= 80 ? '' : 'rojo') + 'Retención</span><span class="fv num ' + (retPct >= 88 ? 'verde' : retPct >= 80 ? '' : 'rojo') + '">' + retPct + '%</span></div>';
     if (J.rolN >= 1) {
-      h += '<div class="fun"><span class="fk">' + funIc('revenue') + 'Revenue</span><span class="fv num">' + money(J.mrr) + '<span class="mut fsub">/mo</span></span></div>';
-      h += '<div class="fun"><span class="fk">' + funIc('revenue', profit >= 0 ? 'verde' : 'rojo') + 'Profit</span><span class="fv num ' + (profit >= 0 ? 'verde' : 'rojo') + '">' + (profit >= 0 ? '+' : '') + money(profit) + '</span></div>';
+      h += '<div class="fun"><span class="fk">' + funIc('revenue') + 'Ingresos</span><span class="fv num">' + money(J.mrr) + '<span class="mut fsub">/mes</span></span></div>';
+      h += '<div class="fun"><span class="fk">' + funIc('revenue', profit >= 0 ? 'verde' : 'rojo') + 'Ganancia</span><span class="fv num ' + (profit >= 0 ? 'verde' : 'rojo') + '">' + (profit >= 0 ? '+' : '') + money(profit) + '</span></div>';
     }
-    h += '<div class="fun"><span class="fk">' + funIc('referral') + 'Referral</span><span class="fv num">' + refCoef + '<span class="mut fsub"> coef</span></span></div>';
+    h += '<div class="fun"><span class="fk">' + funIc('referral') + 'Referidos</span><span class="fv num">' + refCoef + '<span class="mut fsub"> coef</span></span></div>';
     var metaMet2 = MET_MANDATO[J.mandatoId];
-    if (metaMet2) h += '<div class="pq mut" style="font-size:11px;margin-top:5px">Your mandate lives in <b class="azul">' + MET_NOMBRE[metaMet2] + '</b>. Bets with that chip glowing move it.</div>';
+    if (metaMet2) h += '<div class="pq mut" style="font-size:11px;margin-top:5px">Tu mandato vive en <b class="azul">' + MET_NOMBRE[metaMet2] + '</b>. Las apuestas con ese chip encendido lo mueven.</div>';
     h += '</div>';
 
-    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Where we stand</div>';
-    h += barraEstado(tip('evid','Evidence'), J.evidencia, false, 'lean', 'evidence');
-    h += barraEstado(tip('debt','Debt'), J.deuda, true, 'fowler', 'debt');
-    h += barraEstado(tip('morale','Morale'), J.moral, false, null, 'morale');
-    if ((J.lupa || 0) >= 25) h += barraEstado(tip('heat','The Heat'), J.lupa, true, null, 'heat');
+    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Dónde estamos</div>';
+    h += barraEstado(tip('evid','Evidencia'), J.evidencia, false, 'lean', 'evidence');
+    h += barraEstado(tip('debt','Deuda'), J.deuda, true, 'fowler', 'debt');
+    h += barraEstado(tip('morale','Moral'), J.moral, false, null, 'morale');
+    if ((J.lupa || 0) >= 25) h += barraEstado(tip('heat','la Lupa'), J.lupa, true, null, 'heat');
     if (J.rolN >= 2) {
-      h += barraEstado(tip('load','Load'), Motor.carga(J) * 100, true, 'ddia', 'load');
-      h += barraEstado(tip('usab','Usability'), J.usabilidad, false, 'krug', 'usability');
+      h += barraEstado(tip('load','Carga'), Motor.carga(J) * 100, true, 'ddia', 'load');
+      h += barraEstado(tip('usab','Usabilidad'), J.usabilidad, false, 'krug', 'usability');
     }
     if (J.rolN >= 3) {
-      h += barraEstado(tip('ebudget','Error budget'), J.presupuestoError, false, 'sre', 'errorbudget');
-      h += barraEstado(tip('focus','Focus'), J.foco, false, 'grove', 'focus');
+      h += barraEstado(tip('ebudget','Presupuesto de error'), J.presupuestoError, false, 'sre', 'errorbudget');
+      h += barraEstado(tip('focus','Foco'), J.foco, false, 'grove', 'focus');
     }
-    h += '<div class="pq mut" style="margin-top:6px">' + J.ing + ' eng · ' + J.prod + ' prod · ' + J.gtm + ' gtm' +
-         (J.rampa.length ? ' · <span class="ambar">' + J.rampa.length + ' ramping up</span>' : '') + '</div></div>';
+    h += '<div class="pq mut" style="margin-top:6px">' + J.ing + ' ing · ' + J.prod + ' prod · ' + J.gtm + ' gtm' +
+         (J.rampa.length ? ' · <span class="ambar">' + J.rampa.length + ' en rampa</span>' : '') + '</div></div>';
 
-    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">' + tip('capfondeo','Company capabilities') + '</div>';
-    h += barraEstado(tip('cap_prod','Product'), J.capacidades.producto, false, null, null);
-    h += barraEstado(tip('cap_tec','Tech'), J.capacidades.tecnologia, false, null, null);
+    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">' + tip('capfondeo','Capacidades de la empresa') + '</div>';
+    h += barraEstado(tip('cap_prod','Producto'), J.capacidades.producto, false, null, null);
+    h += barraEstado(tip('cap_tec','Tecnología'), J.capacidades.tecnologia, false, null, null);
     h += barraEstado(tip('cap_gtm','GTM'), J.capacidades.gtm, false, null, null);
     h += barraEstado(tip('cap_gente','Org'), J.capacidades.gente, false, null, null);
-    h += barraEstado(tip('cap_cap','Fundraising'), J.capacidades.capital, false, null, null);
+    h += barraEstado(tip('cap_cap','Fondeo'), J.capacidades.capital, false, null, null);
     h += '<div class="pq mut" style="margin-top:6px">' + (J.capFondeo > 0 ?
-      'Funded to build: ' + money(J.capFondeo) + ' of raised capital left to convert into capability.' :
-      '<span class="rojo">No funding fuel left</span> — capabilities are drifting down. Raise to restart growth.') + '</div></div>';
+      'Fondeo para construir: quedan ' + money(J.capFondeo) + ' de capital levantado por convertir en capacidad.' :
+      '<span class="rojo">Sin combustible de fondeo</span> — las capacidades se erosionan. Levanta una ronda para reactivar el crecimiento.') + '</div>';
+    if (J.fichasCap > 0) {
+      var EJES = [['producto','Producto'],['tecnologia','Tecnología'],['gtm','GTM'],['gente','Org'],['capital','Fondeo']];
+      h += '<div class="pq mut" style="margin-top:8px">Gastar una ficha de capacidad (+8):</div><div style="margin-top:4px">';
+      for (i = 0; i < EJES.length; i++) {
+        h += '<span class="btn chico" data-act="gastar-ficha" data-eje="' + EJES[i][0] + '" style="margin:2px 4px 0 0">' + EJES[i][1] + '</span>';
+      }
+      h += '</div>';
+    }
+    h += '</div>';
+
+    /* Impacto: dónde vive de forma persistente el real-vs-esperado de cada
+       proyecto entregado, en vez de aparecer solo una vez en el resumen del
+       mes y desaparecer. */
+    if (J.historialImpacto && J.historialImpacto.length) {
+      h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Impacto</div>';
+      for (i = 0; i < J.historialImpacto.length; i++) {
+        var hi = J.historialImpacto[i];
+        var sub = hi.real < hi.esperado * 0.55 ? 'rojo' : hi.real >= hi.esperado * 0.8 ? 'verde' : 'ambar';
+        h += '<div class="pq" style="margin-top:4px"><b>' + esc(hi.n) + '</b> — <span class="' + sub + ' num">real ' + hi.real +
+          '</span> <span class="mut num">· esperabas ' + hi.esperado + '</span>' +
+          (hi.vec ? '<div style="margin-top:2px">' + chipsVec(hi.vec, MET_MANDATO[J.mandatoId]) + '</div>' : '') + '</div>';
+      }
+      h += '</div>';
+    }
 
     if (J.rolN >= 1) {
-      h += '<div class="caja2"><div class="rot" style="margin-bottom:4px">Who you\'re reaching · ' + tip('fit','fit') + '</div>';
+      h += '<div class="caja2"><div class="rot" style="margin-bottom:4px">A quién estás llegando · ' + tip('fit','encaje') + '</div>';
       for (i = 0; i < SEGMENTOS.length; i++) {
         var s = SEGMENTOS[i], u2 = J.usuarios[s.id] || 0, f = Motor.fit(J, s.id);
         var ab = Motor.abierto(J, s.id), g = Motor.compuerta(J, s.id);
         var cls = f > 0.65 ? 'v' : f > 0.35 ? 'a' : 'r';
         h += '<div class="seg"><div class="l"><span class="nm">' + esc(s.nombre) +
-          (!ab ? ' <span class="pill">not yet</span>' : (g < 0.5 ? ' <span class="pill rojo">blocked</span>' : '')) +
+          (!ab ? ' <span class="pill">todavía no</span>' : (g < 0.5 ? ' <span class="pill rojo">bloqueado</span>' : '')) +
           '</span><span class="num mut">' + mil(u2) + '</span></div>' +
           '<div class="track"><i class="' + cls + '" style="width:' + Math.round(f * 100) + '%"></i></div></div>';
       }
@@ -977,33 +1087,49 @@
     for (id in plan.asig) if (plan.asig.hasOwnProperty(id)) {
       if ((J.enVuelo[id] || 0) + plan.asig[id] >= Motor.costoDe(J, id)) saliendo++;
     }
-    var h = '<div class="pts"><span class="ambar">⚒ ' + enProyectos() + ' pts</span> on ' +
-      plan.orden.length + ' project' + (plan.orden.length === 1 ? '' : 's') +
-      (saliendo ? ' · <span class="verde">' + saliendo + ' shipping</span>' : '') +
-      (ocio > 0 ? ' · <span class="rojo">' + ocio + ' idle</span>' : '') + '</div>';
-    if (J.esFundador && !J.levantando) h += '<span class="btn chico" data-act="ronda" style="margin-right:10px">Go raise</span>';
-    h += '<span class="btn pri" data-act="ejecutar">3 · Close the month</span>';
+    var h = '<div class="pts"><span class="ambar">⚒ ' + enProyectos() + ' pts</span> en ' +
+      plan.orden.length + ' proyecto' + (plan.orden.length === 1 ? '' : 's') +
+      (saliendo ? ' · <span class="verde">' + saliendo + ' por salir</span>' : '') +
+      (ocio > 0 ? ' · <span class="rojo">' + ocio + ' ociosos</span>' : '') + '</div>';
+    if (J.esFundador && !J.levantando) h += '<span class="btn chico" data-act="ronda" style="margin-right:10px">Salir a levantar</span>';
+    h += '<span class="btn pri" data-act="ejecutar">3 · Cerrar el mes</span>';
     $('barra').innerHTML = h;
   }
 
   function renderJuego() {
     ir('p-juego');
-    renderHud(); renderMandato(); renderEra();
+    renderHud(); renderMandato(); renderRitmo(); renderEra(); renderRetos();
     renderAsignacion(); renderBacklog(); renderPanel(); renderBarra();
   }
 
-  /* ================= dilemmas ================= */
+  /* ================= dilemas ================= */
+
+  function primeraOracion(txt) {
+    if (!txt) return '';
+    var m = txt.match(/^[^.]{0,140}\./);
+    if (m) return m[0];
+    return txt.length > 140 ? txt.slice(0, 140) + '…' : txt;
+  }
 
   function mostrarEvento(ev) {
     var tx = eventoTexto(ev, J);
     var quien = ev.quien && J.elenco[ev.quien] ? J.elenco[ev.quien] : null;
-    var h = '<div class="rot">Month ' + (J.mesPuesto + 1) + ' at ' + esc(J.empresa) + '</div>' +
+    var h = '<div class="rot">Mes ' + (J.mesPuesto + 1) + ' en ' + esc(J.empresa) + '</div>' +
             '<h2>' + esc(tx.titulo) + '</h2>';
     if (quien) {
       h += '<div class="quien"><div class="avatar">' + esc(quien.nombre.charAt(0)) + '</div>' +
            '<div><div class="qn">' + esc(quien.nombre) + '</div><div class="qc">' + esc(quien.cargo) + '</div></div></div>';
     }
-    h += '<div class="pq mut" style="margin-bottom:4px">' + esc(tx.texto) + '</div><div class="cuerpo2 scroll">';
+    h += '<div class="pq mut" style="margin-bottom:4px">' + esc(tx.texto) + '</div>';
+    var libroEv = ev.libro ? libroPorId(ev.libro) : null;
+    if (libroEv) {
+      var yaLeido = !!C.codex[ev.libro];
+      h += '<div class="teoria-caso" style="margin:8px 0">' +
+        '<div class="rot" style="margin-bottom:4px">' + (yaLeido ? 'Esto pone a prueba un concepto que conoces' : 'Antes de decidir') + '</div>' +
+        '<div class="pq" style="line-height:1.5">' + esc(primeraOracion(libroEv.idea)) + ' ' + chip(ev.libro) + '</div>' +
+        '</div>';
+    }
+    h += '<div class="cuerpo2 scroll">';
     var i;
     for (i = 0; i < ev.opciones.length; i++) {
       h += '<div class="opt" data-op="' + i + '"><div class="ot">' + esc(ev.opciones[i].txt) + '</div></div>';
@@ -1022,13 +1148,25 @@
     marcarCodex(log);
     notasEvento = log;
     var libroTeoria = op.libro || ev.libro;
+    var decisionTxt = op.txt;
     evActual = null;
     ov('ov-evento', false);
     renderJuego();
-    mostrarResultado(log, 'What the decision left behind', true, libroTeoria);
+    mostrarResultado(log, 'Lo que dejó la decisión', true, libroTeoria, decisionTxt);
   }
 
-  /* ================= close the month ================= */
+  /* ================= cerrar el mes ================= */
+
+  function pctMandato(m0, valor, meta) {
+    if (!m0) return null;
+    if (m0.invertido) {
+      if (meta <= 0) return valor <= 0 ? 100 : Math.max(0, Math.round(100 - Math.min(valor, 5) * 20));
+      if (valor <= meta) return 100;
+      return Math.max(0, Math.min(100, Math.round((meta / valor) * 100)));
+    }
+    if (meta <= 0) return 100;
+    return Math.max(0, Math.min(100, Math.round((valor / meta) * 100)));
+  }
 
   function ejecutar() {
     var m0 = mandatoPorId(J.mandatoId);
@@ -1043,103 +1181,144 @@
       var mejor = m0.invertido ? valorDespues < valorAntes : valorDespues > valorAntes;
       var igual = m0.fmt(valorDespues) === m0.fmt(valorAntes);
       log.unshift({ tipo: igual ? 'neutro' : (mejor ? 'bueno' : 'malo'),
-        mandato:{ antes:m0.fmt(valorAntes), despues:m0.fmt(valorDespues), meta:m0.fmt(m0.meta(J)), txt:m0.txt } });
+        mandato:{ antes:m0.fmt(valorAntes), despues:m0.fmt(valorDespues), meta:m0.fmt(m0.meta(J)), txt:m0.txt,
+                  pct:pctMandato(m0, valorDespues, m0.meta(J)) } });
     }
     var fichas2 = fichasNuevas(J, C), fi;
     for (fi = 0; fi < fichas2.length; fi++) {
-      log.push({ tipo:'nota', texto:'A card opened in the library: the moment you\'re living has a name.',
+      log.push({ tipo:'nota', texto:'Se abrió una tarjeta en la biblioteca: el momento que estás viviendo tiene nombre.',
                  libro:fichas2[fi].id });
     }
     var cambioEra = Mundo.tick(M);
     if (cambioEra) {
-      log.push({ tipo:'neutro', texto:'The era changed: "' + cambioEra.nombre + '" begins. ' + cambioEra.desc, libro:null });
+      log.push({ tipo:'neutro', texto:'Cambió la era: empieza "' + cambioEra.nombre + '". ' + cambioEra.desc, libro:null });
     }
     marcarCodex(log);
     var todo = notasEvento.concat(log);
     guardar();
     if (!J.vivo) { cerrarPuesto(); return; }
-    mostrarResultado(todo, 'Month ' + J.mesPuesto + ' at ' + esc(J.empresa), false);
+    mostrarResultado(todo, 'Mes ' + J.mesPuesto + ' en ' + esc(J.empresa), false);
   }
 
-  function mostrarResultado(log, titulo, esDecision, libroTeoria) {
+  function mostrarResultado(log, titulo, esDecision, libroTeoria, decisionTxt) {
     var h = '<div class="rot">' + titulo + '</div><h2>' +
-            (esDecision ? 'Decided' : 'What happened') + '</h2><div class="cuerpo2 scroll">';
-    if (!log.length) h += '<div class="pq mut">A month with no surprises. Sometimes that\'s exactly what you need.</div>';
-    var i, ic;
+            (esDecision ? 'Decidido' : 'Qué pasó') + '</h2><div class="cuerpo2 scroll">';
+    if (!log.length) h += '<div class="pq mut">Un mes sin sorpresas. A veces es justo lo que necesitas.</div>';
+
+    var mandatoItem = null, ships = [], notas = [], eventos = [], i;
     for (i = 0; i < log.length; i++) {
-      var l = log[i];
-      if (l.mandato) {
-        var cls2 = l.tipo === 'bueno' ? 'verde' : l.tipo === 'malo' ? 'rojo' : 'mut';
-        h += '<div class="res-mandato"><span class="rot" style="margin-right:10px">Your mandate</span>' +
-          esc(l.mandato.txt) + ': <b class="num ' + cls2 + '">' + esc(l.mandato.antes) + ' → ' + esc(l.mandato.despues) + '</b>' +
-          '<span class="mut num"> · target ' + esc(l.mandato.meta) + '</span></div>';
-        continue;
-      }
-      if (l.ship) {
-        var s2 = l.ship;
-        var metaMet3 = MET_MANDATO[J.mandatoId] || null;
-        h += '<div class="res-ship"><div class="ic">' + (l.tipo === 'bueno' ? '<span class="verde">▲</span>' : '<span class="rojo">▼</span>') + '</div>' +
-          '<div class="tx"><b>Shipped: ' + esc(s2.n) + '</b> — real impact ' + s2.real + ', you expected ' + s2.esperado +
-          (s2.real < s2.esperado * 0.55 ? ' <span class="rojo">(you built without knowing)</span>' : '') +
-          '<div style="margin-top:4px">' + chipsVec(s2.vec, metaMet3) + '</div></div></div>';
-        continue;
-      }
-      ic = l.tipo === 'bueno' ? '<span class="verde">▲</span>' :
-           l.tipo === 'malo' ? '<span class="rojo">▼</span>' :
-           l.tipo === 'nota' ? '<span class="azul">✎</span>' : '<span class="mut">•</span>';
-      h += '<div class="linea"><div class="ic">' + ic + '</div><div class="tx">' +
-           esc(l.texto) + ' ' + (l.libro ? chip(l.libro) : '') + '</div></div>';
+      var le = log[i];
+      if (le.mandato) mandatoItem = le;
+      else if (le.ship) ships.push(le);
+      else if (le.tipo === 'nota') notas.push(le);
+      else eventos.push(le);
     }
+
+    if (mandatoItem) {
+      var cls2 = mandatoItem.tipo === 'bueno' ? 'verde' : mandatoItem.tipo === 'malo' ? 'rojo' : 'mut';
+      var pct = typeof mandatoItem.mandato.pct === 'number' ? Math.max(0, Math.min(100, mandatoItem.mandato.pct)) : null;
+      h += '<div class="res-mandato"><span class="rot" style="margin-right:10px">Tu mandato</span>' +
+        esc(mandatoItem.mandato.txt) +
+        '<div style="margin-top:6px"><b class="num ' + cls2 + '">' + esc(mandatoItem.mandato.antes) + ' → ' + esc(mandatoItem.mandato.despues) + '</b>' +
+        '<span class="mut num"> · meta ' + esc(mandatoItem.mandato.meta) + '</span></div>' +
+        (pct !== null ? '<div class="mand-bar"><div class="mand-fill" style="width:' + pct + '%"></div></div>' +
+          '<div class="mut num" style="margin-top:3px;font-size:11px">' + pct + '% del camino a la meta</div>' : '') +
+        '</div>';
+    }
+
+    if (ships.length) {
+      h += '<div class="rot" style="margin:12px 0 4px">Salió este mes</div>';
+      for (i = 0; i < ships.length; i++) {
+        var s2 = ships[i].ship;
+        var metaMet3 = MET_MANDATO[J.mandatoId] || null;
+        h += '<div class="res-ship"><div class="ic">' + (ships[i].tipo === 'bueno' ? '<span class="verde">▲</span>' : '<span class="rojo">▼</span>') + '</div>' +
+          '<div class="tx"><b>' + esc(s2.n) + '</b> — impacto real ' + s2.real + ', esperabas ' + s2.esperado +
+          (s2.real < s2.esperado * 0.55 ? ' <span class="rojo">(construiste sin saber)</span>' : '') +
+          '<div style="margin-top:4px">' + chipsVec(s2.vec, metaMet3) + '</div></div></div>';
+      }
+    }
+
+    if (eventos.length) {
+      h += '<div class="rot" style="margin:12px 0 4px">' + (esDecision ? 'Lo que siguió' : 'También este mes') + '</div>';
+      for (i = 0; i < eventos.length; i++) {
+        var l = eventos[i];
+        var ic = l.tipo === 'bueno' ? '<span class="verde">▲</span>' :
+             l.tipo === 'malo' ? '<span class="rojo">▼</span>' : '<span class="mut">•</span>';
+        h += '<div class="linea"><div class="ic">' + ic + '</div><div class="tx">' +
+             esc(l.texto) + ' ' + (l.libro ? chip(l.libro) : '') + '</div></div>';
+      }
+    }
+
+    if (notas.length) {
+      h += '<div class="rot" style="margin:12px 0 4px">Nuevo en la biblioteca</div>';
+      for (i = 0; i < notas.length; i++) {
+        var ln = notas[i];
+        h += '<div class="linea"><div class="ic"><span class="azul">✎</span></div><div class="tx">' +
+             esc(ln.texto) + ' ' + (ln.libro ? chip(ln.libro) : '') + '</div></div>';
+      }
+    }
+
     if (esDecision && libroTeoria) {
       var lt = libroPorId(libroTeoria);
       var ap2 = J ? aplicarLibro(libroTeoria, J) : null;
       if (lt) {
         h += '<div class="teoria-caso" style="margin-top:8px">' +
-          '<div class="rot" style="margin-bottom:4px">The theory · ' + esc(lt.titulo) + ' — ' + esc(lt.autor) + '</div>' +
+          (decisionTxt ? '<div class="pq mut" style="margin-bottom:6px">Elegiste: “' + esc(decisionTxt) + '”</div>' : '') +
+          '<div class="rot" style="margin-bottom:4px">La teoría · ' + esc(lt.titulo) + ' — ' + esc(lt.autor) + '</div>' +
           '<div class="pq" style="line-height:1.5">' + esc(lt.idea) + '</div>' +
           (ap2 ? '<div class="pq caso-linea">' + esc(ap2) + '</div>' : '') +
           '</div>';
       }
     }
     h += '</div><div style="margin-top:14px"><span class="btn pri" data-act="cerrar-result">' +
-         (esDecision ? 'On with the month' : 'Next month') + '</span></div>';
+         (esDecision ? 'Seguir con el mes' : 'Mes siguiente') + '</span></div>';
     $('t-result').innerHTML = h;
     $('t-result').setAttribute('data-decision', esDecision ? '1' : '0');
     ov('ov-result', true);
   }
 
-  /* ================= end of a job ================= */
+  /* ================= fin de un puesto ================= */
 
   function cerrarPuesto() {
     var e = J;
+    var nivelAntes = C.nivel;
     var cierre = Carrera.cerrar(C, e, M);
     var nuevos = Logros.evaluarPuesto(R, C, e, cierre);
     J = null;
 
-    var titulo = cierre.final === 'renuncia' ? 'You took the call, and then the exit' :
-                 cierre.final === 'imputado' ? 'You left in handcuffs through the glass door' :
-                 cierre.final === 'quiebra' ? 'The company ran out of cash' :
-                 cierre.final === 'despido' ? 'They asked for your resignation' :
-                 cierre.final === 'venta' ? 'The company got sold' :
-                 'End of your mandate at ' + cierre.empresa;
-    var h = '<div class="rot">' + esc(cierre.rol) + ' · ' + cierre.meses + ' months · ' + esc(cierre.sector) + '</div>' +
+    var titulo = cierre.final === 'renuncia' ? 'Tomaste la llamada, y después la salida' :
+                 cierre.final === 'imputado' ? 'Saliste esposado por la puerta de vidrio' :
+                 cierre.final === 'quiebra' ? 'A la empresa se le acabó la caja' :
+                 cierre.final === 'despido' ? 'Te pidieron la renuncia' :
+                 cierre.final === 'venta' ? 'La empresa se vendió' :
+                 'Fin de tu mandato en ' + cierre.empresa;
+    var h = '<div class="rot">' + esc(cierre.rol) + ' · ' + cierre.meses + ' meses · ' + esc(cierre.sector) + '</div>' +
       '<div class="h1">' + esc(titulo) + '</div>';
 
     h += '<div class="notas">';
-    h += '<div class="nota"><div class="nk">Mandate</div><div class="nv ' +
+    h += '<div class="nota"><div class="nk">Mandato</div><div class="nv ' +
          (cierre.cumplido ? 'verde' : 'rojo') + '" style="font-size:26px;margin-top:8px">' +
-         (cierre.cumplido ? 'Delivered' : 'You fell short') + '</div>' +
-         '<div class="pq mut">' + esc(cierre.valorMandato) + ' of ' + esc(cierre.metaMandato) + '</div></div>';
-    h += '<div class="nota"><div class="nk">Reputation</div><div class="nv ' +
+         (cierre.cumplido ? 'Cumplido' : 'Te quedaste corto') + '</div>' +
+         '<div class="pq mut">' + esc(cierre.valorMandato) + ' de ' + esc(cierre.metaMandato) + '</div></div>';
+    h += '<div class="nota"><div class="nk">Reputación</div><div class="nv ' +
          (cierre.dRep >= 0 ? 'verde' : 'rojo') + '">' + (cierre.dRep >= 0 ? '+' : '') + cierre.dRep + '</div>' +
-         '<div class="pq mut">now ' + Math.round(C.reputacion) + '</div></div>';
-    h += '<div class="nota"><div class="nk">Move</div><div class="nv" style="font-size:22px;margin-top:10px">' +
-         (cierre.promocion ? '<span class="verde">Promotion</span>' : cierre.imputado ? '<span class="rojo">Indictment</span>' : cierre.despido ? '<span class="rojo">Fired</span>' : 'Lateral') +
+         '<div class="pq mut">ahora ' + Math.round(C.reputacion) + '</div></div>';
+    h += '<div class="nota"><div class="nk">Movida</div><div class="nv" style="font-size:22px;margin-top:10px">' +
+         (cierre.promocion ? '<span class="verde">Ascenso</span>' : cierre.imputado ? '<span class="rojo">Imputación</span>' : cierre.despido ? '<span class="rojo">Despido</span>' : 'Lateral') +
          '</div><div class="pq mut">' + esc(nivelPorN(C.nivel).rol) + '</div></div>';
-    h += '<div class="nota" style="width:280px"><div class="nk">Your pocket</div>' +
+    h += '<div class="nota" style="width:280px"><div class="nk">Tu bolsillo</div>' +
          '<div class="nv" style="font-size:26px;margin-top:6px">' + money(cierre.ahorrado + (cierre.cascada ? cierre.cascada.aFund : 0)) + '</div>' +
-         '<div class="pq mut">Vested equity: ' + (Math.round(cierre.equityVestida * 100) / 100) + '% (paper ' + money(cierre.valorPapel) + ')</div></div>';
+         '<div class="pq mut">Equity consolidado: ' + (Math.round(cierre.equityVestida * 100) / 100) + '% (en papel ' + money(cierre.valorPapel) + ')</div></div>';
     h += '</div>';
+    if (cierre.promocion && C.nivel > nivelAntes) {
+      var nuevasPalancas = ESCALAFON[C.nivel].palancas.filter(function (p) { return ESCALAFON[nivelAntes].palancas.indexOf(p) < 0; });
+      h += '<div class="age-up"><div class="rot">⬆ Subiste de Edad</div>' +
+        '<h3 style="margin:4px 0">' + esc(ESCALAFON[C.nivel].rol) + '</h3>' +
+        '<div class="pq">' + esc(ESCALAFON[C.nivel].nota) + '</div>' +
+        (nuevasPalancas.length ? '<div class="pq mut" style="margin-top:4px">Desbloqueaste: <b>' +
+          esc(nuevasPalancas.map(function (p) { return NOMBRE_PALANCA[p] || p; }).join(', ')) + '</b></div>' : '') +
+        '</div>';
+    }
 
     h += '<div style="display:-webkit-flex;display:flex">';
     h += '<div style="width:520px;padding-right:24px">';
@@ -1149,11 +1328,11 @@
     }
     if (cierre.cascada) {
       var cs = cierre.cascada;
-      h += '<div class="rot" style="margin:12px 0 4px 0">Exit waterfall</div>' +
-        '<div class="req"><span class="mut">Exit value</span> <b>' + money(cs.salida) + '</b></div>' +
-        '<div class="req"><span class="mut">Liquidation preferences</span> <b>' + money(cs.pref) + '</b></div>' +
-        '<div class="req"><span class="mut">Investors</span> <b>' + money(cs.aInv) + '</b></div>' +
-        '<div class="req"><span class="mut">You</span> <b class="verde">' + money(cs.aFund) + '</b></div>';
+      h += '<div class="rot" style="margin:12px 0 4px 0">Cascada de salida</div>' +
+        '<div class="req"><span class="mut">Valor de salida</span> <b>' + money(cs.salida) + '</b></div>' +
+        '<div class="req"><span class="mut">Preferencias de liquidación</span> <b>' + money(cs.pref) + '</b></div>' +
+        '<div class="req"><span class="mut">Inversionistas</span> <b>' + money(cs.aInv) + '</b></div>' +
+        '<div class="req"><span class="mut">Tú</span> <b class="verde">' + money(cs.aFund) + '</b></div>';
     }
     if (cierre.rivalTxt) {
       h += '<div class="linea" style="margin-top:8px"><div class="ic lila">◆</div><div class="tx lila">' +
@@ -1161,15 +1340,15 @@
     }
     h += '</div>';
 
-    h += '<div style="width:380px"><div class="rot" style="margin-bottom:6px">What you take with you</div>';
-    var HH = [['producto','Product'],['tecnologia','Tech'],['negocio','Business'],['liderazgo','Leadership']];
+    h += '<div style="width:380px"><div class="rot" style="margin-bottom:6px">Lo que te llevas</div>';
+    var HH = [['producto','Producto'],['tecnologia','Tecnología'],['negocio','Negocio'],['liderazgo','Liderazgo']];
     for (i = 0; i < HH.length; i++) {
       var k = HH[i][0], v = Math.round(C.hab[k]), d = cierre.dHab[k];
       h += '<div class="hab"><div class="hk">' + HH[i][1] +
            (d > 0 ? ' <span class="verde">+' + d + '</span>' : '') + '<b class="num">' + v + '</b></div>' +
            '<div class="track"><i class="l" style="width:' + v + '%"></i></div></div>';
     }
-    h += '<div class="pq mut" style="margin-top:4px">Every one of these accelerates the matching capability at your next company — Product, Tech, GTM and Org grow faster wherever your own skill is higher.</div>';
+    h += '<div class="pq mut" style="margin-top:4px">Cada una acelera la capacidad gemela en tu próxima empresa — Producto, Tecnología, GTM y Org crecen más rápido donde tu propia habilidad es más alta.</div>';
     for (i = 0; i < nuevos.length; i++) {
       h += '<div class="logro"><div class="med">★</div><div><div class="ln">' + esc(nuevos[i].n) + '</div>' +
            '<div class="ld">' + esc(nuevos[i].d) + '</div></div></div>';
@@ -1177,13 +1356,13 @@
     h += '</div></div>';
 
     h += '<div style="margin-top:16px"><span class="btn pri" data-act="ver-ofertas">' +
-         (C.final ? 'See how your career ends' : 'See what\'s on the table') + '</span></div>';
+         (C.final ? 'Ver cómo termina tu carrera' : 'Ver qué hay sobre la mesa') + '</span></div>';
     $('p-cierre').innerHTML = h;
     guardar();
     ir('p-cierre');
   }
 
-  /* ================= career end ================= */
+  /* ================= fin de la carrera ================= */
 
   function mostrarFinal() {
     var b = Carrera.boletin(C);
@@ -1191,38 +1370,38 @@
     var rv = M.rival, i;
     var ganaste = C.nivel >= rv.nivel;
 
-    var h = '<div class="rot">' + b.anios + ' years · ' + b.puestos + ' jobs · ' +
-            b.cumplidos + ' mandates delivered · ' + b.despidos + ' firings</div>' +
-      '<div class="h1">Your career ended as ' + esc(b.nivel.rol) + '</div>';
+    var h = '<div class="rot">' + b.anios + ' años · ' + b.puestos + ' puestos · ' +
+            b.cumplidos + ' mandatos cumplidos · ' + b.despidos + ' despidos</div>' +
+      '<div class="h1">Tu carrera terminó como ' + esc(b.nivel.rol) + '</div>';
 
     h += '<div class="notas">';
-    h += '<div class="nota"><div class="nk">Net worth</div><div class="nv" style="font-size:30px;margin-top:6px">' +
-         money(b.patrimonio) + '</div><div class="pq mut">salaries ' + money(b.ahorros) + ' + equity ' + money(b.equityRealizado) + '</div></div>';
-    h += '<div class="nota"><div class="nk">Reputation</div><div class="nv">' + b.reputacion + '</div></div>';
-    h += '<div class="nota" style="width:300px"><div class="nk">Your rival: ' + esc(rv.nombre) +
-         (rv.fantasma ? ' <span class="pill frio">real player</span>' : '') + '</div>' +
+    h += '<div class="nota"><div class="nk">Patrimonio</div><div class="nv" style="font-size:30px;margin-top:6px">' +
+         money(b.patrimonio) + '</div><div class="pq mut">sueldos ' + money(b.ahorros) + ' + equity ' + money(b.equityRealizado) + '</div></div>';
+    h += '<div class="nota"><div class="nk">Reputación</div><div class="nv">' + b.reputacion + '</div></div>';
+    h += '<div class="nota" style="width:300px"><div class="nk">Tu rival: ' + esc(rv.nombre) +
+         (rv.fantasma ? ' <span class="pill frio">jugador real</span>' : '') + '</div>' +
          '<div class="nv" style="font-size:22px;margin-top:8px" class="num">' +
-         (ganaste ? '<span class="verde">You came out on top</span>' : '<span class="rojo">They beat you</span>') + '</div>' +
-         '<div class="pq mut">' + esc(rv.nombre) + ' ended as ' + esc(nivelPorN(rv.nivel).rol) +
-         (rv.fundo ? ' and founded their own company' : '') + '</div>' +
-         (rv.fantasma ? '<div class="pq lila" style="margin-top:4px">A real career from the Hall of Fame: they reached ' +
-           esc(nivelPorN(rv.nivelReal !== undefined ? rv.nivelReal : rv.nivel).rol) + ' with ' + money(rv.patReal || 0) + '.</div>' : '') +
+         (ganaste ? '<span class="verde">Quedaste arriba</span>' : '<span class="rojo">Te ganó</span>') + '</div>' +
+         '<div class="pq mut">' + esc(rv.nombre) + ' terminó como ' + esc(nivelPorN(rv.nivel).rol) +
+         (rv.fundo ? ' y fundó su propia empresa' : '') + '</div>' +
+         (rv.fantasma ? '<div class="pq lila" style="margin-top:4px">Una carrera real del Salón de la Fama: llegó a ' +
+           esc(nivelPorN(rv.nivelReal !== undefined ? rv.nivelReal : rv.nivel).rol) + ' con ' + money(rv.patReal || 0) + '.</div>' : '') +
          '</div>';
     h += '</div>';
 
     h += '<div style="display:-webkit-flex;display:flex">';
     h += '<div style="width:460px;padding-right:26px">';
-    h += '<div class="rot" style="margin-bottom:5px">The equity, in the end</div>';
-    if (!b.detalleEquity.length) h += '<div class="pq mut">You didn\'t vest equity anywhere.</div>';
+    h += '<div class="rot" style="margin-bottom:5px">El equity, al final</div>';
+    if (!b.detalleEquity.length) h += '<div class="pq mut">No consolidaste equity en ninguna parte.</div>';
     for (i = 0; i < b.detalleEquity.length; i++) {
       var q = b.detalleEquity[i];
       h += '<div class="req"><span class="mut">' + esc(q.empresa) + ' (' + (Math.round(q.pct*100)/100) + '%)</span> <b class="num ' +
-           (q.valor > 0 ? 'verde' : 'mut') + '">' + (q.valor > 0 ? money(q.valor) : 'worth nothing') + '</b></div>';
+           (q.valor > 0 ? 'verde' : 'mut') + '">' + (q.valor > 0 ? money(q.valor) : 'no vale nada') + '</b></div>';
     }
-    h += '<div class="pq mut" style="margin-top:8px">Most equity dies at zero. The equity that pays covers everything else. ' +
-         'That\'s why the company\'s health when you leave matters — and the terms it signed before you got there.</div>';
-    h += '<div class="rot" style="margin:14px 0 5px 0">Final skills</div>';
-    var HH = [['producto','Product'],['tecnologia','Tech'],['negocio','Business'],['liderazgo','Leadership']];
+    h += '<div class="pq mut" style="margin-top:8px">La mayoría del equity muere en cero. El equity que paga cubre todo lo demás. ' +
+         'Por eso importa la salud de la empresa cuando te vas — y los términos que firmó antes de que llegaras.</div>';
+    h += '<div class="rot" style="margin:14px 0 5px 0">Habilidades finales</div>';
+    var HH = [['producto','Producto'],['tecnologia','Tecnología'],['negocio','Negocio'],['liderazgo','Liderazgo']];
     for (i = 0; i < HH.length; i++) {
       var v = Math.round(C.hab[HH[i][0]]);
       h += '<div class="hab"><div class="hk">' + HH[i][1] + '<b class="num">' + v + '</b></div>' +
@@ -1230,23 +1409,23 @@
     }
     h += '</div>';
 
-    h += '<div style="width:420px"><div class="rot" style="margin-bottom:5px">Job by job</div>';
+    h += '<div style="width:420px"><div class="rot" style="margin-bottom:5px">Puesto por puesto</div>';
     for (i = 0; i < C.puestos.length; i++) {
       var p = C.puestos[i];
       h += '<div class="req">' + (p.cumplido ? '<span class="verde">✓</span>' : p.despido ? '<span class="rojo">✕</span>' : '<span class="mut">○</span>') +
-           ' <b>' + esc(p.rol) + '</b> <span class="mut">at ' + esc(p.empresa) + ' — ' + esc(p.mandato) + '</span></div>';
+           ' <b>' + esc(p.rol) + '</b> <span class="mut">en ' + esc(p.empresa) + ' — ' + esc(p.mandato) + '</span></div>';
     }
     for (i = 0; i < nuevos.length; i++) {
       h += '<div class="logro"><div class="med">★</div><div><div class="ln">' + esc(nuevos[i].n) + '</div>' +
            '<div class="ld">' + esc(nuevos[i].d) + '</div></div></div>';
     }
-    h += '<div class="pq mut" style="margin-top:8px">You opened ' + Object.keys(C.codex).length + ' of ' + LIBROS.length + ' cards.</div>';
+    h += '<div class="pq mut" style="margin-top:8px">Abriste ' + Object.keys(C.codex).length + ' de ' + LIBROS.length + ' tarjetas.</div>';
     h += '</div></div>';
 
-    h += '<div id="rk-final" class="pq mut" style="margin-top:14px">Sending your career to the public Hall of Fame…</div>';
-    h += '<div style="margin-top:12px"><span class="btn pri" data-act="reiniciar">Another career</span> ' +
-         '<span class="btn" data-act="ranking">Hall of Fame</span> ' +
-         '<span class="btn" data-act="biblio">Library</span></div>';
+    h += '<div id="rk-final" class="pq mut" style="margin-top:14px">Enviando tu carrera al Salón de la Fama público…</div>';
+    h += '<div style="margin-top:12px"><span class="btn pri" data-act="reiniciar">Otra carrera</span> ' +
+         '<span class="btn" data-act="ranking">Salón de la Fama</span> ' +
+         '<span class="btn" data-act="biblio">Biblioteca</span></div>';
     $('p-final').innerHTML = h;
     try { localStorage.removeItem(CLAVE); } catch (e2) {}
     ir('p-final');
@@ -1254,26 +1433,26 @@
   }
 
   function mostrarIntro() {
-    $('t-intro').innerHTML = '<div class="rot">How to play</div>' +
-      '<h2>Four things. That\'s it.</h2>' +
+    $('t-intro').innerHTML = '<div class="rot">Cómo se juega</div>' +
+      '<h2>Cuatro cosas. Nada más.</h2>' +
       '<div class="cuerpo2" style="margin-top:6px">' +
-      '<div class="linea"><div class="ic azul">1</div><div class="tx"><b>Pick a job.</b> They hire you for ONE thing: the mandate. The bar up top is your job. Deliver it and you climb.</div></div>' +
-      '<div class="linea"><div class="ic azul">2</div><div class="tx"><b>Every month, station your team\'s points.</b> Whatever you don\'t station goes to Build and pushes your projects — which fit in limited slots, and each one shipped grants the company a new capability.</div></div>' +
-      '<div class="linea"><div class="ic azul">3</div><div class="tx"><b>Prioritize by probability × impact ÷ effort.</b> The dots and blocks are estimates: the more you talk to users, the less they lie to you.</div></div>' +
-      '<div class="linea"><div class="ic azul">4</div><div class="tx"><b>Everything else you learn by losing.</b> When the game charges you for something, it tells you which book had it written down.</div></div>' +
+      '<div class="linea"><div class="ic azul">1</div><div class="tx"><b>Elige un puesto.</b> Te contratan para UNA cosa: el mandato. La barra de arriba es tu trabajo. Cúmplelo y subes.</div></div>' +
+      '<div class="linea"><div class="ic azul">2</div><div class="tx"><b>Cada mes, estaciona los puntos de tu equipo.</b> Lo que no estaciones va a Construir y empuja tus proyectos — que caben en slots limitados, y cada uno entregado le da a la empresa una capacidad nueva.</div></div>' +
+      '<div class="linea"><div class="ic azul">3</div><div class="tx"><b>Prioriza por probabilidad × impacto ÷ esfuerzo.</b> Los puntos y bloques son estimaciones: mientras más hables con usuarios, menos te mienten.</div></div>' +
+      '<div class="linea"><div class="ic azul">4</div><div class="tx"><b>Todo lo demás lo aprendes perdiendo.</b> Cuando el juego te cobra algo, te dice qué libro lo tenía escrito.</div></div>' +
       '</div>' +
-      '<div style="margin-top:18px"><span class="btn pri" data-act="cerrar-intro">See the offers</span></div>';
+      '<div style="margin-top:18px"><span class="btn pri" data-act="cerrar-intro">Ver las ofertas</span></div>';
     ov('ov-intro', true);
   }
 
-  /* ================= library ================= */
+  /* ================= biblioteca ================= */
 
   function mostrarBiblio() {
     var codex = C ? C.codex : {};
     var abiertos = 0, i, j;
     for (i = 0; i < LIBROS.length; i++) if (codex[LIBROS[i].id]) abiertos++;
-    var h = '<div class="rot">Library</div><h2>' + abiertos + ' of ' + LIBROS.length + ' cards</h2>' +
-      '<div class="pq mut" style="margin-bottom:8px">Each card opens when the concept hits you in your career. Tap an open one to read it.</div>' +
+    var h = '<div class="rot">Biblioteca</div><h2>' + abiertos + ' de ' + LIBROS.length + ' tarjetas</h2>' +
+      '<div class="pq mut" style="margin-bottom:8px">Cada tarjeta se abre cuando el concepto te golpea en tu carrera. Toca una abierta para leerla.</div>' +
       '<div class="cuerpo2 scroll">';
     for (j = 0; j < PILARES.length; j++) {
       var pil = PILARES[j], n = 0, tot = 0, cuerpo = '';
@@ -1286,12 +1465,12 @@
         cuerpo += '<div class="lib' + (ab ? '' : ' blq') + '"' + (ab ? ' data-lib="' + l.id + '"' : '') + '>' +
           '<div class="lt">' + esc(l.titulo) + '</div>' +
           '<div class="la">' + esc(l.autor) + '</div>' +
-          '<div class="lc ' + pil.cls + '">' + esc(ab ? l.concepto : 'unopened') + '</div></div>';
+          '<div class="lc ' + pil.cls + '">' + esc(ab ? l.concepto : 'sin abrir') + '</div></div>';
       }
       h += '<div class="rot ' + pil.cls + '" style="margin:10px 0 6px 0">' + esc(pil.nombre) +
            ' · ' + n + '/' + tot + '</div><div class="libs">' + cuerpo + '</div>';
     }
-    h += '</div><div style="margin-top:12px"><span class="btn" data-act="cerrar-biblio">Close</span></div>';
+    h += '</div><div style="margin-top:12px"><span class="btn" data-act="cerrar-biblio">Cerrar</span></div>';
     $('t-biblio').innerHTML = h;
     ov('ov-biblio', true);
   }
@@ -1305,23 +1484,23 @@
       '<h2>' + esc(l.titulo) + '</h2>' +
       '<div class="pq mut" style="margin-bottom:12px">' + esc(l.autor) + '</div>' +
       '<div class="cuerpo2 scroll"><div style="font-size:15px;line-height:1.6">' + esc(l.idea) + '</div>' +
-      '<div class="rot" style="margin:16px 0 5px 0">How the game models it</div>' +
+      '<div class="rot" style="margin:16px 0 5px 0">Cómo lo modela el juego</div>' +
       '<div class="pq" style="font-size:14px;line-height:1.55">' + esc(l.juego) + '</div>' +
       (function () {
         var ap = J ? aplicarLibro(l.id, J) : null;
         if (!ap) return '';
-        return '<div class="teoria-caso"><div class="rot" style="margin-bottom:4px">In your run, today</div>' +
+        return '<div class="teoria-caso"><div class="rot" style="margin-bottom:4px">En tu partida, hoy</div>' +
                '<div class="pq" style="font-size:14px;line-height:1.55">' + esc(ap) + '</div></div>';
       })() + '</div>' +
-      '<div style="margin-top:14px"><span class="btn" data-act="cerrar-libro">Back</span></div>';
+      '<div style="margin-top:14px"><span class="btn" data-act="cerrar-libro">Volver</span></div>';
     ov('ov-libro', true);
   }
 
-  /* ================= public ranking ================= */
+  /* ================= ranking público ================= */
 
-  /* Starting a career, normal or weekly. Weekly seeds the world with the ISO
-     week, so everyone on the internet faces the same era sequence; the run
-     is tagged with the week and lands on that week's public table. */
+  /* Empezar una carrera, normal o semanal. La semanal siembra el mundo con la
+     semana ISO, así todos en internet enfrentan la misma secuencia de eras; la
+     partida queda etiquetada con la semana y cae en la tabla pública de esa semana. */
   function empezarCarrera(semanal) {
     var inp2 = $('perfil-in');
     if (inp2 && inp2.value) {
@@ -1350,15 +1529,15 @@
     if (!sabe) mostrarIntro(); else renderOfertas();
   }
 
-  /* The ghost rival: a real player's career from the ranking replaces the
-     NPC. They climb with the usual dice but stop at the level they actually
-     reached. Arrives async; if it never does, the NPC stays. */
+  /* El rival fantasma: la carrera de un jugador real del ranking reemplaza al
+     NPC. Sube con los dados de siempre pero se detiene en el nivel que de
+     verdad alcanzó. Llega async; si nunca llega, se queda el NPC. */
   function pedirRivalReal() {
     var id = C.rkId;
     Ranking.rival(C.nivel, function (g) {
       if (!g || !g.ok || !g.nombre || !C || C.rkId !== id || !M) return;
       M.rival = {
-        /* the rival is always Lucas M; the real career possesses him */
+        /* el rival siempre es Lucas M; la carrera real lo posee */
         nombre:'Lucas M', nivel:C.nivel,
         reputacion:Math.round(g.reputacion || 38),
         hitos:[], fundo:false, fantasma:true,
@@ -1388,7 +1567,7 @@
     for (k in R.logros) if (R.logros.hasOwnProperty(k) && R.logros[k]) nLogros++;
     var datos = {
       id:C.rkId || (Ranking.token() + '-x'), token:Ranking.token(),
-      nombre:C.nombre && C.nombre !== 'you' ? C.nombre : 'Anonymous',
+      nombre:C.nombre && C.nombre !== 'you' && C.nombre !== 'tú' ? C.nombre : 'Anónimo',
       faccion:Ranking.faccion(), semana:C.semana || null,
       patrimonio:b.patrimonio, nivel:C.nivel, reputacion:b.reputacion,
       anios:parseFloat(b.anios) || 0, puestos:b.puestos,
@@ -1399,13 +1578,13 @@
       var el = $('rk-final');
       if (!el) return;
       if (!r || !r.ok) {
-        el.innerHTML = 'The public Hall of Fame is out of reach right now — your career still counts at home.';
+        el.innerHTML = 'El Salón de la Fama público está fuera de alcance ahora mismo — tu carrera igual cuenta en casa.';
         return;
       }
-      var t = 'Public Hall of Fame: you\'re <b class="verde">#' + r.pos + '</b> of ' + r.total + ' players by net worth.';
-      if (r.posSemanal) t += ' This week: <b class="verde">#' + r.posSemanal + '</b> of ' + r.totalSemanal + '.';
+      var t = 'Salón de la Fama público: eres <b class="verde">#' + r.pos + '</b> de ' + r.total + ' jugadores por patrimonio.';
+      if (r.posSemanal) t += ' Esta semana: <b class="verde">#' + r.posSemanal + '</b> de ' + r.totalSemanal + '.';
       if (r.destronaste) {
-        t += ' <span class="lila">You dethroned ' + esc(r.destronaste) + ' as the #1.</span>';
+        t += ' <span class="lila">Destronaste a ' + esc(r.destronaste) + ' del #1.</span>';
         var g = Logros.dar(R, 'regicidio');
         Logros.guardar(R);
         if (g) {
@@ -1418,7 +1597,7 @@
   }
 
   function filasRk(arr, valor) {
-    if (!arr || !arr.length) return '<div class="pq mut">Nobody yet. Be the first.</div>';
+    if (!arr || !arr.length) return '<div class="pq mut">Nadie todavía. Sé el primero.</div>';
     var h = '', i;
     for (i = 0; i < arr.length; i++) {
       var e = arr[i];
@@ -1432,51 +1611,51 @@
   }
 
   function renderRanking(d, cargando) {
-    var h = '<div class="rot">Public ranking · everyone who ever finished a career</div>' +
-            '<div class="h1">Hall of Fame</div>';
+    var h = '<div class="rot">Ranking público · todos los que alguna vez terminaron una carrera</div>' +
+            '<div class="h1">Salón de la Fama</div>';
     if (cargando) {
-      h += '<div class="pq mut" style="margin-top:14px">Reaching the Hall of Fame…</div>';
+      h += '<div class="pq mut" style="margin-top:14px">Buscando el Salón de la Fama…</div>';
     } else if (!d || !d.ok) {
-      h += '<div class="pq mut" style="margin-top:14px">The Hall of Fame is out of reach right now. It lives on the internet — try again in a bit.</div>';
+      h += '<div class="pq mut" style="margin-top:14px">El Salón de la Fama está fuera de alcance ahora mismo. Vive en internet — intenta de nuevo en un rato.</div>';
     } else {
-      h += '<div class="pq mut" style="margin-top:4px">' + d.jugadores + ' players · ' + d.carreras + ' careers finished' +
-           (d.tu && d.tu.pos ? ' · you\'re <b class="verde">#' + d.tu.pos + '</b> by net worth' : '') + '</div>';
+      h += '<div class="pq mut" style="margin-top:4px">' + d.jugadores + ' jugadores · ' + d.carreras + ' carreras terminadas' +
+           (d.tu && d.tu.pos ? ' · eres <b class="verde">#' + d.tu.pos + '</b> por patrimonio' : '') + '</div>';
       if (d.bounty) {
-        h += '<div class="caja2" style="margin-top:12px;max-width:660px"><span class="lila">BOUNTY</span> · beat <b>' +
+        h += '<div class="caja2" style="margin-top:12px;max-width:660px"><span class="lila">RECOMPENSA</span> · vence a <b>' +
              esc(d.bounty.nombre) + '</b> (' + money(d.bounty.patrimonio) +
-             ') and the <b>Regicide</b> achievement is yours.</div>';
+             ') y el logro <b>Regicidio</b> es tuyo.</div>';
       }
       h += '<div class="rkcols scroll" style="-webkit-flex:1;flex:1;min-height:0">';
       h += '<div style="width:330px;padding-right:26px">';
-      h += '<div class="rot" style="margin-bottom:6px">World ranking · net worth · all ' + d.jugadores + ' players</div>';
+      h += '<div class="rot" style="margin-bottom:6px">Ranking mundial · patrimonio · los ' + d.jugadores + ' jugadores</div>';
       h += filasRk(d.tablas.patrimonio, function (e) { return money(e.patrimonio); });
       h += '</div>';
       h += '<div style="width:310px;padding-right:26px">';
-      h += '<div class="rot" style="margin-bottom:6px">This week · ' + esc(d.semana) + '</div>';
+      h += '<div class="rot" style="margin-bottom:6px">Esta semana · ' + esc(d.semana) + '</div>';
       h += filasRk(d.tablas.semanal, function (e) { return money(e.patrimonio); });
       if (d.semanaPasada) {
-        h += '<div class="pq mut" style="margin-top:6px">Last week: <b>' + esc(d.semanaPasada.nombre) +
-             '</b> won with ' + money(d.semanaPasada.patrimonio) + '.</div>';
+        h += '<div class="pq mut" style="margin-top:6px">La semana pasada: <b>' + esc(d.semanaPasada.nombre) +
+             '</b> ganó con ' + money(d.semanaPasada.patrimonio) + '.</div>';
       }
       var g2 = d.facciones.growth, c2 = d.facciones.craft;
       var totalC = g2.cumplidos + c2.cumplidos;
       var pg = totalC ? Math.round(g2.cumplidos / totalC * 100) : 50;
-      h += '<div class="rot" style="margin:14px 0 4px 0">Faction war · mandates delivered</div>';
+      h += '<div class="rot" style="margin:14px 0 4px 0">Guerra de facciones · mandatos cumplidos</div>';
       h += '<div class="facbar"><i style="width:' + pg + '%;background:#e8a33d"></i>' +
            '<i style="width:' + (100 - pg) + '%;background:#5aa9f0"></i></div>';
-      h += '<div class="pq"><span style="color:#e8a33d"><b>Growth Legion</b> ' + g2.cumplidos + '</span> · ' +
-           '<span style="color:#5aa9f0"><b>Craft Guild</b> ' + c2.cumplidos + '</span></div>';
+      h += '<div class="pq"><span style="color:#e8a33d"><b>Legión del Crecimiento</b> ' + g2.cumplidos + '</span> · ' +
+           '<span style="color:#5aa9f0"><b>Gremio del Oficio</b> ' + c2.cumplidos + '</span></div>';
       h += '</div>';
       h += '<div style="width:260px">';
-      h += '<div class="rot" style="margin-bottom:6px">Highest role</div>';
+      h += '<div class="rot" style="margin-bottom:6px">Rol más alto</div>';
       h += filasRk(d.tablas.nivel, function (e) { return esc(nivelPorN(e.nivel).corto); });
-      h += '<div class="rot" style="margin:12px 0 6px 0">Mandate streak</div>';
-      h += filasRk(d.tablas.racha, function (e) { return e.racha + ' in a row'; });
-      h += '<div class="rot" style="margin:12px 0 6px 0">Achievements</div>';
-      h += filasRk(d.tablas.logros, function (e) { return e.logros + ' of ' + Logros.DEFS.length; });
+      h += '<div class="rot" style="margin:12px 0 6px 0">Racha de mandatos</div>';
+      h += filasRk(d.tablas.racha, function (e) { return e.racha + ' seguidos'; });
+      h += '<div class="rot" style="margin:12px 0 6px 0">Logros</div>';
+      h += filasRk(d.tablas.logros, function (e) { return e.logros + ' de ' + Logros.DEFS.length; });
       h += '</div></div>';
     }
-    h += '<div style="margin-top:14px"><span class="btn" data-act="cerrar-ranking">Back</span></div>';
+    h += '<div style="margin-top:14px"><span class="btn" data-act="cerrar-ranking">Volver</span></div>';
     $('p-ranking').innerHTML = h;
   }
 
@@ -1626,6 +1805,12 @@
     else if (v === 'tour-sigo') { tourPaso++; if (tourPaso >= TOUR.length) tourFin(); else tourRender(); }
     else if (v === 'tour-salir') { tourFin(); }
     else if (v === 'ver-objetivo') { if (J) mostrarBrief(); }
+    else if (v === 'gastar-ficha') {
+      if (J) {
+        var eje = attr(t, 'data-eje');
+        if (eje && Motor.gastarFicha(J, eje)) { guardar(); renderRetos(); renderPanel(); }
+      }
+    }
     else if (v === 'continuar') {
       if (cargar()) {
         if (J && !J.briefVisto) { mostrarBrief(); }
@@ -1666,8 +1851,8 @@
       if (tourActivo()) tourFin();
       var bld = $('building');
       bld.className = 'on';
-      bld.innerHTML = '<div class="bld-in"><div class="bld-t">Building<span class="bdots"><i>.</i><i>.</i><i>.</i></span></div>' +
-        '<div class="bld-s">The month runs: code ships, users decide, the market answers.</div></div>';
+      bld.innerHTML = '<div class="bld-in"><div class="bld-t">Construyendo<span class="bdots"><i>.</i><i>.</i><i>.</i></span></div>' +
+        '<div class="bld-s">El mes corre: el código sale, los usuarios deciden, el mercado responde.</div></div>';
       setTimeout(function () { bld.className = ''; ejecutar(); }, 1100);
     }
     else if (v === 'ronda') { if (J) { J.levantando = true; evActual = eventoAplicable(J, C); if (evActual) mostrarEvento(evActual); } }
@@ -1679,7 +1864,7 @@
     else if (v === 'reiniciar') { C = null; M = null; J = null; R = Logros.cargar(); renderInicio(); ir('p-inicio'); }
   }, false);
 
-  /* scale the 1024x768 stage to the viewport, centered. iPad 3 lands at 1. */
+  /* escala el escenario de 1024x768 al viewport, centrado. El iPad 3 cae en 1. */
   function escalar() {
     var st = document.getElementById('stage');
     if (!st) return;

@@ -1,7 +1,7 @@
-// Minimal server for Railway. Zero dependencies.
-// Locally the game is still served by the panel's server; this file only
-// runs on the deploy — which is why /api/perfil and the public ranking
-// live here. The game talks to this API cross-origin from the LAN too.
+// Servidor mínimo para Railway. Cero dependencias.
+// En local el juego lo sigue sirviendo el servidor del panel; este archivo solo
+// corre en el deploy — por eso /api/perfil y el ranking público viven aquí.
+// El juego también le habla a esta API cross-origin desde la LAN.
 var http = require('http');
 var https = require('https');
 var fs = require('fs');
@@ -21,11 +21,11 @@ var MIME = {
   '.txt': 'text/plain; charset=utf-8'
 };
 
-/* ================= PUBLIC RANKING (Hall of Fame) =================
-   A JSON file on a Railway volume (/data). Without the volume it still
-   works but resets on every deploy — the boot log says which one you got.
-   Everything the client sends is untrusted: clamp numbers, whitelist
-   strings, and escape names at render time. */
+/* ================= RANKING PÚBLICO (Salón de la Fama) =================
+   Un archivo JSON en un volumen de Railway (/data). Sin el volumen igual
+   funciona, pero se resetea en cada deploy — el log de arranque dice cuál
+   te tocó. Todo lo que manda el cliente es no confiable: acotar números,
+   listas blancas de strings, y escapar nombres al renderizar. */
 
 var RANK_DIR = process.env.RANKING_DIR ||
   (fs.existsSync('/data') ? '/data' : ROOT);
@@ -53,7 +53,7 @@ function guardarRanking() {
   }, 1500);
 }
 
-/* ISO week, e.g. "2026-W36". Same function ships in the client. */
+/* Semana ISO, p.ej. "2026-W36". La misma función viaja en el cliente. */
 function semanaISO(d) {
   d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   var dia = d.getUTCDay() || 7;
@@ -77,9 +77,10 @@ function ent(v, a, b) {
   return v === null ? null : Math.round(v);
 }
 function limpiarNombre(s) {
-  if (typeof s !== 'string') return 'Anonymous';
+  if (typeof s !== 'string') return 'Anónimo';
   s = s.replace(/[<>&"']/g, '').replace(/[\x00-\x1f\x7f]/g, ' ').replace(/\s+/g, ' ').trim();
-  if (!s || s.toLowerCase() === 'you') return 'Anonymous';
+  /* anonimiza tanto el default viejo ('you') como el nuevo ('tú') */
+  if (!s || s.toLowerCase() === 'you' || s.toLowerCase() === 'tú') return 'Anónimo';
   return s.slice(0, 40);
 }
 
@@ -101,7 +102,7 @@ function validarCarrera(b) {
   var faccion = b.faccion === 'growth' || b.faccion === 'craft' ? b.faccion : null;
   var semana = null;
   if (typeof b.semana === 'string' && /^\d{4}-W\d{2}$/.test(b.semana)) {
-    /* a weekly run started late in the week can land after the flip */
+    /* una partida semanal empezada tarde puede caer después del cambio de semana */
     if (b.semana === semanaISO(new Date()) || b.semana === semanaAnterior()) semana = b.semana;
   }
   return {
@@ -114,7 +115,7 @@ function validarCarrera(b) {
   };
 }
 
-/* soft rate limit, in memory: enough to stop a bored script kid */
+/* rate limit suave, en memoria: suficiente para frenar a un script kid aburrido */
 var ultimoEnvio = {};
 function rateLimitOk(token) {
   var ahora = Date.now(), r = ultimoEnvio[token];
@@ -125,7 +126,7 @@ function rateLimitOk(token) {
   return true;
 }
 
-/* best career per player (token) by a field, sorted desc */
+/* mejor carrera por jugador (token) según un campo, orden descendente */
 function mejores(carreras, campo) {
   var por = {}, i, e;
   for (i = 0; i < carreras.length; i++) {
@@ -189,7 +190,7 @@ function armarTablas(miToken) {
     ok: true, semana: semana,
     carreras: DB.carreras.length, jugadores: patTop.length,
     tablas: {
-      /* the world ranking lists EVERY player; the caps are just a fuse */
+      /* el ranking mundial lista a TODOS los jugadores; los topes son solo un fusible */
       patrimonio: filas(patTop, 1000, miToken),
       nivel: filas(nivTop, 5, miToken),
       racha: filas(rachaTop, 5, miToken),
@@ -218,7 +219,7 @@ function recibirCarrera(body, res) {
   var patAntes = mejores(DB.carreras, 'patrimonio');
   var reyAntes = patAntes.length ? patAntes[0] : null;
 
-  /* same career resubmitted (same id) replaces itself instead of duplicating */
+  /* la misma carrera reenviada (mismo id) se reemplaza a sí misma en vez de duplicarse */
   for (var i = 0; i < DB.carreras.length; i++) {
     if (DB.carreras[i].id === c.id) { DB.carreras.splice(i, 1); break; }
   }
@@ -247,7 +248,7 @@ function elegirRival(miToken, nivelMin) {
   for (i = 0; i < DB.carreras.length; i++) {
     e = DB.carreras[i];
     if (e.token === miToken) continue;
-    /* one candidate per player: their best career */
+    /* un candidato por jugador: su mejor carrera */
     var m = por[e.token];
     if (!m || e.patrimonio > m.patrimonio) por[e.token] = e;
   }
@@ -260,7 +261,7 @@ function elegirRival(miToken, nivelMin) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-/* ---------- the public /ranking page ---------- */
+/* ---------- la página pública /ranking ---------- */
 function escHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
                   .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -270,12 +271,12 @@ function dinero(n) {
   if (Math.abs(n) >= 10000) return '$' + Math.round(n / 1000) + 'k';
   return '$' + Math.round(n);
 }
-var ROLES = ['Product Analyst', 'Product Manager', 'Senior PM', 'Group PM',
-             'Director of Product', 'VP of Product', 'CPO', 'Founder'];
+var ROLES = ['Analista de Producto', 'Product Manager', 'Senior PM', 'Group PM',
+             'Director de Producto', 'VP de Producto', 'CPO', 'Fundador/a'];
 
 function tablaHtml(titulo, filas2, valor) {
   var h = '<div class="tabla"><div class="rot">' + titulo + '</div>';
-  if (!filas2.length) h += '<div class="fila mut">Nobody yet. Be the first.</div>';
+  if (!filas2.length) h += '<div class="fila mut">Nadie todavía. Sé el primero.</div>';
   for (var i = 0; i < filas2.length; i++) {
     var e = filas2[i];
     var tag = e.faccion === 'growth' ? ' <span class="tag g">growth</span>' :
@@ -291,7 +292,7 @@ function paginaRanking() {
   var d = armarTablas(null);
   var h = '<!DOCTYPE html><html><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-    '<title>Founders — Hall of Fame</title><style>' +
+    '<title>Founder Mode — Salón de la Fama</title><style>' +
     'body{margin:0;background:#04060a;color:#e8eaed;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;padding:28px 20px}' +
     '.marco{max-width:920px;margin:0 auto}' +
     'h1{font-weight:200;font-size:34px;letter-spacing:-0.5px;margin:4px 0 2px 0}' +
@@ -312,48 +313,49 @@ function paginaRanking() {
     '.pie{margin-top:26px;font-size:13px}' +
     'a{color:#5aa9f0;text-decoration:none}' +
     '</style></head><body><div class="marco">' +
-    '<div class="rot">Founders · public ranking · ' + escHtml(d.semana) + '</div>' +
-    '<h1>Hall of Fame</h1>' +
-    '<div class="mut" style="font-size:13px">' + d.jugadores + ' players · ' + d.carreras + ' careers finished</div>';
+    '<div class="rot">Founder Mode · ranking público · ' + escHtml(d.semana) + '</div>' +
+    '<h1>Salón de la Fama</h1>' +
+    '<div class="mut" style="font-size:13px">' + d.jugadores + ' jugadores · ' + d.carreras + ' carreras terminadas</div>';
 
   if (d.bounty) {
-    h += '<div class="bounty"><span class="lila">BOUNTY</span> &nbsp;Dethrone <b>' + escHtml(d.bounty.nombre) +
-         '</b> (' + dinero(d.bounty.patrimonio) + ') and the <b>Regicide</b> achievement is yours.</div>';
+    h += '<div class="bounty"><span class="lila">RECOMPENSA</span> &nbsp;Destrona a <b>' + escHtml(d.bounty.nombre) +
+         '</b> (' + dinero(d.bounty.patrimonio) + ') y el logro <b>Regicidio</b> es tuyo.</div>';
   }
 
   h += '<div class="cols">';
-  h += tablaHtml('World ranking · net worth · all ' + d.jugadores + ' players', d.tablas.patrimonio, function (e) { return dinero(e.patrimonio); });
-  h += tablaHtml('This week · ' + escHtml(d.semana), d.tablas.semanal, function (e) { return dinero(e.patrimonio); });
+  h += tablaHtml('Ranking mundial · patrimonio · los ' + d.jugadores + ' jugadores', d.tablas.patrimonio, function (e) { return dinero(e.patrimonio); });
+  h += tablaHtml('Esta semana · ' + escHtml(d.semana), d.tablas.semanal, function (e) { return dinero(e.patrimonio); });
   h += '</div><div class="cols">';
-  h += tablaHtml('Highest role', d.tablas.nivel, function (e) { return escHtml(ROLES[e.nivel] || ''); });
-  h += tablaHtml('Mandate streak', d.tablas.racha, function (e) { return e.racha + ' in a row'; });
-  h += tablaHtml('Achievements', d.tablas.logros, function (e) { return e.logros + ' unlocked'; });
+  h += tablaHtml('Rol más alto', d.tablas.nivel, function (e) { return escHtml(ROLES[e.nivel] || ''); });
+  h += tablaHtml('Racha de mandatos', d.tablas.racha, function (e) { return e.racha + ' seguidos'; });
+  h += tablaHtml('Logros', d.tablas.logros, function (e) { return e.logros + ' desbloqueados'; });
   h += '</div>';
 
   var g = d.facciones.growth, c = d.facciones.craft;
   var totalC = g.cumplidos + c.cumplidos;
   var pg = totalC ? Math.round(g.cumplidos / totalC * 100) : 50;
-  h += '<div class="tabla" style="margin-top:22px"><div class="rot">Faction war · mandates delivered</div>' +
+  h += '<div class="tabla" style="margin-top:22px"><div class="rot">Guerra de facciones · mandatos cumplidos</div>' +
     '<div class="facbar"><i style="width:' + pg + '%;background:#e8a33d"></i><i style="width:' + (100 - pg) + '%;background:#5aa9f0"></i></div>' +
     '<div style="display:flex;justify-content:space-between;font-size:13px">' +
-    '<span><b style="color:#e8a33d">Growth Legion</b> · ' + g.cumplidos + ' mandates · ' + g.carreras + ' careers</span>' +
-    '<span><b style="color:#5aa9f0">Craft Guild</b> · ' + c.cumplidos + ' mandates · ' + c.carreras + ' careers</span></div></div>';
+    '<span><b style="color:#e8a33d">Legión del Crecimiento</b> · ' + g.cumplidos + ' mandatos · ' + g.carreras + ' carreras</span>' +
+    '<span><b style="color:#5aa9f0">Gremio del Oficio</b> · ' + c.cumplidos + ' mandatos · ' + c.carreras + ' carreras</span></div></div>';
 
   if (d.semanaPasada) {
-    h += '<div class="mut" style="margin-top:14px;font-size:13px">Last week (' + escHtml(d.semanaPasada.semana) + ') was won by <b>' +
-         escHtml(d.semanaPasada.nombre) + '</b> with ' + dinero(d.semanaPasada.patrimonio) + '.</div>';
+    h += '<div class="mut" style="margin-top:14px;font-size:13px">La semana pasada (' + escHtml(d.semanaPasada.semana) + ') la ganó <b>' +
+         escHtml(d.semanaPasada.nombre) + '</b> con ' + dinero(d.semanaPasada.patrimonio) + '.</div>';
   }
 
-  h += '<div class="pie"><a href="/">Play Founders</a> — every career you finish lands here.</div>';
+  h += '<div class="pie"><a href="/">Juega Founder Mode</a> — cada carrera que termines cae aquí.</div>';
   h += '</div></body></html>';
   return h;
 }
 
 /* ---------- /api/perfil?u=<linkedin-url> ----------
-   Server-side fetch of the PUBLIC profile page: LinkedIn puts
-   "Name - Headline | LinkedIn" in og:title / <title> for logged-out views.
-   LinkedIn often authwalls datacenter IPs, so this is best-effort by design:
-   the client always falls back to slug + title parsing when we return ok:false. */
+   Fetch del lado del servidor de la página PÚBLICA del perfil: LinkedIn pone
+   "Nombre - Titular | LinkedIn" en og:title / <title> para vistas sin sesión.
+   LinkedIn suele poner authwall a IPs de datacenter, así que esto es mejor
+   esfuerzo por diseño: el cliente siempre cae al parseo de slug + cargo
+   cuando devolvemos ok:false. */
 function limpiarEntidades(s) {
   return s
     .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
@@ -366,7 +368,7 @@ function extraerPerfil(html) {
   if (!m) return null;
   var t = limpiarEntidades(m[1]).replace(/\s*\|\s*LinkedIn\s*$/i, '').replace(/\s*- LinkedIn\s*$/i, '');
   if (/authwall|sign ?up|log ?in/i.test(t)) return null;
-  // "Name - Headline - Company" or "Name – Headline"
+  // "Nombre - Titular - Empresa" o "Nombre – Titular"
   var partes = t.split(/\s+[-–—]\s+/);
   var nombre = partes[0] ? partes[0].trim() : null;
   var titular = partes.slice(1).join(' - ').trim() || null;

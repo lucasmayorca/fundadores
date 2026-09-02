@@ -1,14 +1,14 @@
-/* Public ranking client: anonymous identity (a token in localStorage),
-   career submissions, the Hall of Fame tables, the ghost rival and the
-   weekly seed. Best-effort by design: on the LAN or offline every call
-   fails quietly and the game never blocks on it. Strict ES5 (Safari 9). */
+/* Cliente del ranking público: identidad anónima (un token en localStorage),
+   envío de carreras, las tablas del Salón de la Fama, el rival fantasma y la
+   semilla semanal. Mejor esfuerzo por diseño: en la LAN o sin conexión cada
+   llamada falla en silencio y el juego nunca se bloquea. ES5 estricto (Safari 9). */
 
 var Ranking = (function () {
   'use strict';
 
-  /* On Railway (or `npm start` locally) the API is same-origin. Served by
-     the panel — the game lives under /juego/ there — it goes cross-origin
-     to the public deploy, so the iPad on the LAN scores publicly too. */
+  /* En Railway (o "npm start" local) la API es same-origin. Servido por
+     el panel — ahí el juego vive bajo /juego/ — va cross-origin al deploy
+     público, así el iPad en la LAN también puntúa en público. */
   var API = (function () {
     try {
       if (/railway\.app$/i.test(window.location.hostname)) return '';
@@ -47,7 +47,7 @@ var Ranking = (function () {
     } catch (e) {}
   }
 
-  /* ISO week, e.g. "2026-W36". Same function lives in the server. */
+  /* Semana ISO, p.ej. "2026-W36". La misma función vive en el servidor. */
   function semana() {
     var d = new Date();
     d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -59,7 +59,7 @@ var Ranking = (function () {
     return a + '-W' + (w < 10 ? '0' + w : w);
   }
 
-  /* djb2: the week string becomes the world seed, same for everyone */
+  /* djb2: el string de la semana se vuelve la semilla del mundo, igual para todos */
   function semilla(s) {
     var h = 5381, i;
     for (i = 0; i < s.length; i++) h = ((h * 33) + s.charCodeAt(i)) % 4294967296;
@@ -83,7 +83,7 @@ var Ranking = (function () {
         try { r = JSON.parse(x.responseText); } catch (e) {}
         fin(r);
       };
-      /* text/plain keeps old Safari away from CORS preflight */
+      /* text/plain le evita el preflight de CORS al Safari viejo */
       if (cuerpo) x.setRequestHeader('Content-Type', 'text/plain');
       x.send(cuerpo ? JSON.stringify(cuerpo) : null);
     } catch (e2) { fin(null); }

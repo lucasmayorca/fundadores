@@ -1,5 +1,5 @@
-/* Achievements and hall of records. Persist across careers in localStorage.
-   Strict ES5 (Safari 9). */
+/* Logros y salón de récords. Persisten entre carreras en localStorage.
+   ES5 estricto (Safari 9). */
 
 var Logros = (function () {
   'use strict';
@@ -7,23 +7,23 @@ var Logros = (function () {
   var CLAVE = 'fundadores.records';
 
   var DEFS = [
-    { id:'abismo',    n:'Beachhead',             d:'Cracked open the big market in a single role.' },
-    { id:'cpo',       n:'The big chair',         d:'Made it to CPO.' },
-    { id:'fundaste',  n:'Garage',                d:'Founded your own company.' },
-    { id:'salida',    n:'The bell',              d:'Sold a company as a founder.' },
-    { id:'limpio',    n:'Zero downtime',         d:'A whole role without a single incident.' },
-    { id:'invierno',  n:'Winter survivor',       d:'Delivered a mandate during the capital winter.' },
-    { id:'mudo',      n:'The uncomfortable number', d:'Showed the board the cohorts knowing it would hurt.' },
-    { id:'sindeuda',  n:'Debt-free',             d:'Finished a role with technical debt under 20.' },
-    { id:'biblioteca',n:'Bookworm',              d:'Opened 60 library entries.' },
-    { id:'rival',     n:'Unfinished business',   d:'Finished a career above your rival.' },
-    { id:'pleno',     n:'On a streak',           d:'Delivered 4 mandates in a row.' },
-    { id:'fenix',     n:'Phoenix',               d:'A promotion in the role right after a firing.' },
-    { id:'heisenberg',n:'The one who knocks',    d:'Finished a role with the Heat above 70, no indictment.' },
-    { id:'manoslimpias',n:'Clean hands',         d:'A whole career without the Heat ever passing 20.' },
-    { id:'labanca',   n:'The house wins',        d:'Delivered a mandate in the gambling industry.' },
-    { id:'zafaste',   n:'You got away',          d:'Survived a raid.' },
-    { id:'regicidio', n:'Regicide',              d:'Dethroned the #1 of the public Hall of Fame.' }
+    { id:'abismo',    n:'Cabeza de playa',       d:'Abriste el mercado grande en un solo puesto.' },
+    { id:'cpo',       n:'La silla grande',       d:'Llegaste a CPO.' },
+    { id:'fundaste',  n:'Garaje',                d:'Fundaste tu propia empresa.' },
+    { id:'salida',    n:'La campana',            d:'Vendiste una empresa como fundador.' },
+    { id:'limpio',    n:'Cero caídas',           d:'Un puesto entero sin un solo incidente.' },
+    { id:'invierno',  n:'Sobreviviente del invierno', d:'Entregaste un mandato durante el invierno del capital.' },
+    { id:'mudo',      n:'El número incómodo', d:'Le mostraste al directorio las cohortes sabiendo que iba a doler.' },
+    { id:'sindeuda',  n:'Sin deudas',            d:'Terminaste un puesto con la deuda técnica por debajo de 20.' },
+    { id:'biblioteca',n:'Ratón de biblioteca',   d:'Abriste 60 entradas de la biblioteca.' },
+    { id:'rival',     n:'Cuentas pendientes',    d:'Terminaste una carrera por encima de tu rival.' },
+    { id:'pleno',     n:'En racha',              d:'Entregaste 4 mandatos seguidos.' },
+    { id:'fenix',     n:'Fénix',                 d:'Un ascenso en el puesto siguiente a un despido.' },
+    { id:'heisenberg',n:'El que golpea la puerta', d:'Terminaste un puesto con la Lupa arriba de 70, sin imputación.' },
+    { id:'manoslimpias',n:'Manos limpias',       d:'Una carrera entera sin que la Lupa pasara de 20.' },
+    { id:'labanca',   n:'La banca gana',         d:'Entregaste un mandato en la industria del juego.' },
+    { id:'zafaste',   n:'Zafaste',               d:'Sobreviviste a un allanamiento.' },
+    { id:'regicidio', n:'Regicidio',             d:'Destronaste al #1 del Salón de la Fama público.' }
   ];
 
   function cargar() {
@@ -42,7 +42,7 @@ var Logros = (function () {
     return null;
   }
 
-  /* Called when a role closes. Returns the new achievements to display. */
+  /* Se llama cuando cierra un puesto. Devuelve los logros nuevos para mostrar. */
   function evaluarPuesto(r, c, e, cierre) {
     var nuevos = [], g;
     if (Motor.compuerta(e, 'pragm') >= 1) { g = dar(r, 'abismo'); if (g) nuevos.push(g); }
@@ -66,7 +66,7 @@ var Logros = (function () {
     return nuevos;
   }
 
-  /* At the end of the career. */
+  /* Al final de la carrera. */
   function evaluarCarrera(r, c, b, mundo) {
     var nuevos = [], g;
     if ((c.lupaMax || 0) <= 20 && c.puestos.length >= 4) { g = dar(r, 'manoslimpias'); if (g) nuevos.push(g); }
