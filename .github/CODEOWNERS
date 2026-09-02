@@ -24,6 +24,7 @@
 /index.html         @lucasmayorca
 /server.js          @lucasmayorca
 /ranking.js         @lucasmayorca
+/propuestas.js      @lucasmayorca
 
 # Infraestructura compartida: la revisa el dueño del repo.
 /.github/           @lucasmayorca

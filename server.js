@@ -54,6 +54,35 @@ function guardarRanking() {
   }, 1500);
 }
 
+/* ================= PROPUESTAS DE LA COMUNIDAD =================
+   Mismo volumen, mismo patrón de guardado que el ranking. Los jugadores
+   proponen mejoras al juego y votan; la más votada de la semana la
+   implementa un agente en una rama y abre un PR — ver CONTRIBUTING.md. */
+
+var PROP_FILE = path.join(RANK_DIR, 'propuestas.json');
+var DB_PROP = { propuestas: [], historial: [] };
+try {
+  DB_PROP = JSON.parse(fs.readFileSync(PROP_FILE, 'utf8'));
+  if (!DB_PROP || !Array.isArray(DB_PROP.propuestas) || !Array.isArray(DB_PROP.historial)) {
+    DB_PROP = { propuestas: [], historial: [] };
+  }
+} catch (e) { DB_PROP = { propuestas: [], historial: [] }; }
+
+var guardarPropTimer = null;
+function guardarPropuestas() {
+  if (guardarPropTimer) return;
+  guardarPropTimer = setTimeout(function () {
+    guardarPropTimer = null;
+    var tmp = PROP_FILE + '.tmp';
+    fs.writeFile(tmp, JSON.stringify(DB_PROP), function (err) {
+      if (err) return console.error('propuestas save failed:', err.message);
+      fs.rename(tmp, PROP_FILE, function (err2) {
+        if (err2) console.error('propuestas rename failed:', err2.message);
+      });
+    });
+  }, 1500);
+}
+
 /* Semana ISO, p.ej. "2026-W36". La misma función viaja en el cliente. */
 function semanaISO(d) {
   d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -83,6 +112,12 @@ function limpiarNombre(s) {
   /* anonimiza tanto el default viejo ('you') como el nuevo ('tú') */
   if (!s || s.toLowerCase() === 'you' || s.toLowerCase() === 'tú') return 'Anónimo';
   return s.slice(0, 40);
+}
+function limpiarTexto(s) {
+  if (typeof s !== 'string') return null;
+  s = s.replace(/[<>&"']/g, '').replace(/[\x00-\x1f\x7f]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (s.length < 10 || s.length > 280) return null;
+  return s;
 }
 
 function validarCarrera(b) {
@@ -303,6 +338,136 @@ function recibirCarrera(body, res) {
     out.destronaste = reyAntes.nombre;
   }
   responderJson(res, out);
+}
+
+/* rate limit propio para propuestas: 1 propuesta activa por token por semana,
+   y como mucho un envío cada 20s para frenar reintentos accidentales */
+var ultimoEnvioProp = {};
+function rateLimitPropOk(token) {
+  var ahora = Date.now(), r = ultimoEnvioProp[token];
+  if (r && ahora - r < 20000) return false;
+  ultimoEnvioProp[token] = ahora;
+  return true;
+}
+
+function propuestasDeLaSemana(semana) {
+  var out = [];
+  for (var i = 0; i < DB_PROP.propuestas.length; i++) {
+    if (DB_PROP.propuestas[i].semana === semana) out.push(DB_PROP.propuestas[i]);
+  }
+  return out;
+}
+
+function validarPropuesta(b) {
+  if (!b || typeof b !== 'object') return null;
+  var token = typeof b.token === 'string' && /^[a-z0-9]{8,48}$/.test(b.token) ? b.token : null;
+  if (!token) return null;
+  var texto = limpiarTexto(b.texto);
+  if (!texto) return null;
+  return { token: token, texto: texto };
+}
+
+function recibirPropuesta(body, res) {
+  var b = null;
+  try { b = JSON.parse(body); } catch (e) {}
+  var p = validarPropuesta(b);
+  if (!p) return responderJson(res, { ok: false, motivo: 'datos' });
+  if (!rateLimitPropOk(p.token)) return responderJson(res, { ok: false, motivo: 'calma' });
+
+  var semana = semanaISO(new Date());
+  var deLaSemana = propuestasDeLaSemana(semana);
+  for (var i = 0; i < deLaSemana.length; i++) {
+    if (deLaSemana[i].token === p.token) return responderJson(res, { ok: false, motivo: 'ya-propusiste' });
+  }
+
+  var propuesta = {
+    id: p.token.slice(0, 8) + '-' + Date.now(),
+    token: p.token, texto: p.texto, semana: semana,
+    votos: [], creada: Date.now(), estado: 'activa'
+  };
+  DB_PROP.propuestas.push(propuesta);
+  guardarPropuestas();
+  responderJson(res, { ok: true, id: propuesta.id });
+}
+
+function recibirVoto(body, res) {
+  var b = null;
+  try { b = JSON.parse(body); } catch (e) {}
+  if (!b || typeof b !== 'object') return responderJson(res, { ok: false, motivo: 'datos' });
+  var token = typeof b.token === 'string' && /^[a-z0-9]{8,48}$/.test(b.token) ? b.token : null;
+  var id = typeof b.id === 'string' ? b.id : null;
+  if (!token || !id) return responderJson(res, { ok: false, motivo: 'datos' });
+
+  var semana = semanaISO(new Date());
+  var objetivo = null, i;
+  for (i = 0; i < DB_PROP.propuestas.length; i++) {
+    if (DB_PROP.propuestas[i].id === id && DB_PROP.propuestas[i].semana === semana) {
+      objetivo = DB_PROP.propuestas[i];
+      break;
+    }
+  }
+  if (!objetivo) return responderJson(res, { ok: false, motivo: 'no-existe' });
+
+  /* un voto activo por token por semana: sacarlo de cualquier otra antes de sumarlo acá */
+  var deLaSemana = propuestasDeLaSemana(semana);
+  for (i = 0; i < deLaSemana.length; i++) {
+    var v = deLaSemana[i].votos.indexOf(token);
+    if (v >= 0) deLaSemana[i].votos.splice(v, 1);
+  }
+  objetivo.votos.push(token);
+  guardarPropuestas();
+  responderJson(res, { ok: true, votos: objetivo.votos.length });
+}
+
+function armarPropuestas(miToken) {
+  var semana = semanaISO(new Date());
+  var deLaSemana = propuestasDeLaSemana(semana).slice();
+  deLaSemana.sort(function (a, b) { return b.votos.length - a.votos.length || a.creada - b.creada; });
+
+  var out = { ok: true, semana: semana, propuestas: [], historial: DB_PROP.historial.slice(-5) };
+  for (var i = 0; i < deLaSemana.length; i++) {
+    var p = deLaSemana[i];
+    out.propuestas.push({
+      id: p.id, texto: p.texto, votos: p.votos.length,
+      esTuya: !!(miToken && p.token === miToken),
+      votaste: !!(miToken && p.votos.indexOf(miToken) >= 0)
+    });
+  }
+  return out;
+}
+
+function resolverPropuesta(body, res) {
+  var b = null;
+  try { b = JSON.parse(body); } catch (e) {}
+  if (!b || typeof b !== 'object') return responderJson(res, { ok: false, motivo: 'datos' });
+  var semana = typeof b.semana === 'string' ? b.semana : null;
+  var propuestaId = typeof b.propuestaId === 'string' ? b.propuestaId : null;
+  var prUrl = typeof b.prUrl === 'string' ? b.prUrl.slice(0, 300) : null;
+  var estado = b.estado === 'mergeada' || b.estado === 'descartada' ? b.estado : 'pendiente';
+  if (!semana || !propuestaId) return responderJson(res, { ok: false, motivo: 'datos' });
+
+  var i;
+  for (i = 0; i < DB_PROP.propuestas.length; i++) {
+    if (DB_PROP.propuestas[i].id === propuestaId) { DB_PROP.propuestas[i].estado = 'implementada'; break; }
+  }
+  var texto = i < DB_PROP.propuestas.length ? DB_PROP.propuestas[i].texto : '';
+  var votos = i < DB_PROP.propuestas.length ? DB_PROP.propuestas[i].votos.length : 0;
+
+  var existente = null;
+  for (i = 0; i < DB_PROP.historial.length; i++) {
+    if (DB_PROP.historial[i].semana === semana) { existente = DB_PROP.historial[i]; break; }
+  }
+  if (existente) {
+    existente.propuestaId = propuestaId; existente.prUrl = prUrl; existente.estado = estado;
+    existente.resuelta = Date.now();
+  } else {
+    DB_PROP.historial.push({
+      semana: semana, propuestaId: propuestaId, texto: texto, votos: votos,
+      prUrl: prUrl, estado: estado, resuelta: Date.now()
+    });
+  }
+  guardarPropuestas();
+  responderJson(res, { ok: true });
 }
 
 function elegirRival(miToken, nivelMin) {
@@ -537,6 +702,48 @@ http.createServer(function (req, res) {
       if (cuerpo.length > 16384) { req.destroy(); }
     });
     req.on('end', function () { recibirCarrera(cuerpo, res); });
+    return;
+  }
+
+  if (url === '/api/propuestas' && req.method === 'GET') {
+    var tp = typeof q.t === 'string' && /^[a-z0-9]{8,48}$/.test(q.t) ? q.t : null;
+    return responderJson(res, armarPropuestas(tp));
+  }
+
+  if (url === '/api/propuestas' && req.method === 'POST') {
+    var cuerpoProp = '';
+    req.setEncoding('utf8');
+    req.on('data', function (ch) {
+      cuerpoProp += ch;
+      if (cuerpoProp.length > 4096) { req.destroy(); }
+    });
+    req.on('end', function () { recibirPropuesta(cuerpoProp, res); });
+    return;
+  }
+
+  if (url === '/api/propuestas/votar' && req.method === 'POST') {
+    var cuerpoVoto = '';
+    req.setEncoding('utf8');
+    req.on('data', function (ch) {
+      cuerpoVoto += ch;
+      if (cuerpoVoto.length > 2048) { req.destroy(); }
+    });
+    req.on('end', function () { recibirVoto(cuerpoVoto, res); });
+    return;
+  }
+
+  if (url === '/api/propuestas/resolver' && req.method === 'POST') {
+    if (!process.env.ADMIN_SECRET || req.headers['x-admin-token'] !== process.env.ADMIN_SECRET) {
+      res.writeHead(403, cabecerasApi());
+      return res.end(JSON.stringify({ ok: false, motivo: 'no autorizado' }));
+    }
+    var cuerpoRes = '';
+    req.setEncoding('utf8');
+    req.on('data', function (ch) {
+      cuerpoRes += ch;
+      if (cuerpoRes.length > 4096) { req.destroy(); }
+    });
+    req.on('end', function () { resolverPropuesta(cuerpoRes, res); });
     return;
   }
 

@@ -18,7 +18,7 @@ las mismas líneas.
 |---|---|---|
 | **Contenido** | `sectores.js` `libros.js` `contenido.js` | El mundo: sectores, las 60 empresas, el escalafón, las apuestas, los dilemas, las 105 fichas de la biblioteca |
 | **Motor** | `motor.js` `carrera.js` `mundo.js` `logros.js` | La simulación y el balance: el mes, el fit, la Lupa, ofertas, ascensos, equity, eras, logros |
-| **Interfaz / Plataforma** | `ui.js` `estilos.css` `index.html` `server.js` `ranking.js` | Lo que se ve y lo que sirve: pantallas, estilos, el servidor y el ranking público |
+| **Interfaz / Plataforma** | `ui.js` `estilos.css` `index.html` `server.js` `ranking.js` `propuestas.js` | Lo que se ve y lo que sirve: pantallas, estilos, el servidor, el ranking público y las propuestas de la comunidad |
 
 Quién es quién está en [`.github/CODEOWNERS`](.github/CODEOWNERS). GitHub pide
 sola la review del dueño de cada archivo que toca el PR.
@@ -85,6 +85,25 @@ donde un cambio tuyo rompe el carril de al lado:
   los nombres de `SECTORES` / `EMPRESAS` / `APUESTAS` / `EVENTOS`, llega a la
   interfaz. El test de humo verifica que esa superficie siga existiendo.
 - Agregar cosas es seguro. Renombrar y borrar es lo que rompe.
+
+## Desarrollo colaborativo: propuestas de la comunidad
+
+El juego tiene un segundo circuito además de la carrera: los jugadores
+proponen mejoras al juego (texto libre) y votan las propuestas de otros,
+desde el panel que aparece al subir de escalón. El modelo vive en
+`server.js` (`propuestas.json`, mismo volumen que `ranking.json`) y el
+cliente en `propuestas.js`.
+
+Cada semana, un agente de IA toma la propuesta más votada, la pre-screenea
+contra estas mismas reglas (sin dependencias, sin build, capas en un solo
+sentido), la implementa en una rama `feat/comunidad/<semana>-<slug>` y abre
+un PR contra `main` — **esas ramas y esos PRs no los abre una persona**. El
+único paso humano es la review: cuando Lucas lo aprueba y mergea, Railway
+despliega solo, igual que cualquier otro PR.
+
+Si ves un PR de `feat/comunidad/*`, revisalo con el mismo criterio que
+cualquier otro: que pase `npm test`, que respete las capas y los carriles de
+arriba, y que el cambio sea lo que la propuesta pedía.
 
 ## El deploy
 

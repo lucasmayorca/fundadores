@@ -55,7 +55,7 @@ console.log('\nSuperficie publica');
 
 /* ---------- 3. sintaxis de los modulos con DOM ---------- */
 console.log('\nSintaxis (modulos con DOM)');
-['ui', 'ranking', 'logros', 'server'].forEach(function (f) {
+['ui', 'ranking', 'propuestas', 'logros', 'server'].forEach(function (f) {
   var err = null;
   try { new vm.Script(fs.readFileSync(path.join(RAIZ, f + '.js'), 'utf8'), { filename: f + '.js' }); }
   catch (e) { err = e; }
@@ -119,9 +119,15 @@ esperar(25, function (e) {
           var j = null;
           try { j = JSON.parse(c4); } catch (err) {}
           ok(!!j, '/api/ranking devuelve JSON valido');
-          pedir('/../package.json', null, function (e5, r5) {
-            ok(!e5 && r5.statusCode !== 200, 'no se puede salir de la carpeta (traversal)');
-            terminar();
+          pedir('/api/propuestas', null, function (e6, r6, c6) {
+            ok(!e6 && r6.statusCode === 200, 'GET /api/propuestas responde 200');
+            var j2 = null;
+            try { j2 = JSON.parse(c6); } catch (err2) {}
+            ok(!!j2 && Array.isArray(j2.propuestas), '/api/propuestas devuelve JSON valido');
+            pedir('/../package.json', null, function (e5, r5) {
+              ok(!e5 && r5.statusCode !== 200, 'no se puede salir de la carpeta (traversal)');
+              terminar();
+            });
           });
         });
       });
