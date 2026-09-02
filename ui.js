@@ -149,7 +149,12 @@
     cap_tec:'Engineering maturity that compounds over time: it slows debt growth and speeds up paydown. Your Tech skill accelerates it.',
     cap_gtm:'How efficiently the org turns growth spend into reach, beyond this month\'s push. Your Business skill accelerates it.',
     cap_gente:'How much team the org can carry before cognitive load and politics bite. Your Leadership skill accelerates it.',
-    cap_cap:'Fundraising savvy: it only grows when you close a round, and better terms follow on the next one.'
+    cap_cap:'Fundraising savvy: it only grows when you close a round, and better terms follow on the next one.',
+    st_desc:'Points here become Evidence — talking to users, testing assumptions. More evidence sharpens every probability you see on your bets and reveals your real product-market fit.',
+    st_plat:'Points here pay down Technical debt. Debt eats a share of your team\'s capacity every month, so this is how you buy capacity back.',
+    st_fiab:'Points here raise Reliability (uptime and error budget). Skip it and incidents get more likely — and pricier — as your load grows.',
+    st_crec:'Points here buy Reach: paid spend and channels that bring more users in. It moves acquisition directly, at a cash cost.',
+    st_build:'Whatever you don\'t station goes here, on your backlog bets — this is what actually ships this month.'
   };
   var tipTimer = null;
   function mostrarTip(clave) {
@@ -710,13 +715,13 @@
      points; you station them. Whatever you don't station goes to BUILD and
      pushes your selected projects. Every point is visible and accounted. */
   var ESTACIONES = [
-    { k:'desc', n:'Discover', svg:'discover', col:'#5aa9f0', req:'desc', lib:'torres',
+    { k:'desc', n:'Discover', svg:'discover', col:'#5aa9f0', req:'desc', lib:'torres', tipk:'st_desc',
       rinde:function (v) { return '+' + Math.round(v * 1.1 * J.calidadDesc * (1 + J.hab.producto / 200)) + ' evid'; } },
-    { k:'plat', n:'Platform', svg:'platform', col:'#35c46a', req:'plat', lib:'fowler',
+    { k:'plat', n:'Platform', svg:'platform', col:'#35c46a', req:'plat', lib:'fowler', tipk:'st_plat',
       rinde:function (v) { return '−' + Math.round(v * 0.55 * (1 + J.hab.tecnologia / 150)) + ' debt'; } },
-    { k:'fiab', n:'Reliability', svg:'reliability', col:'#4ecdc4', req:'fiab', lib:'sre',
+    { k:'fiab', n:'Reliability', svg:'reliability', col:'#4ecdc4', req:'fiab', lib:'sre', tipk:'st_fiab',
       rinde:function (v) { return '+' + Math.round(v * 0.45) + ' uptime'; } },
-    { k:'crec', n:'Growth', svg:'growth', col:'#e86ba3', req:'crec', lib:'chasm',
+    { k:'crec', n:'Growth', svg:'growth', col:'#e86ba3', req:'crec', lib:'chasm', tipk:'st_crec',
       rinde:function (v) { return '+reach · $' + Math.round(v * 0.9) + 'k'; } }
   ];
 
@@ -756,14 +761,14 @@
           if (ESCALAFON[k].palancas.indexOf(st.req) >= 0) { falta = ESCALAFON[k].corto; break; }
         }
         h += '<div class="stcard bloq"><div class="sticon">' + svgIc(st.svg) + '</div>' +
-          '<div class="stn">' + st.n + '</div><div class="stlock">🔒 ' + falta + '</div></div>';
+          '<div class="stn">' + tip(st.tipk, st.n) + '</div><div class="stlock">🔒 ' + falta + '</div></div>';
         continue;
       }
       var pctFill = mio > 0 ? Math.round(vv / mio * 100) : 0;
       h += '<div class="stcard' + (vv > 0 ? ' viva' : '') + '">' +
         '<div class="stfill" style="height:' + pctFill + '%;background:' + st.col + '"></div>' +
         '<div class="sticon" style="' + (vv > 0 ? 'background:' + st.col + '26;color:' + st.col : '') + '">' + svgIc(st.svg) + '</div>' +
-        '<div class="stn">' + st.n + '</div>' +
+        '<div class="stn">' + tip(st.tipk, st.n) + '</div>' +
         '<div class="ctrl">' +
         '<div class="b' + (vv <= 0 ? ' off' : '') + '" data-menos="' + st.k + '">−</div>' +
         '<div class="n num">' + vv + '</div>' +
@@ -773,7 +778,7 @@
     }
     h += '<div class="stcard viva build">' +
       '<div class="sticon" style="background:#e8a33d26;color:#e8a33d">' + svgIc('build') + '</div>' +
-      '<div class="stn">On projects</div>' +
+      '<div class="stn">' + tip('st_build', 'On projects') + '</div>' +
       '<div class="n num" style="font-size:19px;margin-top:1px">' + enProyectos() + '</div>' +
       '<div class="strinde">' + (ocio > 0 ? '<span class="ambar">' + ocio + ' idle</span>' : 'all busy') + '</div></div>';
     h += '</div>';
