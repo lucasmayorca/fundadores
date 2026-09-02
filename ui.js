@@ -38,6 +38,37 @@
   function ov(id, on) { $(id).className = 'ov' + (on ? ' on' : ''); }
   var escalaActual = 1;
 
+  /* ================= MÓVIL =================
+     En un teléfono no sirve escalar el escenario de 1024x768 (el texto queda
+     a ~0.38x). Con el lado corto por debajo de 700px el escenario suelta el
+     tamaño fijo, <body> se marca `movil` y el CSS reordena todo; acá solo
+     vive lo que no se puede resolver con CSS: las dos pestañas de la
+     pantalla de juego y la geometría del tour. */
+  var esMovil = false;
+  var tabJuego = 'trabajo';
+
+  function modoMovil(w, h2) { return Math.min(w, h2) < 700; }
+
+  function renderTabs() {
+    var tb = $('tabsm'), cu = $('cuerpo');
+    if (!tb || !cu) return;
+    if (!esMovil) { tb.innerHTML = ''; cu.className = 'cuerpo'; return; }
+    tb.innerHTML =
+      '<div class="tabm' + (tabJuego === 'trabajo' ? ' on' : '') + '" data-tab="trabajo">Tu mes</div>' +
+      '<div class="tabm' + (tabJuego === 'empresa' ? ' on' : '') + '" data-tab="empresa">La empresa</div>';
+    cu.className = 'cuerpo t-' + tabJuego;
+  }
+
+  /* cambiar de modo (rotar el teléfono, redimensionar la ventana) repinta la
+     pantalla que esté arriba: los renders son puros, así que es seguro */
+  function repintar() {
+    var ps = document.getElementsByClassName('pantalla'), i, viva = null;
+    for (i = 0; i < ps.length; i++) if (ps[i].className.indexOf('on') >= 0) viva = ps[i].id;
+    if (viva === 'p-juego' && J && plan) { renderJuego(); return; }
+    renderTabs();
+    if (viva === 'p-inicio') renderInicio();
+  }
+
   /* ================= PRIMER MES GUIADO =================
      No es una clase — es un reflector. La pantalla se oscurece salvo la zona
      activa, el coach te dice qué HACER, y los pasos de acción avanzan solos. */
@@ -75,6 +106,10 @@
   function tourRender() {
     if (!tourActivo()) return;
     var paso = TOUR[tourPaso];
+    if (esMovil) {
+      var quiere = (paso.el === 'panel') ? 'empresa' : 'trabajo';
+      if (tabJuego !== quiere) { tabJuego = quiere; renderTabs(); }
+    }
     var el = $(paso.el), st = $('stage');
     if (!el || !st) return;
     var er = el.getBoundingClientRect(), sr = st.getBoundingClientRect();
@@ -89,12 +124,15 @@
     spot.style.width = (w + 12) + 'px';
     spot.style.height = (h2 + 12) + 'px';
 
-    var abajo = y + h2 + 150 < 768;
+    var sw = sr.width / esc2, sh = sr.height / esc2;
+    var abajo = y + h2 + 150 < sh;
     var coach = $('coach');
+    var cw = Math.min(420, sw - 24);
     coach.className = 'on';
-    coach.style.left = Math.max(16, Math.min(1024 - 436, x + w / 2 - 210)) + 'px';
-    if (abajo) { coach.style.top = Math.min(768 - 190, y + h2 + 14) + 'px'; coach.style.bottom = 'auto'; }
-    else { coach.style.top = Math.max(10, y - 200) + 'px'; coach.style.bottom = 'auto'; }
+    coach.style.width = cw + 'px';
+    coach.style.left = Math.max(12, Math.min(sw - cw - 12, x + w / 2 - cw / 2)) + 'px';
+    if (abajo) { coach.style.top = Math.min(sh - 200, y + h2 + 14) + 'px'; coach.style.bottom = 'auto'; }
+    else { coach.style.top = Math.max(8, y - 200) + 'px'; coach.style.bottom = 'auto'; }
     coach.innerHTML = '<div class="cpaso">' + (tourPaso + 1) + ' / ' + TOUR.length + '</div>' +
       '<div class="ctx">' + paso.texto + '</div>' +
       (paso.accion ? '<div class="chace">' + paso.textoAccion + '</div>' :
@@ -563,8 +601,8 @@
     h += '</div>';
 
     var i, k, nec;
-    h += '<div style="display:-webkit-flex;display:flex;margin-top:8px">';
-    h += '<div style="width:470px;padding-right:26px">';
+    h += '<div class="dosc" style="display:-webkit-flex;display:flex;margin-top:8px">';
+    h += '<div class="colx" style="width:470px;padding-right:26px">';
     h += '<div class="rot" style="margin-bottom:6px">Apuestas que cuentan doble para tu mandato</div><div>';
     for (i = 0; i < J.prima.length; i++) {
       nec = null;
@@ -632,7 +670,7 @@
          '<div class="pq caso-linea" style="border-top:none;margin-top:0;padding-top:0">' + caso + '</div></div>';
     h += '</div>';
 
-    h += '<div style="width:400px"><div class="rot" style="margin-bottom:4px">Con quiénes vas a trabajar</div>' +
+    h += '<div class="colx" style="width:400px"><div class="rot" style="margin-bottom:4px">Con quiénes vas a trabajar</div>' +
       '<div class="pq mut" style="margin-bottom:10px">Pueden ayudarte a aterrizar las apuestas ▲ de arriba — o bloquearlas.</div>';
     var elencoKeys = ['ceo','cto','ventas','estrella'];
     for (i = 0; i < elencoKeys.length; i++) {
@@ -1099,6 +1137,7 @@
   function renderJuego() {
     ir('p-juego');
     renderHud(); renderMandato(); renderRitmo(); renderEra(); renderRetos();
+    renderTabs();
     renderAsignacion(); renderBacklog(); renderPanel(); renderBarra();
   }
 
@@ -1320,8 +1359,8 @@
         '</div>';
     }
 
-    h += '<div style="display:-webkit-flex;display:flex">';
-    h += '<div style="width:520px;padding-right:24px">';
+    h += '<div class="dosc" style="display:-webkit-flex;display:flex">';
+    h += '<div class="colx" style="width:520px;padding-right:24px">';
     var i;
     for (i = 0; i < cierre.notas.length; i++) {
       h += '<div class="linea"><div class="ic mut">•</div><div class="tx">' + esc(cierre.notas[i][0]) + ' ' + chip(cierre.notas[i][1]) + '</div></div>';
@@ -1340,7 +1379,7 @@
     }
     h += '</div>';
 
-    h += '<div style="width:380px"><div class="rot" style="margin-bottom:6px">Lo que te llevas</div>';
+    h += '<div class="colx" style="width:380px"><div class="rot" style="margin-bottom:6px">Lo que te llevas</div>';
     var HH = [['producto','Producto'],['tecnologia','Tecnología'],['negocio','Negocio'],['liderazgo','Liderazgo']];
     for (i = 0; i < HH.length; i++) {
       var k = HH[i][0], v = Math.round(C.hab[k]), d = cierre.dHab[k];
@@ -1389,8 +1428,8 @@
          '</div>';
     h += '</div>';
 
-    h += '<div style="display:-webkit-flex;display:flex">';
-    h += '<div style="width:460px;padding-right:26px">';
+    h += '<div class="dosc" style="display:-webkit-flex;display:flex">';
+    h += '<div class="colx" style="width:460px;padding-right:26px">';
     h += '<div class="rot" style="margin-bottom:5px">El equity, al final</div>';
     if (!b.detalleEquity.length) h += '<div class="pq mut">No consolidaste equity en ninguna parte.</div>';
     for (i = 0; i < b.detalleEquity.length; i++) {
@@ -1409,7 +1448,7 @@
     }
     h += '</div>';
 
-    h += '<div style="width:420px"><div class="rot" style="margin-bottom:5px">Puesto por puesto</div>';
+    h += '<div class="colx" style="width:420px"><div class="rot" style="margin-bottom:5px">Puesto por puesto</div>';
     for (i = 0; i < C.puestos.length; i++) {
       var p = C.puestos[i];
       h += '<div class="req">' + (p.cumplido ? '<span class="verde">✓</span>' : p.despido ? '<span class="rojo">✕</span>' : '<span class="mut">○</span>') +
@@ -1625,12 +1664,12 @@
              esc(d.bounty.nombre) + '</b> (' + money(d.bounty.patrimonio) +
              ') y el logro <b>Regicidio</b> es tuyo.</div>';
       }
-      h += '<div class="rkcols scroll" style="-webkit-flex:1;flex:1;min-height:0">';
-      h += '<div style="width:330px;padding-right:26px">';
+      h += '<div class="rkcols dosc scroll" style="-webkit-flex:1;flex:1;min-height:0">';
+      h += '<div class="colx" style="width:330px;padding-right:26px">';
       h += '<div class="rot" style="margin-bottom:6px">Ranking mundial · patrimonio · los ' + d.jugadores + ' jugadores</div>';
       h += filasRk(d.tablas.patrimonio, function (e) { return money(e.patrimonio); });
       h += '</div>';
-      h += '<div style="width:310px;padding-right:26px">';
+      h += '<div class="colx" style="width:310px;padding-right:26px">';
       h += '<div class="rot" style="margin-bottom:6px">Esta semana · ' + esc(d.semana) + '</div>';
       h += filasRk(d.tablas.semanal, function (e) { return money(e.patrimonio); });
       if (d.semanaPasada) {
@@ -1646,7 +1685,7 @@
       h += '<div class="pq"><span style="color:#e8a33d"><b>Legión del Crecimiento</b> ' + g2.cumplidos + '</span> · ' +
            '<span style="color:#5aa9f0"><b>Gremio del Oficio</b> ' + c2.cumplidos + '</span></div>';
       h += '</div>';
-      h += '<div style="width:260px">';
+      h += '<div class="colx" style="width:260px">';
       h += '<div class="rot" style="margin-bottom:6px">Rol más alto</div>';
       h += filasRk(d.tablas.nivel, function (e) { return esc(nivelPorN(e.nivel).corto); });
       h += '<div class="rot" style="margin:12px 0 6px 0">Racha de mandatos</div>';
@@ -1730,6 +1769,9 @@
       renderInicio();
       return;
     }
+
+    v = attr(t, 'data-tab');
+    if (v) { tabJuego = v; renderTabs(); if (tourActivo()) tourRender(); return; }
 
     v = attr(t, 'data-tip');
     if (v) { mostrarTip(v); return; }
@@ -1864,20 +1906,35 @@
     else if (v === 'reiniciar') { C = null; M = null; J = null; R = Logros.cargar(); renderInicio(); ir('p-inicio'); }
   }, false);
 
-  /* escala el escenario de 1024x768 al viewport, centrado. El iPad 3 cae en 1. */
+  /* escala el escenario de 1024x768 al viewport, centrado. El iPad 3 cae en 1.
+     En móvil no hay escenario fijo que escalar: el CSS lo estira al viewport. */
   function escalar() {
     var st = document.getElementById('stage');
     if (!st) return;
     var w = window.innerWidth || 1024, h2 = window.innerHeight || 768;
-    var s = Math.min(w / 1024, h2 / 768);
-    if (s > 0.98 && s < 1.02) s = 1;
-    escalaActual = s;
-    var t = 'translate(-50%,-50%) scale(' + s + ')';
-    st.style.webkitTransform = t;
-    st.style.transform = t;
-    st.className = s === 1 ? '' : 'suelto';
+    var mov = modoMovil(w, h2), cambio = (mov !== esMovil);
+    esMovil = mov;
+    document.body.className = mov ? 'movil' : '';
+
+    if (mov) {
+      escalaActual = 1;
+      st.style.webkitTransform = 'none';
+      st.style.transform = 'none';
+      st.className = '';
+    } else {
+      var s = Math.min(w / 1024, h2 / 768);
+      if (s > 0.98 && s < 1.02) s = 1;
+      escalaActual = s;
+      var t = 'translate(-50%,-50%) scale(' + s + ')';
+      st.style.webkitTransform = t;
+      st.style.transform = t;
+      st.className = s === 1 ? '' : 'suelto';
+    }
+    if (cambio) repintar();
+    if (tourActivo()) tourRender();
   }
   window.onresize = escalar;
+  window.onorientationchange = function () { setTimeout(escalar, 120); };
   escalar();
 
   renderInicio();

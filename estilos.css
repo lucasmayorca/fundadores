@@ -514,3 +514,162 @@ html, body {
 #p-brief, #p-final, #p-cierre, #p-ofertas {
   overflow-y:auto; -webkit-overflow-scrolling:touch;
 }
+
+/* ============================================================
+   MÓVIL — el mismo juego en un teléfono
+   ============================================================
+   El escenario fijo de 1024x768 se escala bien en un iPad, pero en un
+   teléfono escalarlo deja el texto a ~0.38x: ilegible. Así que en pantallas
+   chicas el escenario suelta el tamaño fijo, la pantalla de juego parte sus
+   dos columnas en dos pestañas (Tu mes / La empresa) y todo lo que era una
+   fila de columnas de ancho fijo se apila.
+
+   El interruptor es la clase `movil` en <body>, que la pone ui.js según el
+   viewport (lado corto < 700px). Nada de esto toca al iPad 3: sin la clase,
+   estas reglas no existen. */
+
+/* la barra de pestañas solo existe en móvil (ui.js la deja vacía si no) */
+.tabsm:empty { display:none; }
+.tabsm {
+  display:-webkit-flex; display:flex; border-bottom:1px solid #1c2027; background:#0b0e13;
+}
+.tabm {
+  -webkit-flex:1; flex:1; text-align:center; padding:11px 4px 9px 4px;
+  font-size:12px; letter-spacing:1.2px; text-transform:uppercase; font-weight:600;
+  color:#6c7685; border-bottom:2px solid transparent; cursor:pointer;
+}
+.tabm.on { color:#cfe0f5; border-bottom-color:#2f6fd0; }
+.tabm:active { background:#11151c; }
+
+/* ---------- el escenario suelta el tamaño fijo ---------- */
+body.movil #stage {
+  position:absolute; left:0; top:0; width:100%; height:100%;
+  -webkit-transform:none; transform:none;
+  border-radius:0; box-shadow:none; overflow:hidden;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+body.movil .pantalla { width:100%; height:100%; }
+body.movil .ov, body.movil #building { width:100%; height:100%; }
+
+/* ---------- tipografía y densidad ---------- */
+body.movil .h1 { font-size:25px; letter-spacing:-0.2px; }
+body.movil .h2 { font-size:17px; }
+body.movil .pq { font-size:13px; }
+body.movil .btn { padding:11px 16px; font-size:14px; }
+body.movil .btn.xl { padding:13px 22px; min-height:50px; font-size:16px; }
+
+/* ---------- pantallas largas: una sola columna, un solo scroll ---------- */
+body.movil #p-brief, body.movil #p-final, body.movil #p-cierre,
+body.movil #p-ofertas, body.movil #p-ranking { padding:16px 14px 24px 14px; }
+
+/* las filas de columnas de ancho fijo (ui.js las marca con .dosc/.colx) */
+body.movil .dosc { display:block !important; }
+body.movil .colx { width:100% !important; padding-right:0 !important; margin-top:16px; }
+body.movil .dosc > .colx:first-child { margin-top:0; }
+
+/* ---------- portada ---------- */
+body.movil #p-inicio { overflow-y:auto; -webkit-overflow-scrolling:touch; }
+body.movil .landhero { padding:16px 16px 10px 16px; }
+body.movil .landtop { -webkit-flex-direction:column; flex-direction:column; }
+body.movil .landleft, body.movil .landright { width:100%; padding-right:0; }
+body.movil .landright { margin-top:14px; }
+body.movil .landmore {
+  -webkit-flex:none; flex:none; overflow:visible;
+  padding:6px 16px 30px 16px;
+}
+body.movil .landchevron { display:none; }
+body.movil .landcols { display:block; }
+body.movil .landcols .lcL, body.movil .landcols .lcR { width:100%; padding-right:0; }
+body.movil .landcols .lcR { margin-top:22px; }
+body.movil .hook { font-size:17px; }
+body.movil .skysvg { max-height:190px; }
+body.movil .rolchip { padding:8px 12px; font-size:12.5px; }
+
+/* ---------- ofertas: una tarjeta por fila ---------- */
+body.movil .tarjetas { -webkit-flex-direction:column; flex-direction:column; margin-top:14px; }
+body.movil .oferta { width:100%; margin:0 0 12px 0; min-height:0; padding:15px; }
+
+/* ---------- notas: rejilla de dos ---------- */
+body.movil .notas { -webkit-flex-wrap:wrap; flex-wrap:wrap; margin:12px 0 4px 0; }
+body.movil .nota { width:48% !important; margin:0 4% 10px 0; padding:12px; }
+body.movil .nota:nth-child(2n) { margin-right:0; }
+body.movil .nota .nv { font-size:26px !important; }
+
+/* ---------- pantalla de juego: barras superiores compactas ---------- */
+body.movil .hud {
+  height:auto; min-height:0; padding:7px 12px 6px 12px;
+  -webkit-flex-wrap:wrap; flex-wrap:wrap;
+}
+body.movil .hudi { margin:0 16px 2px 0; }
+body.movil .hudi .k { font-size:9px; letter-spacing:0.9px; }
+body.movil .hudi .v { font-size:16px; }
+body.movil .hud .der { margin-left:auto; }
+
+body.movil .mandatobar {
+  height:auto; -webkit-flex-wrap:wrap; flex-wrap:wrap;
+  padding:6px 12px 7px 12px; font-size:11.5px; line-height:1.5;
+}
+body.movil .mandatobar .track { -webkit-flex:none; flex:none; width:100%; margin:5px 0 3px 0; }
+body.movil .ritmobar { padding:5px 12px; font-size:11.5px; }
+body.movil .era { height:29px; padding:0 12px; font-size:11.5px; }
+body.movil .retosbar { padding:5px 12px; font-size:11.5px; gap:10px; }
+
+/* ---------- pantalla de juego: dos pestañas en vez de dos columnas ---------- */
+body.movil .izq, body.movil .der { width:100%; border-right:none; }
+body.movil .izq { overflow-y:auto; -webkit-overflow-scrolling:touch; }
+body.movil .der { padding:10px 12px 16px 12px; }
+body.movil .cuerpo.t-empresa .izq { display:none; }
+body.movil .cuerpo.t-trabajo .der { display:none; }
+/* con .izq como único scroller, el backlog crece en vez de scrollear aparte */
+body.movil .bl { -webkit-flex:none; flex:none; overflow:visible; padding:0 12px 14px 12px; }
+body.movil .bloque { padding:9px 12px 4px 12px; }
+
+/* estaciones: tres por fila */
+body.movil .estaciones { -webkit-flex-wrap:wrap; flex-wrap:wrap; }
+body.movil .stcard, body.movil .stcard.build {
+  width:31.6%; margin:0 2.6% 8px 0; height:92px;
+}
+body.movil .stcard:nth-child(3n) { margin-right:0; }
+body.movil .stcard .sticon { margin-top:8px; }
+body.movil .stcard .stn { font-size:10.5px; }
+body.movil .stcard .strinde { font-size:9px; }
+
+/* proyectos y backlog */
+body.movil .ap { padding:9px 10px; }
+body.movil .ap .d2 { white-space:normal; max-width:none; }
+body.movil .ap .c { width:auto; min-width:58px; padding-left:6px; }
+body.movil .prog { width:100%; }
+body.movil .viz { -webkit-flex-wrap:wrap; flex-wrap:wrap; }
+body.movil .vlbl { margin-bottom:2px; }
+
+/* la barra de acción: los puntos arriba, los botones abajo */
+body.movil .barra {
+  height:auto; -webkit-flex-wrap:wrap; flex-wrap:wrap;
+  padding:8px 12px; padding-bottom:calc(8px + env(safe-area-inset-bottom));
+}
+body.movil .barra .pts { width:100%; margin:0 0 7px 0; font-size:12px; }
+body.movil .barra .btn.pri { -webkit-flex:1; flex:1; }
+
+/* ---------- overlays: hojas a pantalla completa ---------- */
+body.movil .tarj {
+  width:100% !important; max-width:none; height:100%; max-height:none;
+  border:none; border-radius:0; padding:16px 16px 0 16px;
+  padding-top:calc(16px + env(safe-area-inset-top));
+}
+body.movil .tarj h2 { font-size:20px; }
+body.movil .tarj .cuerpo2 { padding-bottom:14px; }
+body.movil .tarj > div:last-child { padding-bottom:calc(14px + env(safe-area-inset-bottom)); }
+body.movil .opt { padding:12px 14px; }
+body.movil .opt .ot { font-size:15px; }
+body.movil .libs .lib { width:100%; height:auto; min-height:78px; margin:0 0 8px 0; }
+body.movil .quien .avatar { width:34px; height:34px; line-height:34px; border-radius:17px; }
+
+/* ---------- tooltips y tour ---------- */
+body.movil #tipbar {
+  left:8px; right:8px; width:auto; margin-left:0; bottom:12px;
+  bottom:calc(12px + env(safe-area-inset-bottom));
+}
+body.movil #coach { max-width:none; }
+
+/* ---------- salón de la fama ---------- */
+body.movil .rkcols { display:block !important; }
