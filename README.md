@@ -99,11 +99,10 @@ Qué cambia:
   proyectos, un solo scroll) y *La empresa* (los signos vitales que en ancho
   viven en la columna derecha). El paso del tour que ilumina el panel cambia
   de pestaña solo.
-- **Ritmo, era y retos se mudan adentro del scroll** de la columna izquierda:
-  son contexto que se lee al empezar el mes, no cosas que necesites clavadas
-  mientras mueves puntos. Quedan fijos el HUD, el mandato, las pestañas y el
-  cierre del mes — de 407px de cromo fijo a 284px, que en un iPhone SE es la
-  diferencia entre 160 y 285px para jugar.
+- **Ritmo y era se mudan adentro del scroll** de la columna izquierda: son
+  contexto que se lee al empezar el mes, no cosas que necesites clavadas
+  mientras mueves puntos. Quedan fijos la cabecera, las pestañas y el cierre
+  del mes.
 - **Todo lo que era una fila de columnas de ancho fijo se apila** (portada,
   ofertas, briefing, cierre, final, Salón de la Fama). En el HTML esas
   columnas van marcadas con `.dosc` / `.colx`; las estaciones pasan a tres
@@ -175,9 +174,9 @@ distintas por empresa. Un reclutador puede tentarte a mitad de mandato:
 irte con el plan encaminado es ambición; atrasado, te persigue.
 
 **La pista de Edad** marca tu progresión (APM → … → Fndr) y qué desbloquea
-el siguiente escalón; los **retos** de la semana y las contingencias estilo
-The Founder (robo de datos, notas demoledoras, caídas del proveedor,
-barridas regulatorias) mantienen el mes vivo.
+el siguiente escalón; las contingencias estilo The Founder (robo de datos,
+notas demoledoras, caídas del proveedor, barridas regulatorias) mantienen el
+mes vivo.
 
 ## El briefing y las etapas (teoría de PMF)
 

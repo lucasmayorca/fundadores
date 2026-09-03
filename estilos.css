@@ -261,12 +261,6 @@ h2, h3 { font-weight:500; }
 .track.mini i { height:4px; }
 
 /* ---------- challenges + age track ---------- */
-/* los retos ya no tienen barra propia: viajan a la derecha de la de ritmo */
-.ritmobar .retos { margin-left:auto; display:-webkit-flex; display:flex;
-  -webkit-align-items:center; align-items:center; gap:16px; -webkit-flex-shrink:0; flex-shrink:0; }
-.reto { color:var(--color-neutral-500); font-size:11.5px; white-space:nowrap; }
-.reto.hecho { color:#35c46a; }
-.reto.ficha { color:#e8a33d; }
 
 .age-banner { padding:13px 16px; background:var(--color-neutral-900); border:none;
   border-radius:var(--radius-md); margin:10px 0 14px 0; }
@@ -542,30 +536,38 @@ h2, h3 { font-weight:500; }
 .ebar i { display:block; height:8px; }
 .estaciones { display:-webkit-flex; display:flex; }
 
-/* ability-tile style stations: icon slot with a bottom-up fill showing
-   points committed, like a mana/cooldown gauge — legible before any text. */
-.stcard { position:relative; width:86px; height:96px; margin-right:9px; border-radius:var(--radius-md);
-  text-align:center; overflow:hidden; background:var(--color-surface); border:none;
-  box-shadow:var(--shadow-sm); }
-.stcard.viva { box-shadow:0 0 0 1px var(--color-accent-700); }
-.stcard.bloq { opacity:0.35; }
-.stcard .stfill { position:absolute; left:0; right:0; bottom:0; height:0%; opacity:0.22;
-  -webkit-transition:height .25s ease; transition:height .25s ease; }
-.stcard .sticon { position:relative; margin:10px auto 2px auto; width:30px; height:30px;
-  border-radius:var(--radius-sm); display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
-  -webkit-justify-content:center; justify-content:center; color:var(--color-neutral-700); }
-.stcard.viva .sticon { color:var(--color-accent); }
-.stcard .stn { position:relative; font-size:11px; white-space:nowrap; color:var(--color-neutral-500); }
-.stcard.viva .stn { color:var(--color-neutral-200); }
-.stcard .strinde { position:relative; font-size:9.5px; color:var(--color-neutral-700); margin-top:1px; min-height:11px; white-space:nowrap; }
-.stcard .stlock { position:relative; font-size:9px; color:var(--color-neutral-700); margin-top:6px; }
-.stcard .ctrl { position:relative; -webkit-justify-content:center; justify-content:center; margin-top:4px; }
-.stcard .ctrl .b { width:22px; height:22px; line-height:20px; font-size:13px;
-  background:transparent; border-color:var(--color-divider); border-radius:5px; }
-.stcard .ctrl .n { width:22px; font-size:14px; }
-.stcard.build { background:var(--color-surface); box-shadow:0 0 0 1px #4a3a1c; width:96px; }
-.stcard.build .sticon { color:#e8a33d; }
-.stcard.build .n { font-size:19px; }
+/* Estaciones como pastillas de una linea. Eran tarjetas de 96px: cinco de
+   ellas ocupaban un tercio de la columna izquierda, y en los primeros puestos
+   cuatro estaban con candado — un tercio de la pantalla para decir "todavia
+   no". Lo principal del mes son las iniciativas y como convergen con el
+   mandato, asi que las estaciones ceden el espacio. */
+.estaciones { display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap; gap:7px; }
+.stpill { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  gap:8px; padding:5px 8px 5px 10px; border-radius:var(--radius-md);
+  background:var(--color-surface); box-shadow:var(--shadow-sm); }
+.stpill.viva { box-shadow:0 0 0 1px var(--color-accent-700); }
+.stpill.stmeta { box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 50%, transparent); }
+.stpill.viva.stmeta { box-shadow:0 0 0 1px var(--color-accent-700), inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 50%, transparent); }
+.stpill .sticon { display:-webkit-flex; display:flex; -webkit-flex-shrink:0; flex-shrink:0;
+  color:var(--color-neutral-700); }
+.stpill .sticon .ic { width:16px; height:16px; }
+.stpill .stn { font-size:12px; color:var(--color-neutral-400); white-space:nowrap; }
+.stpill.viva .stn { color:var(--color-neutral-100); }
+.stpill .stmark { font-style:normal; font-size:8.5px; letter-spacing:0.5px; text-transform:uppercase;
+  margin-left:6px; padding:1px 5px; border-radius:999px;
+  background:color-mix(in srgb, var(--color-accent) 18%, transparent); color:var(--color-accent-100); }
+.stpill .strinde { font-size:10px; color:var(--color-accent-300); white-space:nowrap; }
+.stpill .ctrl { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; }
+.stpill .ctrl .b { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  -webkit-justify-content:center; justify-content:center;
+  width:22px; height:22px; font-size:13px; cursor:pointer;
+  background:transparent; border:1px solid var(--color-divider); border-radius:5px; color:var(--color-neutral-300); }
+.stpill .ctrl .b.off { opacity:0.3; cursor:default; }
+.stpill .ctrl .n { width:22px; text-align:center; font-size:14px; }
+/* las bloqueadas no merecen una tarjeta cada una: un renglon las resume */
+.stlocked { font-size:11px; color:var(--color-neutral-600); line-height:1.5;
+  padding:7px 10px; margin-bottom:2px; border-radius:var(--radius-sm);
+  background:var(--color-neutral-900); }
 .slot { display:inline-block; width:13px; height:13px; border-radius:var(--radius-sm); margin:0 3px -1px 0;
   background:var(--color-neutral-900); border:1px solid var(--color-neutral-800); }
 .slot.lleno { background:var(--color-accent); border-color:var(--color-accent); }
@@ -648,8 +650,6 @@ h2, h3 { font-weight:500; }
   background:color-mix(in srgb, var(--color-accent) 18%, transparent);
   color:var(--color-accent-100); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 45%, transparent); }
 .ejechip.chico { font-size:9.5px; padding:1px 6px; margin-left:6px; text-transform:uppercase; letter-spacing:0.5px; }
-.ejechip.reto { background:color-mix(in srgb, #e8a33d 16%, transparent); color:#e8a33d;
-  box-shadow:inset 0 0 0 1px color-mix(in srgb, #e8a33d 40%, transparent); }
 
 /* "lo mueve: ..." pegado al pronostico de ritmo */
 .comomover { margin-left:14px; color:var(--color-neutral-500); }
@@ -669,11 +669,6 @@ h2, h3 { font-weight:500; }
 .avisoeje b { color:var(--color-neutral-100); }
 
 /* la estacion que empuja tu mandato o un reto */
-.stcard.stmeta { box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 45%, transparent); }
-.sttag { position:absolute; top:0; left:0; right:0; font-size:8.5px; text-transform:uppercase;
-  letter-spacing:0.6px; text-align:center; padding:1.5px 0; z-index:2;
-  background:color-mix(in srgb, var(--color-accent) 22%, transparent); color:var(--color-accent-100); }
-.sttag.reto { background:color-mix(in srgb, #e8a33d 20%, transparent); color:#e8a33d; }
 
 /* secciones plegables del panel */
 .rotpleg { margin-bottom:6px; cursor:pointer; }
@@ -887,8 +882,6 @@ body.movil .hud .der { -webkit-flex:1 1 100%; flex:1 1 100%; margin-top:7px; gap
 body.movil .hud .der .hi { text-align:left; }
 body.movil .ritmobar { padding:5px 12px; font-size:11.5px;
   -webkit-flex-wrap:wrap; flex-wrap:wrap; }
-body.movil .ritmobar .retos { margin-left:0; -webkit-flex:1 1 100%; flex:1 1 100%;
-  margin-top:4px; gap:12px; }
 body.movil .era { height:29px; padding:0 12px; font-size:11.5px; }
 /* en telefono no entran los pips, la Lupa y la biblioteca en el mismo
    renglon: los pips se van — la Edad ya esta escrita en la cabecera */
@@ -918,19 +911,10 @@ body.movil .cuerpo > .izq > * { -webkit-flex-shrink:0; flex-shrink:0; }
 body.movil .bloque { padding:9px 12px 4px 12px; }
 
 /* estaciones: tres por fila */
-body.movil .estaciones { -webkit-flex-wrap:wrap; flex-wrap:wrap; }
-body.movil .stcard, body.movil .stcard.build {
-  width:31.6%; margin:0 2.6% 8px 0; height:104px;
-}
-body.movil .stcard:nth-child(3n) { margin-right:0; }
-body.movil .stcard .sticon { margin-top:8px; }
-body.movil .stcard .stn { font-size:10.5px; }
-body.movil .stcard .strinde { font-size:9px; }
-/* dedos, no cursor: los +/- de 24px son un blanco imposible en un teléfono */
-body.movil .stcard .ctrl .b { width:32px; height:32px; line-height:30px; font-size:17px; }
-body.movil .stcard .ctrl .n { width:26px; font-size:16px; }
-body.movil .ap.tuyo .ctrl .b { width:36px; height:36px; line-height:34px; font-size:18px; }
-body.movil .quitar { width:34px; height:34px; line-height:32px; }
+body.movil .stpill { -webkit-flex:1 1 auto; flex:1 1 auto; padding:6px 8px 6px 10px; }
+body.movil .stpill .ctrl .b { width:30px; height:30px; font-size:16px; }
+body.movil .stpill .ctrl .n { width:26px; font-size:16px; }
+body.movil .stpill .strinde { display:none; }
 
 /* proyectos y backlog */
 body.movil .ap { padding:9px 10px; }
@@ -1002,10 +986,6 @@ body.movil.paisaje .girar {
   stroke-linecap:round; stroke-linejoin:round; }
 .girar-t { font-size:22px; font-weight:500; margin-top:14px; }
 .girar-s { font-size:13px; line-height:1.5; color:var(--color-neutral-500); margin:8px auto 0 auto; max-width:440px; }
-
-/* la banda "mandato"/"reto" ocupa el margen superior vacio de la tarjeta de
-   estacion: el icono baja apenas lo justo para no quedar debajo */
-.stcard.stmeta .sticon { margin-top:13px; }
 
 /* en telefono el filtro no cabe al lado del rotulo: baja a su propia linea */
 body.movil .filtroeje { float:none; display:inline-block; margin:5px 0 0 0; }

@@ -57,7 +57,7 @@ var Motor = (function () {
       moral:72, foco:52, politico:clamp(50 + carrera.reputacion / 4, 20, 85),
 
       cobertura:{}, impactos:{}, ruidos:{}, hechas:{}, enVuelo:{}, backlog:[], backlogNuevo:{},
-      retos:[], fichasCap:0, historialImpacto:[],
+      historialImpacto:[],
       usuarios:{}, tam:{},
       competidor:{ fuerza:sec.competidor, atencion:0.05 + et.arq * 0.002 },
       capTable:{ fund:oferta.rolN >= 7 ? 1.0 : 0, inv:0, pool:0 },
@@ -100,7 +100,6 @@ var Motor = (function () {
     e.lupaBase = LUPA_BASE[sec.id] || 0;
     e.lupa = e.lupaBase;
 
-    e.retos = elegirRetos(e);
 
     for (i = 0; i < NECESIDADES.length; i++) e.cobertura[NECESIDADES[i].id] = 0;
 
@@ -259,31 +258,6 @@ var Motor = (function () {
     e.backlogNuevo[entrante] = e.mesPuesto;
     delete e.backlogNuevo[saliente];
     return { saliente:apuesta(saliente), entrante:apuesta(entrante) };
-  }
-
-  /* Challenges: objetivos secundarios y opcionales dentro del puesto. Reusan
-     el mismo esquema que los mandatos (MANDATOS) — cualquier otro que no sea
-     el mandato principal del puesto puede servir de reto extra. Completarlos
-     no es obligatorio, pero da una ficha de capacidad para acelerar la
-     capability que el jugador elija. */
-  function elegirRetos(e) {
-    var pool = [], i;
-    for (i = 0; i < MANDATOS.length; i++) if (MANDATOS[i].id !== e.mandatoId) pool.push(MANDATOS[i].id);
-    var elegidos = [];
-    while (elegidos.length < 2 && pool.length) {
-      var k = Math.floor(Math.random() * pool.length);
-      elegidos.push({ id:pool[k], hecho:false });
-      pool.splice(k, 1);
-    }
-    return elegidos;
-  }
-
-  function gastarFicha(e, eje) {
-    if (!e.fichasCap || e.fichasCap <= 0) return false;
-    if (!e.capacidades || e.capacidades[eje] === undefined) return false;
-    e.fichasCap--;
-    e.capacidades[eje] = clamp(e.capacidades[eje] + 8, 0, 100);
-    return true;
   }
 
   function esDeOtroSector(id, sec) {
@@ -451,7 +425,7 @@ var Motor = (function () {
   }
 
   /* Las tres dimensiones que NO viven en el vector AARRR pero SÍ son metas de
-     mandato y de reto. Sin esto, tres de los ocho mandatos (baja la deuda,
+     mandato. Sin esto, tres de los ocho mandatos (baja la deuda,
      instala discovery, abre el gran mercado) no tenían ninguna apuesta que los
      moviera a la vista: el jugador leía "baja la deuda técnica" y ninguna
      tarjeta del backlog decía nada sobre deuda. Ahora todas lo dicen.
@@ -969,21 +943,6 @@ var Motor = (function () {
       e.capacidades.gente = clamp(e.capacidades.gente - 0.1, 0, 100);
     }
 
-    /* 11c. retos: objetivos secundarios opcionales. Se resuelven solos cuando
-       su métrica llega a la meta, sin costo de puntos aparte del que ya se
-       gastó en las apuestas/estaciones que los mueven. */
-    if (!e.retos) e.retos = [];
-    for (i = 0; i < e.retos.length; i++) {
-      var reto = e.retos[i];
-      if (reto.hecho) continue;
-      if (progresoDe(e, reto.id) >= 1) {
-        reto.hecho = true;
-        e.fichasCap = (e.fichasCap || 0) + 1;
-        var mRet = mandatoPorId(reto.id);
-        log.push({ tipo:'bueno', texto:'Challenge complete: "' + mRet.txt + '" (+1 capability token).', libro:mRet.libro });
-      }
-    }
-
     /* 12. ¿se terminó el puesto? */
     e.valoracion = Math.max(e.valoracion * 0.995, e.mrr * 12 * 6);
     if (e.imputado) { e.vivo = false; e.final = 'imputado'; }
@@ -1121,7 +1080,6 @@ var Motor = (function () {
     estimacion:estimacion, estimacionDetalle:estimacionDetalle, costoDe:costoDe, comprometido:comprometido, confianza:confianza, requisitosGate:requisitosGate, compuerta:compuerta,
     abierto:abierto, contratar:contratar, ronda:ronda, pivotar:pivotar,
     progresoMandato:progresoMandato, progresoDe:progresoDe, ritmoMandato:ritmoMandato, alineacion:alineacion, cascada:cascada,
-    gastarFicha:gastarFicha,
     seg:seg, apuesta:apuesta
   };
 })();

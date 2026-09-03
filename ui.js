@@ -59,18 +59,16 @@
 
   function modoMovil(w, h2) { return Math.min(w, h2) < 700; }
 
-  /* En un teléfono las barras fijas se comen la pantalla: con HUD, mandato,
-     ritmo, era, retos, pestañas y barra de acción clavados, a un iPhone SE le
-     quedan ~160px para el mes. Ritmo, era y retos son contexto que se lee una
-     vez al empezar el mes, no cosas que necesites a la vista mientras mueves
-     puntos — así que en móvil se mudan adentro del scroll de la columna
-     izquierda, arriba de las estaciones. Quedan clavados el HUD, el mandato,
-     las pestañas y el cierre del mes. */
+  /* En un teléfono las barras fijas se comen la pantalla. Ritmo y era son
+     contexto que se lee una vez al empezar el mes, no cosas que necesites a la
+     vista mientras mueves puntos — así que en móvil se mudan adentro del
+     scroll de la columna izquierda. Quedan clavados la cabecera, las pestañas
+     y el cierre del mes. */
   function acomodarBarras() {
     var pj = $('p-juego'), tb = $('tabsm'), capa = $('capa');
     var izq = pj ? pj.getElementsByClassName('izq')[0] : null;
     if (!pj || !izq || !capa || !tb) return;
-    var ids = ['ritmo', 'era', 'retos'], i, el, destino, ancla;
+    var ids = ['ritmo', 'era'], i, el, destino, ancla;
     destino = esMovil ? izq : pj;
     ancla = esMovil ? capa : tb;
     for (i = 0; i < ids.length; i++) {
@@ -213,7 +211,7 @@
     focus:'Qué tan alineada está la organización en pocas cosas. Baja sola con el tiempo; las decisiones de liderazgo la empujan hacia arriba.',
     usab:'Qué tan poco necesitan pensar los usuarios. Multiplica la conversión de TODO el tráfico que traes.',
     esf:'El tamaño es tiempo, para tu equipo, este mes: XS ~un día, S ~3 días, M ~una semana, L ~2 semanas, XL ~el mes entero.',
-    vec:'Cuánto mueve cada eje si sale. Son los MISMOS ocho ejes que pueden ser tu mandato o un reto, con los mismos nombres: lo que dice el chip es lo que sube o baja en el panel de la derecha. El chip con borde es el eje por el que te miden, y sale siempre — si dice “—”, este proyecto no lo mueve. Los chips rojos son efectos secundarios reales: construir agrega Deuda, y la superficie nueva cuesta Fiabilidad o Usabilidad. Las estimaciones se afinan con evidencia.',
+    vec:'Cuánto mueve cada eje si sale. Son los MISMOS ocho ejes del panel de la derecha, con los mismos nombres: lo que dice el chip es lo que sube o baja en el panel de la derecha. El chip con borde es el eje por el que te miden, y sale siempre — si dice “—”, este proyecto no lo mueve. Los chips rojos son efectos secundarios reales: construir agrega Deuda, y la superficie nueva cuesta Fiabilidad o Usabilidad. Las estimaciones se afinan con evidencia.',
     eje:'El eje en el que vive tu mandato. Busca ese mismo nombre en los chips de los proyectos del backlog y en la estación marcada arriba: esas son todas las formas de moverlo.',
     funnel:'Los ocho ejes medibles de la empresa, con los mismos nombres que llevan los chips de cada proyecto. Los marcados son los que te están midiendo este puesto. Ganancia = ingresos menos gasto.',
     capfondeo:'Las capacidades de la empresa se componen desde iniciativas fondeadas: necesitan capital levantado detrás para crecer, y sin él se erosionan en silencio. Cada una tiene una habilidad gemela en tu perfil que acelera su crecimiento.',
@@ -1116,7 +1114,6 @@
     var cls = prog >= 1 ? 'v' : prog >= esperado ? 'a' : 'r';
     var eje = ejeDe(J.mandatoId);
     var pol = Math.round(J.politico);
-    var sig = siguienteDesbloqueo(C.nivel);
     var val = m.fmt(m.valor(J)), meta = m.fmt(m.meta(J));
 
     var h = '<span class="fasechip mini ' + faseClase(J.faseCorta) + '" data-act="ver-objetivo">' +
@@ -1128,14 +1125,14 @@
         Math.round(Math.min(1, prog) * 100) + '%"></i></span>' +
       vHud('mand', val, esc(val) + '<span class="mut"> · meta ' + esc(meta) + '</span>', 'hmv') +
       '</div></div>';
+    /* Solo dos datos a la derecha: el reloj y lo unico que te puede echar. El
+       nombre de la empresa ya esta en el titulo de la pestana y en el cierre
+       del mes; la Edad se lee en los pips del ticker de era. */
     h += '<div class="hudi der">' +
-      '<div class="hi"><div class="k">' + esc(J.empresa) + '</div><div class="v num">Mes ' + (J.mesPuesto + 1) +
+      '<div class="hi"><div class="k">Mes</div><div class="v num">' + (J.mesPuesto + 1) +
         '<span class="mut" style="font-size:13px"> de ' + J.meses + '</span></div></div>' +
       '<div class="hi"><div class="k">' + tip('pol','Capital político') + '</div>' +
         '<div class="v num ' + (pol < 25 ? 'rojo' : pol < 45 ? 'ambar' : '') + '">' + pol + '</div></div>' +
-      '<div class="hi"><div class="k">Edad</div><div class="v" style="font-size:13px">' +
-        esc(ESCALAFON[C.nivel].corto) + (sig ? ' <span class="mut">→ ' + esc(NOMBRE_PALANCA[sig.palanca] || sig.palanca) + '</span>' : '') +
-        '</div></div>' +
       '</div>';
     $('hud').innerHTML = h;
   }
@@ -1153,17 +1150,14 @@
     return h + '</span>';
   }
 
-  /* Ritmo y retos en UNA barra. Eran dos filas de cromo separadas que decian
-     lo mismo en dos alturas: "vas a llegar o no" y "estos otros dos numeros
-     tambien te miden". Van juntas — el pronostico manda a la izquierda, los
-     retos quedan a la derecha como marcadores chicos. El "lo mueve: ..." se va
-     de aca: es una instruccion sobre el backlog, y su lugar es el backlog. */
+  /* El pronostico del mandato, en un renglon. El "lo mueve: ..." no vive aca:
+     es una instruccion sobre el backlog, y su lugar es el backlog. */
   function renderRitmo() {
     var r = Motor.ritmoMandato(J);
     var runTxt = r.runway > 90 ? '∞' : r.runway.toFixed(1) + ' meses';
     var h, cls;
     if (r.cumplido) {
-      h = '<span class="verde">✓ Mandato cumplido.</span> <span class="mut">Asegúralo — runway ' + runTxt + '.</span>';
+      h = '<span><span class="verde">✓ Mandato cumplido.</span> <span class="mut">Asegúralo — runway ' + runTxt + '.</span></span>';
     } else {
       var nm = Math.max(1, Math.ceil(r.mesesMeta));
       var mesesTxt = isFinite(r.mesesMeta) ? ('~' + nm + (nm === 1 ? ' mes' : ' meses')) : 'nunca';
@@ -1182,28 +1176,7 @@
       }
       h += ' ' + chip('pgdefault');
     }
-    $('ritmo').innerHTML = h + retosHtml();
-  }
-
-  function retosHtml() {
-    if (!J.retos || !J.retos.length) return '';
-    var h = '<span class="retos">', i, hay = false;
-    for (i = 0; i < J.retos.length; i++) {
-      var reto = J.retos[i], m = mandatoPorId(reto.id);
-      if (!m) continue;
-      hay = true;
-      var prog = reto.hecho ? 1 : Motor.progresoDe(J, reto.id);
-      var cls = reto.hecho ? 'v' : prog >= 0.66 ? 'a' : 'r';
-      var ejeR = ejeDe(reto.id);
-      h += '<span class="reto' + (reto.hecho ? ' hecho' : '') + '" title="' + esc(m.txt) + '">' +
-        (reto.hecho ? '✓ ' : '◇ ') + esc(ejeR ? nombreEje(ejeR) : m.txt) +
-        '<span class="track mini"><i class="' + cls + '" style="width:' + Math.round(Math.min(1, prog) * 100) + '%"></i></span>' +
-        '</span>';
-    }
-    if (J.fichasCap > 0) {
-      h += '<span class="reto ficha">🏅 ' + J.fichasCap + ' ficha' + (J.fichasCap > 1 ? 's' : '') + '</span>';
-    }
-    return hay || J.fichasCap > 0 ? h + '</span>' : '';
+    $('ritmo').innerHTML = h;
   }
 
   function renderEra() {
@@ -1271,60 +1244,65 @@
   function sinUsar() { return Math.max(0, Motor.capacidadPropia(J) - enEstaciones() - enProyectos()); }
 
   function renderAsignacion() {
-    var mio = Motor.capacidadPropia(J), ocio = sinUsar(), ejes = ejesEnJuego();
-    /* el rótulo largo se come tres renglones en un teléfono */
-    /* el rotulo era una instruccion de dos renglones; el numero solo ya dice
-       todo lo que hace falta, y la barra de abajo cuenta lo que falta poner */
-    var h = '<div class="rot" style="margin-bottom:6px">Estaciona a tu equipo · <b class="num">' + mio + ' pts</b></div>';
+    var mio = Motor.capacidadPropia(J), ocio = sinUsar();
+    var metaEje = ejeDe(J.mandatoId);
+    var i, k;
 
-    h += '<div class="ebar">';
-    var i;
+    /* Las estaciones ocupaban un tercio de la columna con cinco tarjetas de
+       96px — y en los primeros puestos cuatro de esas cinco estaban con
+       candado, o sea: un tercio de la pantalla para decir "todavia no".
+       Lo principal del mes son las iniciativas y como convergen con el
+       mandato, asi que las estaciones bajan a una tira de pastillas de una
+       linea, las bloqueadas se resumen en un renglon, y la tarjeta de "En
+       proyectos" se va: la barra de abajo ya cuenta lo mismo. */
+    var abiertas = [], cerradas = [];
     for (i = 0; i < ESTACIONES.length; i++) {
-      var v = plan[ESTACIONES[i].k];
-      if (v > 0) h += '<i style="width:' + (v / mio * 100) + '%;background:' + ESTACIONES[i].col + '"></i>';
+      if (J.palancas.indexOf(ESTACIONES[i].req) >= 0) abiertas.push(ESTACIONES[i]);
+      else cerradas.push(ESTACIONES[i]);
     }
-    if (enProyectos() > 0) h += '<i style="width:' + (enProyectos() / mio * 100) + '%;background:#e8a33d"></i>';
-    if (ocio > 0) h += '<i style="width:' + (ocio / mio * 100) + '%;background:var(--color-neutral-800)"></i>';
-    h += '</div>';
 
-    h += '<div class="estaciones">';
-    for (i = 0; i < ESTACIONES.length; i++) {
-      var st = ESTACIONES[i], vv = plan[st.k];
-      if (J.palancas.indexOf(st.req) < 0) {
+    var h = '';
+    if (abiertas.length) {
+      h += '<div class="rot" style="margin-bottom:6px">Estaciona a tu equipo · <b class="num">' + mio + ' pts</b></div>';
+      h += '<div class="ebar">';
+      for (i = 0; i < ESTACIONES.length; i++) {
+        var v = plan[ESTACIONES[i].k];
+        if (v > 0) h += '<i style="width:' + (v / mio * 100) + '%;background:' + ESTACIONES[i].col + '"></i>';
+      }
+      if (enProyectos() > 0) h += '<i style="width:' + (enProyectos() / mio * 100) + '%;background:#e8a33d"></i>';
+      if (ocio > 0) h += '<i style="width:' + (ocio / mio * 100) + '%;background:var(--color-neutral-800)"></i>';
+      h += '</div>';
+
+      h += '<div class="estaciones">';
+      for (i = 0; i < abiertas.length; i++) {
+        var st = abiertas[i], vv = plan[st.k];
+        var esMeta = metaEje && EJES[metaEje] && EJES[metaEje].est === st.k;
+        h += '<div class="stpill' + (vv > 0 ? ' viva' : '') + (esMeta ? ' stmeta' : '') + '">' +
+          '<span class="sticon" style="' + (vv > 0 ? 'color:' + st.col : '') + '">' + svgIc(st.svg) + '</span>' +
+          '<span class="stn">' + tip(st.tipk, st.n) + (esMeta ? '<i class="stmark">mandato</i>' : '') + '</span>' +
+          '<span class="strinde">' + (vv > 0 ? st.rinde(vv) : '') + '</span>' +
+          '<span class="ctrl">' +
+            '<span class="b' + (vv <= 0 ? ' off' : '') + '" data-menos="' + st.k + '">−</span>' +
+            '<span class="n num">' + vv + '</span>' +
+            '<span class="b' + (ocio <= 0 ? ' off' : '') + '" data-mas="' + st.k + '">+</span>' +
+          '</span></div>';
+      }
+      h += '</div>';
+    }
+
+    if (cerradas.length) {
+      var partes = [];
+      for (i = 0; i < cerradas.length; i++) {
         var falta = '';
-        for (var k = 0; k < ESCALAFON.length; k++) {
-          if (ESCALAFON[k].palancas.indexOf(st.req) >= 0) { falta = ESCALAFON[k].corto; break; }
+        for (k = 0; k < ESCALAFON.length; k++) {
+          if (ESCALAFON[k].palancas.indexOf(cerradas[i].req) >= 0) { falta = ESCALAFON[k].corto; break; }
         }
-        h += '<div class="stcard bloq"><div class="sticon">' + svgIc(st.svg) + '</div>' +
-          '<div class="stn">' + tip(st.tipk, st.n) + '</div><div class="stlock">🔒 ' + falta + '</div></div>';
-        continue;
+        partes.push(cerradas[i].n + ' <span class="mut">(' + falta + ')</span>');
       }
-      var pctFill = mio > 0 ? Math.round(vv / mio * 100) : 0;
-      /* la estación que empuja el eje por el que te miden lleva la marca: si
-         ningún proyecto mueve tu mandato, esta es la palanca que queda */
-      var porQue = '';
-      for (var ek in ejes) if (ejes.hasOwnProperty(ek) && EJES[ek] && EJES[ek].est === st.k) {
-        porQue = ejes[ek]; if (porQue === 'mandato') break;
-      }
-      h += '<div class="stcard' + (vv > 0 ? ' viva' : '') + (porQue ? ' stmeta' : '') + '">' +
-        (porQue ? '<div class="sttag' + (porQue === 'reto' ? ' reto' : '') + '">' + (porQue === 'reto' ? 'reto' : 'mandato') + '</div>' : '') +
-        '<div class="stfill" style="height:' + pctFill + '%;background:' + st.col + '"></div>' +
-        '<div class="sticon" style="' + (vv > 0 ? 'background:color-mix(in srgb, ' + st.col +
-          ' 15%, transparent);color:' + st.col : '') + '">' + svgIc(st.svg) + '</div>' +
-        '<div class="stn">' + tip(st.tipk, st.n) + '</div>' +
-        '<div class="ctrl">' +
-        '<div class="b' + (vv <= 0 ? ' off' : '') + '" data-menos="' + st.k + '">−</div>' +
-        '<div class="n num">' + vv + '</div>' +
-        '<div class="b' + (ocio <= 0 ? ' off' : '') + '" data-mas="' + st.k + '">+</div>' +
-        '</div>' +
-        '<div class="strinde">' + (vv > 0 ? st.rinde(vv) : '—') + '</div></div>';
+      h += '<div class="stlocked">🔒 ' + (abiertas.length ? 'Se abren al ascender: ' :
+        'Todavía no tienes estaciones — tu mes entero va a los proyectos. Se abren al ascender: ') +
+        partes.join(' · ') + '</div>';
     }
-    h += '<div class="stcard viva build">' +
-      '<div class="sticon" style="background:color-mix(in srgb, #e8a33d 15%, transparent);color:#e8a33d">' + svgIc('build') + '</div>' +
-      '<div class="stn">' + tip('st_build', '⚒ En proyectos') + '</div>' +
-      '<div class="n num" style="font-size:19px;margin-top:1px">' + enProyectos() + '</div>' +
-      '<div class="strinde">' + (ocio > 0 ? '<span class="ambar">' + ocio + ' ociosos</span>' : 'todos ocupados') + '</div></div>';
-    h += '</div>';
     $('capa').innerHTML = h;
   }
 
@@ -1333,7 +1311,7 @@
      tres nombres distintos según dónde la miraras. El mandato decía
      "usabilidad", el panel decía "Activación" y el chip de la apuesta decía
      "ACT" — y nadie podía atar los tres. Ahora hay UN eje por cosa medible, con
-     UN nombre, y ese nombre aparece igual en el mandato, en el reto, en el chip
+     UN nombre, y ese nombre aparece igual en el mandato, en el chip
      de cada proyecto y en la estación que lo mueve.
 
      `est` es la estación del mes que empuja ese eje sin construir nada: es la
@@ -1349,8 +1327,8 @@
     deuda: { n:'Deuda',       est:'plat', invertido:true }
   };
   var ORDEN_EJES = ['adq','act','ret','rev','rel','gate','evid','deuda'];
-  /* el hilo conductor: cada mandato (y cada reto, que usa el mismo catálogo)
-     vive en exactamente uno de esos ejes. Los ocho están cubiertos. */
+  /* el hilo conductor: cada mandato vive en exactamente uno de esos ejes.
+     Los ocho están cubiertos. */
   var MET_MANDATO = { retencion:'ret', crecer:'adq', ingresos:'rev', activacion:'act',
                       estabilidad:'rel', deuda:'deuda', abismo:'gate', descubrir:'evid' };
   /* cómo se mueve cada mandato, dicho con las palabras que el jugador ve en
@@ -1368,16 +1346,11 @@
   function ejeDe(mandatoId) { return MET_MANDATO[mandatoId] || null; }
   function nombreEje(k) { return (EJES[k] && EJES[k].n) || k; }
 
-  /* los ejes que te están midiendo ahora mismo: el mandato y los retos vivos */
+  /* el eje por el que te miden: uno solo, el del mandato */
   function ejesEnJuego() {
-    var s = {}, i;
-    if (J && J.mandatoId) s[ejeDe(J.mandatoId)] = 'mandato';
-    if (J && J.retos) for (i = 0; i < J.retos.length; i++) {
-      if (J.retos[i].hecho) continue;
-      var k = ejeDe(J.retos[i].id);
-      if (k && !s[k]) s[k] = 'reto';
-    }
-    return s;
+    var s2 = {};
+    if (J && J.mandatoId) s2[ejeDe(J.mandatoId)] = 'mandato';
+    return s2;
   }
 
   function chipEje(mk, v, esMeta) {
@@ -1596,8 +1569,7 @@
     }
     var filaHtml = function (f) {
       return '<div class="fun' + (ejes[f.k] ? ' funmeta' : '') + '"><span class="fk">' + funIc(f.ic, f.cls) +
-        nombreEje(f.k) + (ejes[f.k] ? '<span class="ejechip chico' + (ejes[f.k] === 'reto' ? ' reto' : '') + '">' +
-        (ejes[f.k] === 'reto' ? 'reto' : 'mandato') + '</span>' : '') +
+        nombreEje(f.k) + (ejes[f.k] ? '<span class="ejechip chico">mandato</span>' : '') +
         '</span><span class="fv num' + (f.cls ? ' ' + f.cls : '') + '">' + f.v + '</span></div>';
     };
     h += '<div class="caja2">' + rotPleg('ejes', tip('funnel','Te miden por'), otros.length);
@@ -1672,15 +1644,6 @@
     /* el combustible de fondeo si falta: no es contexto, es una alarma */
     if (!(J.capFondeo > 0)) {
       h += '<div class="alarma">' + svgIc('debt') + '<span><b>Sin combustible de fondeo</b> — las capacidades se erosionan. Levanta una ronda para reactivar el crecimiento.</span></div>';
-    }
-    if (J.fichasCap > 0) {
-      var EJF = [['producto','Producto'],['tecnologia','Tecnología'],['gtm','GTM'],['gente','Org'],['capital','Fondeo']];
-      h += '<div class="pq" style="margin-top:8px"><b class="ambar">🏅 ' + J.fichasCap + ' ficha' + (J.fichasCap > 1 ? 's' : '') +
-        '</b> — gástala en una capacidad (+8):</div><div style="margin-top:4px">';
-      for (i = 0; i < EJF.length; i++) {
-        h += '<span class="btn chico" data-act="gastar-ficha" data-eje="' + EJF[i][0] + '" style="margin:2px 4px 0 0">' + EJF[i][1] + '</span>';
-      }
-      h += '</div>';
     }
     h += '</div>';
 
@@ -2632,12 +2595,6 @@
     else if (v === 'tour-sigo') { tourPaso++; if (tourPaso >= TOUR.length) tourFin(); else tourRender(); }
     else if (v === 'tour-salir') { tourFin(); }
     else if (v === 'ver-objetivo') { if (J) mostrarBrief(); }
-    else if (v === 'gastar-ficha') {
-      if (J) {
-        var eje = attr(t, 'data-eje');
-        if (eje && Motor.gastarFicha(J, eje)) { guardar(); renderRitmo(); renderPanel(); }
-      }
-    }
     else if (v === 'continuar') {
       if (cargar()) {
         if (J && !J.briefVisto) { mostrarBrief(); }
