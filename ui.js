@@ -896,7 +896,7 @@
        la Era del mundo de arriba. Un pip por nivel, relleno hasta donde llegaste. */
     var pips = '', sig2 = siguienteDesbloqueo(C.nivel);
     for (i = 0; i < ESCALAFON.length; i++) pips += '<i class="' + (i <= C.nivel ? 'on' : '') + '"></i>';
-    h += '<div class="age-banner"><span class="rot">Edad · <b>' + esc(ESCALAFON[C.nivel].rol) + '</b></span>' +
+    h += '<div class="age-banner"><span class="rot">Edad' + ayuda('edad') + ' · <b>' + esc(ESCALAFON[C.nivel].rol) + '</b></span>' +
          '<span class="agepips">' + pips + '</span>' +
          (sig2 ? '<div class="pq mut" style="margin-top:4px">La próxima Edad desbloquea <b>' + esc(NOMBRE_PALANCA[sig2.palanca] || sig2.palanca) + '</b></div>' : '') +
          '</div>';
@@ -904,8 +904,8 @@
     h += '<div class="tarjetas">';
     for (i = 0; i < ofs.length; i++) {
       var o = ofs[i];
-      var calor = o.calor > 0 ? '<span class="pill hot">sector caliente</span>' :
-                  o.calor < 0 ? '<span class="pill frio">sector frío</span>' : '';
+      var calor = o.calor > 0 ? '<span class="pill hot" data-tip="calor">sector caliente</span>' :
+                  o.calor < 0 ? '<span class="pill frio" data-tip="calor">sector frío</span>' : '';
       h += '<div class="oferta' + (ofertaSel === i ? ' sel' : '') + '" data-oferta="' + i + '">' +
         '<div class="cab ' + (o.fundar ? 'lila' : 'azul') + '">' + esc(o.sectorCorto) + ' · ' + esc(o.etapaNombre) + calor + '</div>' +
         '<h3>' + esc(o.nombre) + '</h3>' +
@@ -1023,7 +1023,7 @@
     h += '<div class="notas" style="margin-top:14px">';
     h += '<div class="nota" style="width:170px"><div class="nk">Usuarios</div><div class="nv" style="font-size:30px">' + mil(Motor.usuarios(J)) + '</div></div>';
     h += '<div class="nota" style="width:170px"><div class="nk">Equipo</div><div class="nv" style="font-size:30px">' + (J.ing + J.prod + J.gtm) + '</div></div>';
-    h += '<div class="nota" style="width:170px"><div class="nk">Sector</div><div class="nv" style="font-size:22px;margin-top:8px">' + calorTxt + '</div><div class="pq mut" style="font-size:10.5px">' + esc(era.nombre) + '</div></div>';
+    h += '<div class="nota" style="width:170px"><div class="nk tipped" data-tip="calor">Sector</div><div class="nv" style="font-size:22px;margin-top:8px">' + calorTxt + '</div><div class="pq mut" style="font-size:10.5px">' + esc(era.nombre) + '</div></div>';
     h += '<div class="nota" style="width:280px"><div class="nk">Tu mandato · ' + J.meses + ' meses</div><div class="nv" style="font-size:17px;margin-top:8px;line-height:1.3">' + esc(m2.txt) + '</div></div>';
     h += '</div>';
 
@@ -1505,7 +1505,7 @@
     var id, i, a, d;
     /* el rotulo de "Tus proyectos" con la fila de slots vacia y nada debajo
        era una seccion fantasma en el mes 1: solo aparece cuando hay algo */
-    if (plan.orden.length) h += '<div class="rot" style="margin:8px 0 7px 0">Tus proyectos ' + cajas + '</div>';
+    if (plan.orden.length) h += '<div class="rot" style="margin:8px 0 7px 0">Tus proyectos' + ayuda('st_build') + ' ' + cajas + '</div>';
 
     /* tu tablero: los proyectos que reciben puntos este mes */
     for (i = 0; i < plan.orden.length; i++) {
@@ -1577,12 +1577,12 @@
           (detalleAbierto[id] ? 'menos' : 'más') + '</span>' : '') +
           (detalleAbierto[id] && a.d2 ? '<span class="inid2">' + esc(a.d2) + '</span>' : '') + '</div>' +
         '<div class="inim">' +
-          '<span class="ml">Prob</span>' + dots(d.prob) +
+          '<span class="ml tipped" data-tip="prob">Prob</span>' + dots(d.prob) +
           '<span class="ml">Esfuerzo</span><span class="tipped" data-tip="esf"><span class="esf e' + d.esf + '">' + d.esf + '</span></span>' +
           '<span class="mut">' + d.tiempo + ' · ' + d.costo + ' pts</span>' +
         '</div>' +
         '<div class="inie">' +
-          '<span class="ml">Esperado</span>' + chipsVec(d.vec, ejesAqui) +
+          '<span class="ml tipped" data-tip="vec">Esperado</span>' + chipsVec(d.vec, ejesAqui) +
           '<span class="sello' + (aporte > 0 ? ' on' : '') + '">' +
             (aporte > 0 ? '↑ mandato' : 'no mueve el mandato') + '</span>' +
         '</div></div>';
@@ -1716,7 +1716,7 @@
     if (secAbierta.mas) {
       h += '<div class="fun"><span class="fk">Usuarios</span><span class="fv num">' + mil(Motor.usuarios(J)) + '</span></div>';
       var profit = J.mrr - Motor.burnMensual(J);
-      h += '<div class="fun"><span class="fk">Ganancia</span><span class="fv num ' + (profit >= 0 ? 'verde' : 'rojo') + '">' + (profit >= 0 ? '+' : '') + money(profit) + '</span></div>';
+      h += '<div class="fun"><span class="fk tipped" data-tip="funnel">Ganancia</span><span class="fv num ' + (profit >= 0 ? 'verde' : 'rojo') + '">' + (profit >= 0 ? '+' : '') + money(profit) + '</span></div>';
       h += '<div class="fun"><span class="fk">Reputación</span><span class="fv num">' + Math.round(C.reputacion) + '</span></div>';
       h += '<div class="subrot">Salud</div>';
       h += barraEstado(tip('evid','Evidencia'), J.evidencia, false, 'lean', 'evidence');
