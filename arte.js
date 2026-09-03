@@ -3,8 +3,10 @@
    Por qué SVG en código y no PNG: la dirección "Terminal de Broker" es línea
    de 1px, plano, gris + ámbar. Eso es exactamente lo que hace un SVG, y de
    paso el ámbar sale de var(--color-accent) — si el token cambia, cambian los
-   35 emblemas a la vez. En PNG el color queda quemado en el pixel y hay que
+   32 de una vez. En PNG el color queda quemado en el pixel y hay que
    regenerar todo.
+
+   Son 8 escalones, 5 pasos, 9 pilares, 7 finales, 2 vacíos y la marca.
 
    Es el mismo patrón que skylineSvg() en ui.js: una función que devuelve una
    cadena, que se inyecta con innerHTML. Sin build, sin dependencias, ES5.
@@ -28,7 +30,6 @@ var Arte = (function () {
   var LN = 'var(--color-divider)';
   var AM = 'var(--color-accent)';
   var VERDE = '#35c46a', ROJO = '#e2564a';
-  var AMBAR_PUNTO = 'var(--color-accent)';
 
   function svg(vb, cls, cuerpo) {
     return '<svg class="' + cls + '" viewBox="' + vb + '" preserveAspectRatio="xMidYMid meet" ' +
@@ -346,7 +347,7 @@ var Arte = (function () {
     corto: function () {
       var h = p('M0 62.5h464', LN, 1) + p('M232 28.5h150', ES, 1.3, ' stroke-dasharray="4 4"') + '', i;
       h += p('M232 56c26 0 40 -5 54 -12s26 -13 38 -15', MD, 1.6);
-      h += circR(324, 29.5, 4, AMBAR_PUNTO);
+      h += circR(324, 29.5, 4, AM);
       h += p('M330 29.5h52', ES, 1.2, ' stroke-dasharray="2 4"');
       h += p('M398 62.5h34M402 62.5V44h26v18.5', MD, 1.5);
       h += p('M406 44v-8h18v8', MD, 1.4);
