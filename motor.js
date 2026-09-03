@@ -510,7 +510,11 @@ var Motor = (function () {
     }
     var dx = dimsExtra(e, id, est), dk;
     for (dk in dx) if (dx.hasOwnProperty(dk)) vecEsp[dk] = dx[dk];
-    return { est:est, prob:prob, mag:mag, esf:esf, tiempo:TIEMPO[esf] || '', costo:cst, vec:vecEsp };
+    /* el desglose de submétricas viaja con la estimación: son el "por qué" del
+       vector de arriba, no una segunda predicción — van nominales, sin ruido */
+    var ap = apuesta(id);
+    return { est:est, prob:prob, mag:mag, esf:esf, tiempo:TIEMPO[esf] || '', costo:cst, vec:vecEsp,
+             subs:(ap && ap.impactoSubmetricas) || null };
   }
 
   function estimacion(e, id) {

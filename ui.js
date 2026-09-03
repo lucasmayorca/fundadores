@@ -1574,22 +1574,35 @@
     return h || '<span class="vchip vnull">sin efecto medible</span>';
   }
 
-  /* Submétricas impactadas por una apuesta */
-  function chipSubmetricas(impactoSubmetricas) {
-    if (!impactoSubmetricas || Object.keys(impactoSubmetricas).length === 0) return '';
-    var h = '<span style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;font-size:10px">';
-    var count = 0;
-    for (var key in impactoSubmetricas) {
-      if (!impactoSubmetricas.hasOwnProperty(key)) continue;
-      if (count >= 6) { h += '…'; break; } /* máximo 6 submétricas visibles */
-      var valor = impactoSubmetricas[key];
-      var cls = valor > 0 ? 'vpos' : 'vneg';
-      var txt = key.split(':')[1] || key;
-      h += '<span class="vchip ' + cls + '" style="padding:1px 6px;font-size:9px">' + txt + (valor > 0 ? '+' : '') + valor + '</span>';
-      count++;
+  /* Nombre legible de una submétrica a partir de su clave "eje:submetrica".
+     Sin esto los chips dirían "time_value" o "conv_rate". */
+  function nombreSubmetrica(key) {
+    var p = key.split(':'), eje = EJES[p[0]], i;
+    if (eje && eje.submetricas) {
+      for (i = 0; i < eje.submetricas.length; i++) {
+        if (eje.submetricas[i].id === p[1]) return eje.submetricas[i].n;
+      }
     }
-    h += '</span>';
-    return h;
+    return p[1] || key;
+  }
+
+  /* El desglose de una iniciativa: qué submétricas mueve, que es el "por qué"
+     de los chips de eje de arriba. Se muestran las 3 de mayor magnitud — la
+     lista entera son hasta 5 y satura la tarjeta. */
+  function chipSubmetricas(subs) {
+    if (!subs) return '';
+    var ks = [], k;
+    for (k in subs) if (subs.hasOwnProperty(k) && subs[k]) ks.push(k);
+    if (!ks.length) return '';
+    ks.sort(function (a, b) { return Math.abs(subs[b]) - Math.abs(subs[a]); });
+    var muestra = ks.slice(0, 3), h = '', i, v;
+    for (i = 0; i < muestra.length; i++) {
+      v = subs[muestra[i]];
+      h += '<span class="subchip">' + esc(nombreSubmetrica(muestra[i])) +
+        ' <b class="num ' + (v > 0 ? 'verde' : 'rojo') + '">' + (v > 0 ? '+' : '−') + Math.abs(v) + '</b></span>';
+    }
+    if (ks.length > muestra.length) h += '<span class="subchip mut">+' + (ks.length - muestra.length) + ' más</span>';
+    return '<div class="subrow">' + h + '</div>';
   }
 
   /* Cuánto aporta una iniciativa al mandato: sus chips × el peso de cada eje,
@@ -1704,9 +1717,11 @@
         '</div>' +
         '<div class="inie">' +
           '<span class="ml tipped" data-tip="vec">Esperado</span>' + chipsVec(d.vec, ejesAqui) +
-          (d.impactoSubmetricas ? chipSubmetricas(d.impactoSubmetricas) : '') +
           '<span class="sello' + (aporte > 0 ? ' on' : '') + '">' +
             (aporte > 0 ? '↑ mandato' : 'no mueve el mandato') + '</span>' +
+          /* va después del sello a propósito: el sello se ancla a la derecha de
+             la primera línea con margin-left:auto, y el desglose baja entero */
+          chipSubmetricas(d.subs) +
         '</div></div>';
     }
     $('backlog').innerHTML = h;
@@ -1792,7 +1807,11 @@
       var conSubmetricas = tieneSubs && eje && eje.submetricas && subs;
       h += '<div class="fun' + (mide ? ' funmide' : '') + '" ' +
         (conSubmetricas ? 'onclick="var s=this.querySelector(\'.submetricas\');if(s){s.classList.toggle(\'open\');s.style.maxHeight=s.classList.contains(\'open\')?\'400px\':\'0px\';}" style="cursor:pointer"' : '') +
-        'style="display:flex;flex-direction:column;gap:' + (conSubmetricas ? '6' : '0') + 'px;padding:8px 0">' +
+        /* align-items:stretch pisa el center de .fun en estilos.css: en un
+           contenedor column, center encoge las filas al ancho de su texto y las
+           submétricas quedaban en 138px de los 338 del panel, truncadas. */
+        'style="display:flex;flex-direction:column;align-items:stretch;gap:' +
+        (conSubmetricas ? '6' : '0') + 'px;padding:8px 0">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:3.5px 0">' +
           '<div style="display:flex;align-items:center;flex:1 1 auto">' +
             '<span class="funic' + (mide ? ' mide' : '') + '">' + svgIc(EJES[k].ic) + '</span>' +
@@ -1801,13 +1820,15 @@
           '<span class="fv num">' + VALOR[k] + '</span>' +
         '</div>';
       if (conSubmetricas) {
-        h += '<div class="submetricas" style="max-height:0;overflow:hidden;transition:max-height 0.2s ease;display:flex;flex-direction:column;gap:3px;padding:0 0 0 32px;border-left:1px solid var(--color-divider);margin-left:-2px">';
+        /* el indent de 25px alinea los nombres con el label del eje de arriba
+           (ícono de 19px + su margen de 6px) */
+        h += '<div class="submetricas" style="max-height:0;overflow:hidden;transition:max-height 0.2s ease;display:flex;flex-direction:column;gap:3px;padding:0 0 0 25px;border-left:1px solid var(--color-divider);margin-left:-2px">';
         for (var si = 0; si < eje.submetricas.length; si++) {
           var sub = eje.submetricas[si];
           var valor = subs[sub.id] || 0;
-          h += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--color-neutral-600);padding:2px 0 2px 8px">' +
+          h += '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--color-neutral-600);padding:2px 0">' +
             '<span style="flex:1 1 auto;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">' + esc(sub.n) + '</span>' +
-            '<span style="font-weight:500;color:var(--color-neutral-500);min-width:50px;text-align:right;margin-left:12px;font-family:\'IBM Plex Mono\'">' + Math.round(valor * 10) / 10 + '</span>' +
+            '<span class="num" style="color:var(--color-neutral-400);text-align:right;margin-left:8px;flex:0 0 auto">' + Math.round(valor * 10) / 10 + '</span>' +
           '</div>';
         }
         h += '</div>';
