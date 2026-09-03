@@ -691,7 +691,8 @@ h2, h3 { font-weight:500; }
 
 /* ---------- vector de métricas y funnel ---------- */
 .vchip { display:inline-block; padding:2px 7px; margin:0 5px 3px 0; border-radius:var(--radius-sm);
-  font-size:10.5px; font-weight:500; font-variant-numeric:tabular-nums; }
+  font-size:10.5px; font-weight:500; font-variant-numeric:tabular-nums; cursor:pointer; }
+.vchip:hover { box-shadow:0 0 0 1px var(--color-accent); }
 .vchip.vpos { background:var(--color-neutral-800); color:#4ade7c; }
 .vchip.vneg { background:var(--color-neutral-800); color:#f37b72; }
 /* el eje de tu mandato se muestra aunque el proyecto no lo mueva: en cero se
