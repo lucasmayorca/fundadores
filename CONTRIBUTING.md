@@ -107,11 +107,33 @@ arriba, y que el cambio sea lo que la propuesta pedía.
 
 ## El deploy
 
-Railway despliega solo cuando algo entra a `main`. **No corras `railway up` a
-mano**: mergear el PR es el deploy.
-
 - Producción: https://fundadores-production.up.railway.app/
-- Cada PR abierto puede tener su propia URL de preview.
+
+**Mergear no alcanza: hay que verificar que salió.** Este documento afirmaba
+que Railway desplegaba solo con cada entrada a `main`, y durante meses no fue
+cierto — el servicio se desplegaba a mano con `railway up` y nadie lo había
+anotado. Dos sesiones distintas perdieron tiempo el 2026-09-03 confiando en
+esta línea, así que ahora dice lo que realmente hay que hacer.
+
+Después de mergear, confirmá que producción tomó el cambio:
+
+```
+curl -s -o /dev/null -w "%{http_code}\n" https://fundadores-production.up.railway.app/ui.js
+railway deployment list | head -3
+```
+
+Si el último deploy no es posterior a tu merge, no salió. En ese caso:
+
+```
+cd fundadores && railway up
+```
+
+El repo quedó conectado a Railway el 2026-09-03 (Settings → Source →
+`lucasmayorca/fundadores`, branch `main`), así que el auto-deploy debería
+disparar solo. Mientras el dashboard siga mostrando **"Auto deploy
+unavailable"**, no confíes en eso: verificá siempre, y si no salió, subilo a
+mano. Cuando el auto-deploy quede confirmado funcionando, esta sección se
+puede simplificar — pero recién ahí, y con una verificación real encima.
 
 ## Reglas del proyecto
 
