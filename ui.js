@@ -543,21 +543,21 @@
 
     s += '<defs>' +
       '<linearGradient id="' + u + 'cielo" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0" stop-color="#101220"></stop>' +
-        '<stop offset="0.5" stop-color="#181a2c"></stop>' +
-        '<stop offset="1" stop-color="#232541"></stop></linearGradient>' +
+        '<stop offset="0" stop-color="#0a0b0d"></stop>' +
+        '<stop offset="0.5" stop-color="#131519"></stop>' +
+        '<stop offset="1" stop-color="#1a1c20"></stop></linearGradient>' +
       '<radialGradient id="' + u + 'brillo" cx="0.5" cy="1" r="0.85">' +
         '<stop offset="0" stop-color="#9a742a" stop-opacity="0.40"></stop>' +
         '<stop offset="0.45" stop-color="#5a4418" stop-opacity="0.15"></stop>' +
         '<stop offset="1" stop-color="#5a4418" stop-opacity="0"></stop></radialGradient>' +
       '<radialGradient id="' + u + 'halo" cx="0.5" cy="0.5" r="0.5">' +
-        '<stop offset="0" stop-color="#e7e5fe" stop-opacity="0.22"></stop>' +
-        '<stop offset="1" stop-color="#e7e5fe" stop-opacity="0"></stop></radialGradient>' +
+        '<stop offset="0" stop-color="#fefaf5" stop-opacity="0.22"></stop>' +
+        '<stop offset="1" stop-color="#fefaf5" stop-opacity="0"></stop></radialGradient>' +
       '<linearGradient id="' + u + 'bordes" x1="0" y1="0" x2="1" y2="0">' +
-        '<stop offset="0" stop-color="#141527" stop-opacity="0.85"></stop>' +
-        '<stop offset="0.055" stop-color="#141527" stop-opacity="0"></stop>' +
-        '<stop offset="0.945" stop-color="#141527" stop-opacity="0"></stop>' +
-        '<stop offset="1" stop-color="#141527" stop-opacity="0.85"></stop></linearGradient>' +
+        '<stop offset="0" stop-color="#08090b" stop-opacity="0.85"></stop>' +
+        '<stop offset="0.055" stop-color="#08090b" stop-opacity="0"></stop>' +
+        '<stop offset="0.945" stop-color="#08090b" stop-opacity="0"></stop>' +
+        '<stop offset="1" stop-color="#08090b" stop-opacity="0.85"></stop></linearGradient>' +
       '<clipPath id="' + u + 'suelo"><rect x="0" y="0" width="' + vw + '" height="' + baseY + '"></rect></clipPath>' +
       '</defs>';
 
@@ -566,15 +566,15 @@
     s += '<rect x="0" y="0" width="' + vw + '" height="' + vh + '" fill="url(#' + u + 'brillo)"></rect>';
     /* luna creciente: disco claro y encima otro del color del cielo */
     s += '<circle cx="82" cy="34" r="27" fill="url(#' + u + 'halo)"></circle>' +
-         '<circle cx="82" cy="34" r="8.5" fill="#cfd3e5" opacity="0.82"></circle>' +
-         '<circle cx="87.5" cy="30.5" r="8.5" fill="#141527"></circle>';
+         '<circle cx="82" cy="34" r="8.5" fill="#cfd0d3" opacity="0.82"></circle>' +
+         '<circle cx="87.5" cy="30.5" r="8.5" fill="#08090b"></circle>';
 
     /* estrellas: unas cuantas titilan */
     for (i = 0; i < 22; i++) {
       var ex = ruido(i, 1) * vw, ey = 8 + ruido(i, 2) * 78, er = 0.6 + ruido(i, 5) * 0.7;
       var eo = 0.25 + ruido(i, 8) * 0.5;
       s += '<circle cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="' + er.toFixed(1) +
-           '" fill="#b2b6ca" opacity="' + eo.toFixed(2) + '">';
+           '" fill="#b7b9be" opacity="' + eo.toFixed(2) + '">';
       if (animar && i % 6 === 0) {
         s += '<animate attributeName="opacity" values="' + eo.toFixed(2) + ';0.08;' + eo.toFixed(2) +
              '" dur="' + (2.8 + ruido(i, 9) * 2.6).toFixed(1) + 's" repeatCount="indefinite"></animate>';
@@ -587,13 +587,13 @@
       var fx = ruido(i, 3) * (vw + 30) - 15;
       var fh = 18 + ruido(i, 7) * 52, fw = 15 + ruido(i, 11) * 24;
       s += '<rect x="' + fx.toFixed(1) + '" y="' + (baseY - fh).toFixed(1) + '" width="' + fw.toFixed(1) +
-           '" height="' + fh.toFixed(1) + '" fill="#181a2c"></rect>';
+           '" height="' + fh.toFixed(1) + '" fill="#131519"></rect>';
     }
     for (i = 0; i < 12; i++) {
       var mx = ruido(i, 17) * (vw + 20) - 10;
       var mh = 14 + ruido(i, 19) * 34, mw = 18 + ruido(i, 23) * 20;
       s += '<rect x="' + mx.toFixed(1) + '" y="' + (baseY - mh).toFixed(1) + '" width="' + mw.toFixed(1) +
-           '" height="' + mh.toFixed(1) + '" fill="#1d1f33"></rect>';
+           '" height="' + mh.toFixed(1) + '" fill="#23262b"></rect>';
     }
 
     /* ---- las ocho torres, recortadas por el horizonte para que emerjan ---- */
@@ -601,8 +601,8 @@
     for (i = 0; i < n; i++) {
       var g = geo(i), esSel = (i === sel), esFnd = (i === n - 1);
       var col = esSel
-        ? { cuerpo:'#2b2741', borde:(esFnd ? '#b5abfc' : '#796cbf'), techo:'#423a6a', acento:(esFnd ? '#b5abfc' : '#9184d9') }
-        : { cuerpo:'#20223a', borde:'#353749', techo:'#292b31', acento:'#9184d9' };
+        ? { cuerpo:'#3a2c14', borde:(esFnd ? '#fbd8ac' : '#8a641f'), techo:'#5c451f', acento:(esFnd ? '#fbd8ac' : '#ffb454') }
+        : { cuerpo:'#131519', borde:'#23262b', techo:'#1a1c20', acento:'#ffb454' };
 
       /* el transform base los deja hundidos: sin él, SMIL los muestra en su
          sitio final hasta que arranca su turno y ahí saltan hacia abajo */
@@ -653,7 +653,7 @@
       ax = gt.x + gt.w; ay = gt.y;
     }
     largo = Math.ceil(largo) + 2;
-    s += '<path d="' + d + '" fill="none" stroke="#9184d9" stroke-width="1.4" ' +
+    s += '<path d="' + d + '" fill="none" stroke="#ffb454" stroke-width="1.4" ' +
          'opacity="0.62" stroke-linejoin="round" stroke-linecap="round"' +
          (animar ? ' stroke-dasharray="' + largo + '" stroke-dashoffset="' + largo + '"' : '') + '>';
     if (animar) {
@@ -665,7 +665,7 @@
     for (i = 0; i < n; i++) {
       var gp = geo(i), ult = (i === n - 1);
       s += '<circle cx="' + gp.x.toFixed(1) + '" cy="' + gp.y.toFixed(1) + '" r="' +
-           (ult ? 2.8 : 1.9) + '" fill="' + (ult ? '#b5abfc' : '#9184d9') + '" opacity="' +
+           (ult ? 2.8 : 1.9) + '" fill="' + (ult ? '#fbd8ac' : '#ffb454') + '" opacity="' +
            (ult ? '1' : '0.75') + '"></circle>';
     }
 
@@ -680,15 +680,15 @@
            '" y="' + (fnd2 ? (gs.y - 19).toFixed(1) : (gs.y - alto - 9).toFixed(1)) +
            '" text-anchor="' + (fnd2 ? 'end' : 'middle') +
            '" font-size="11" font-weight="500" letter-spacing="0.8" fill="' +
-           (fnd2 ? '#e7e5fe' : '#d2cefd') + '">' + lab + '</text>';
+           (fnd2 ? '#fefaf5' : '#fce8cf') + '">' + lab + '</text>';
     }
     s += '</g>';
 
     /* suelo, neblina cálida y desvanecido en los bordes. Todo esto va encima
        de las torres, así que no puede robarles el toque: pointer-events none. */
     s += '<g pointer-events="none">';
-    s += '<rect x="0" y="' + baseY + '" width="' + vw + '" height="' + (vh - baseY) + '" fill="#101220"></rect>';
-    s += '<line x1="0" y1="' + baseY + '" x2="' + vw + '" y2="' + baseY + '" stroke="#3f424d" stroke-width="1"></line>';
+    s += '<rect x="0" y="' + baseY + '" width="' + vw + '" height="' + (vh - baseY) + '" fill="#0a0b0d"></rect>';
+    s += '<line x1="0" y1="' + baseY + '" x2="' + vw + '" y2="' + baseY + '" stroke="#3a3d44" stroke-width="1"></line>';
     for (i = 0; i < 16; i++) {
       var lx = 12 + ruido(i, 29) * (vw - 24);
       s += '<circle cx="' + lx.toFixed(1) + '" cy="' + (baseY + 5 + ruido(i, 31) * 14).toFixed(1) +
@@ -719,8 +719,26 @@
       '<div class="colx" style="width:520px;padding-right:36px">' + escaleraHtml() + '</div>' +
       '<div class="colx" style="-webkit-flex:1;flex:1;min-width:0">' + pilaresHtml() + '</div>' +
       '</div>';
-    h += '<div style="margin-top:20px">' +
-      '<span class="btn pri xl" data-act="nueva">Empezar como ' + esc(sel0.corto) + '</span> ' +
+    /* dos modos, no uno solo: libre (tu mundo, tu ritmo) y semanal (el mismo
+       mundo para todos, siete dias, una tabla). El semanal ya existia como
+       link de texto perdido mas abajo — es el mismo Ranking.semana()/
+       empezarCarrera(true) de siempre, ahora al frente en vez de escondido. */
+    h += '<div class="modos" style="margin-top:22px">' +
+      '<div class="modo modo-pri" data-act="nueva">' +
+        '<div class="modok"><span class="mut">01</span><span class="pill" style="margin-left:0">CARRERA</span></div>' +
+        '<h3>Carrera libre</h3>' +
+        '<p class="pq mut">De ' + esc(sel0.rol) + ' a Fundador/a. Tu mundo, tus ofertas, tu ritmo — cada ' +
+        'error trae su lectura.</p>' +
+        '<div class="modocta">Empezar como ' + esc(sel0.corto) + ' →</div>' +
+      '</div>' +
+      '<div class="modo" data-act="semanal">' +
+        '<div class="modok"><span class="mut">02</span><span class="pill">SEMANAL</span></div>' +
+        '<h3 style="font-size:16px">Desafío semanal</h3>' +
+        '<p class="pq mut">El mismo mundo, las mismas eras, para todos esta semana (' + esc(Ranking.semana()) +
+        '). Una tabla pública, siete días.</p>' +
+        '<div class="modocta">Jugar →</div>' +
+      '</div></div>';
+    h += '<div style="margin-top:14px">' +
       '<span class="btn sec" data-act="ir-perfil">o pega tu LinkedIn</span>' +
       (hay ? ' <span class="btn" data-act="continuar">Continuar</span>' : '') + '</div>';
     h += '</div></div>'; /* landcol, landhero */
@@ -1768,7 +1786,16 @@
     h += '<div class="cuerpo2 scroll">';
     var i;
     for (i = 0; i < ev.opciones.length; i++) {
-      h += '<div class="opt" data-op="' + i + '"><div class="ot">' + esc(ev.opciones[i].txt) + '</div></div>';
+      var op = ev.opciones[i];
+      h += '<div class="opt" data-op="' + i + '"><div class="ot">' + esc(op.txt) + '</div>';
+      /* opciones con `prob` juegan a cara o ceca en el momento: la barra
+         muestra el % antes de elegir, como cualquier apuesta real — no hay
+         resultado escrito de antemano como en el resto de los eventos. */
+      if (typeof op.prob === 'number') {
+        h += '<div class="probbar"><i class="ok" style="width:' + op.prob + '%">' + op.prob + '%</i>' +
+             '<i class="ko" style="width:' + (100 - op.prob) + '%">' + (100 - op.prob) + '%</i></div>';
+      }
+      h += '</div>';
     }
     h += '</div>';
     $('t-evento').innerHTML = h;
@@ -1779,11 +1806,15 @@
     var ev = evActual, op = ev.opciones[i], log = [];
     J.eventosVistos[ev.id] = true;
     C.dilemasVistos[ev.id] = (C.dilemasVistos[ev.id] || 0) + 1;
-    op.ef(J, log);
-    if (op.nota) log.push({ tipo:'nota', texto:op.nota, libro:op.libro || ev.libro });
+    /* opciones normales resuelven contra si mismas; las que declaran `prob`
+       tiran los dados aca, una sola vez, y siguen por la rama que toque —
+       ok/ko tienen la misma forma {nota,libro,ef} que cualquier opcion vieja. */
+    var rama = (typeof op.prob === 'number') ? (Math.random() * 100 < op.prob ? op.ok : op.ko) : op;
+    rama.ef(J, log);
+    if (rama.nota) log.push({ tipo:'nota', texto:rama.nota, libro:rama.libro || ev.libro });
     marcarCodex(log);
     notasEvento = log;
-    var libroTeoria = op.libro || ev.libro;
+    var libroTeoria = rama.libro || ev.libro;
     var decisionTxt = op.txt;
     evActual = null;
     ov('ov-evento', false);
