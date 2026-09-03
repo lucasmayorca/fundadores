@@ -1574,6 +1574,24 @@
     return h || '<span class="vchip vnull">sin efecto medible</span>';
   }
 
+  /* Submétricas impactadas por una apuesta */
+  function chipSubmetricas(impactoSubmetricas) {
+    if (!impactoSubmetricas || Object.keys(impactoSubmetricas).length === 0) return '';
+    var h = '<span style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;font-size:10px">';
+    var count = 0;
+    for (var key in impactoSubmetricas) {
+      if (!impactoSubmetricas.hasOwnProperty(key)) continue;
+      if (count >= 6) { h += '…'; break; } /* máximo 6 submétricas visibles */
+      var valor = impactoSubmetricas[key];
+      var cls = valor > 0 ? 'vpos' : 'vneg';
+      var txt = key.split(':')[1] || key;
+      h += '<span class="vchip ' + cls + '" style="padding:1px 6px;font-size:9px">' + txt + (valor > 0 ? '+' : '') + valor + '</span>';
+      count++;
+    }
+    h += '</span>';
+    return h;
+  }
+
   /* Cuánto aporta una iniciativa al mandato: sus chips × el peso de cada eje,
      ×1.3 si está alineada a lo que premia la etapa. Es el número que decide si
      la tarjeta lleva el sello "↑ mandato". */
@@ -1686,6 +1704,7 @@
         '</div>' +
         '<div class="inie">' +
           '<span class="ml tipped" data-tip="vec">Esperado</span>' + chipsVec(d.vec, ejesAqui) +
+          (d.impactoSubmetricas ? chipSubmetricas(d.impactoSubmetricas) : '') +
           '<span class="sello' + (aporte > 0 ? ' on' : '') + '">' +
             (aporte > 0 ? '↑ mandato' : 'no mueve el mandato') + '</span>' +
         '</div></div>';
