@@ -173,7 +173,13 @@ h2, h3 { font-weight:500; }
    p-inicio: hero fijo (título, gancho, un solo CTA) sobre un "más" que
    scrollea. p-perfil: todo en un bloque — el scroll es un resguardo, no
    el diseño. */
-#p-inicio { padding:0; overflow:hidden; }
+/* la portada scrollea como una sola pagina. Estaba partida en "heroe fijo"
+   que nunca scrollea + un "mas" con su propio scroll, y el heroe crecio
+   (escalera + pilares + los dos modos + los botones) hasta medir 751 de los
+   768 del escenario: al "mas" le quedaban 36px de alto para 1211 de
+   contenido, por debajo del borde del escenario, o sea inalcanzable. Un
+   solo scroller, que es lo que movil ya hacia. */
+#p-inicio { padding:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 #p-perfil { padding:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 .landhero { -webkit-flex-shrink:0; flex-shrink:0; padding:30px 40px 16px 40px; }
 .landcol { max-width:640px; margin:0 auto; }
@@ -190,7 +196,7 @@ h2, h3 { font-weight:500; }
 .linklike { color:var(--color-accent-300); cursor:pointer; padding:4px 2px; }
 .linklike:hover { color:var(--color-accent-100); }
 .linklike:active { opacity:0.6; }
-.landmore { -webkit-flex:1; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+.landmore { -webkit-flex:none; flex:none; overflow:visible;
   padding:6px 40px 30px 40px; border-top:1px solid var(--color-neutral-900); position:relative; }
 .landchevron { text-align:center; color:var(--color-neutral-800); font-size:15px; margin-bottom:6px; }
 
