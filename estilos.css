@@ -1241,3 +1241,137 @@ body.movil .ini .sello { margin-left:0; }
 .hud .der .hi .k, .hud .der .hi .v { white-space:nowrap; }
 .hud .der { -webkit-flex-wrap:nowrap; flex-wrap:nowrap; }
 .hmb .hmv { -webkit-flex-shrink:0; flex-shrink:0; }
+
+/* ================= ARTE =================
+   Dos materiales distintos, a propósito:
+
+   · PNG en img/ — las 32 piezas que son textura y grabado: las placas de
+     sector, las bandas de era y los retratos del elenco. Eso no se dibuja con
+     geometría, y por eso son imágenes.
+   · SVG desde arte.js — los 35 emblemas que sí son geometría: escalones,
+     pasos, pilares, fases, finales, la ciudad. Ámbar tomado de
+     var(--color-accent), así que siguen al token en vez de tenerlo quemado.
+
+   Regla que vale para todo lo de abajo: si la imagen no carga, la pantalla se
+   ve como antes. Ninguna capa de arte sostiene información — la sostiene el
+   texto. Es la misma lógica que la pila de reserva de las fuentes. */
+
+/* ---- placa de sector en la tarjeta de oferta ----
+   Empezó siendo una banda arriba de la tarjeta, y estaba mal: sumaba 130px
+   por tarjeta y la pantalla de ofertas ya iba justa en los 768 del escenario
+   — el flex terminaba aplastando el banner de era hasta dejarlo en 26px.
+
+   Como capa de fondo no cuesta layout: las tres ofertas siguen entrando de
+   una sola mirada, que es de lo que se trata esa pantalla. El arte se compuso
+   con el tercio izquierdo casi vacío, así que aguanta texto encima, y se
+   desvanece antes de llegar a los datos del contrato. La placa grande tiene
+   su momento en el briefing. */
+.oferta { position:relative; overflow:hidden; }
+.ofplaca {
+  position:absolute; left:0; right:0; top:0; height:172px; pointer-events:none;
+  background-repeat:no-repeat; background-position:center 42%; background-size:cover;
+  opacity:0.62;
+  -webkit-mask-image:linear-gradient(to bottom, #000 46%, transparent);
+  mask-image:linear-gradient(to bottom, #000 46%, transparent);
+}
+.oferta > *:not(.ofplaca) { position:relative; }
+
+/* ---- placa de sector en el briefing: detrás del titular ----
+   el arte se compuso con el tercio izquierdo casi vacío, que es justo donde
+   cae el texto. Por eso se ancla a la derecha en vez de centrarse. */
+.briefcab {
+  position:relative; margin:0 -20px 4px -20px; padding:14px 20px 10px 20px;
+  border-radius:var(--radius-md); overflow:hidden;
+}
+.briefcab .arte {
+  position:absolute; right:0; top:0; width:72%; height:100%;
+  background-repeat:no-repeat; background-position:right center; background-size:cover;
+  opacity:0.5;
+  -webkit-mask-image:linear-gradient(to right, transparent, #000 42%);
+  mask-image:linear-gradient(to right, transparent, #000 42%);
+}
+.briefcab > *:not(.arte) { position:relative; }
+
+/* ---- banda de era: el arte va detrás del texto del banner ----
+   Sin overflow:hidden a propósito. La capa de arte ya cubre exactamente la
+   caja, así que solo necesita su propio radio para no asomar en las esquinas
+   — y recortar el padre acá le cortaba la descripción de la era a la mitad
+   en cuanto el texto pasaba de dos líneas. */
+.era-banner { position:relative; }
+.era-banner .arte {
+  position:absolute; left:0; top:0; right:0; bottom:0;
+  border-radius:var(--radius-md);
+  background-repeat:no-repeat; background-position:center; background-size:cover;
+  opacity:0.34;
+}
+.era-banner > *:not(.arte) { position:relative; }
+
+/* ---- que las pantallas largas scrolleen en vez de aplastarse ----
+   Las .pantalla son columnas flex, y un hijo de una columna flex se encoge
+   por defecto. Con contenido justo — una era de descripción larga, tres
+   empresas de pitch largo, un cierre con cascada de salida — el navegador
+   prefería comprimir cajas antes que desbordar, y una caja comprimida con
+   overflow:hidden pierde texto sin avisar.
+
+   Esto no lo trajo el arte: la pantalla de ofertas ya llegaba a 792px sobre
+   un escenario de 768 y cortaba los botones del pie. Las cuatro pantallas ya
+   traían overflow-y:auto más arriba — lo que faltaba era decirle a los hijos
+   que no se encojan, para que ese scroll llegue a usarse. */
+#p-ofertas > *, #p-brief > *, #p-cierre > *, #p-final > * {
+  -webkit-flex-shrink:0; flex-shrink:0;
+}
+
+/* ---- retratos del elenco ----
+   a 34px un retrato no se lee: es tono y textura, y a ese tamaño no queda ni
+   tono ni textura. Por eso el avatar del dilema pasa a 64. */
+.quien .avatar {
+  width:64px; height:64px; line-height:64px; font-size:24px;
+  border-radius:var(--radius-md); overflow:hidden; margin-right:14px;
+  -webkit-flex-shrink:0; flex-shrink:0;
+}
+.quien .avatar img { display:block; width:64px; height:64px; }
+.quien .qn { font-size:16px; }
+.quien .qc { font-size:12px; }
+
+/* ---- emblemas SVG: el tamaño lo pone quien los usa ---- */
+.ic-escalon, .ic-paso, .ic-pilar, .ic-fase, .marca { display:block; width:100%; height:auto; }
+.placa-final, .placa-vacia { display:block; width:100%; height:auto; }
+
+/* pasos de "cómo funciona": el glifo reemplaza al número de colores viejos */
+.linea .ic.glifo { width:26px; padding-top:1px; }
+.linea .ic.glifo svg { width:20px; height:20px; }
+
+/* pilares de la biblioteca — .pilfila ya es flex con gap:10px más arriba, así
+   que acá solo va la marca; nada de repetir el display ni sumar un margin que
+   se apilaría sobre ese gap */
+.pilmarca { width:19px; -webkit-flex-shrink:0; flex-shrink:0; opacity:.85; }
+.libcab { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; }
+.libcab .pilmarca { width:17px; margin-right:7px; }
+
+/* escalón: en el detalle de la portada, al subir de Edad y al cerrar carrera */
+.escalonic { width:44px; -webkit-flex-shrink:0; flex-shrink:0; margin-right:12px; }
+.edcab { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:12px; }
+/* el .edcab de la portada venía alineado a baseline, que con un emblema al
+   lado descuadra: acá manda el centro */
+.escalondet .edcab { -webkit-align-items:center; align-items:center; margin-bottom:0; }
+.escalondet .edcab .escalonic { margin-right:0; }
+.age-up { display:-webkit-flex; display:flex; -webkit-align-items:flex-start; align-items:flex-start; }
+.age-up .escalonic { width:52px; margin-right:14px; }
+
+/* banda del final de mandato */
+.finalplaca { margin:10px 0 16px 0; background:var(--color-sunken);
+  border-radius:var(--radius-md); overflow:hidden; }
+
+/* estados vacíos */
+.vaciocaja { text-align:center; padding:14px 0 4px 0; }
+.vaciocaja .placa-vacia { width:230px; margin:0 auto 8px auto; opacity:.75; }
+
+/* la marca, en la cabecera de la portada */
+.marcachip { display:inline-block; width:19px; vertical-align:-4px; margin-right:7px; }
+
+/* en móvil el avatar grande se come el ancho del dilema */
+body.movil .quien .avatar { width:48px; height:48px; line-height:48px; margin-right:11px; }
+body.movil .quien .avatar img { width:48px; height:48px; }
+/* en el teléfono las ofertas se apilan y cada tarjeta es mucho más ancha, así
+   que la misma placa cae más grande y empieza a pelear con el texto */
+body.movil .ofplaca { opacity:0.42; height:150px; }

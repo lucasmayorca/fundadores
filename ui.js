@@ -366,7 +366,7 @@
      intro del juego ("Cuatro cosas. Nada más.") — probadamente legible, así
      que se reusa tal cual en vez de inventar un layout nuevo. */
   function pasoHtml(n, col, tit, txt) {
-    return '<div class="linea"><div class="ic" style="color:' + col + '">' + n + '</div>' +
+    return '<div class="linea"><div class="ic glifo">' + Arte.paso(n) + '</div>' +
       '<div class="tx"><b>' + tit + '.</b> ' + txt + '</div></div>';
   }
 
@@ -388,9 +388,10 @@
     h += '</div>';
     var sel = nivelPorN(inicioSel.nivel);
     h += '<div class="escalondet"><div class="edcab">' +
-         '<div class="rot">' + esc(sel.rol) + '</div>' +
-         '<span class="tagout num">Mando ' + Math.round(sel.mando * 100) + '%</span></div>' +
-         '<div class="ednota">' + esc(sel.nota) + '</div></div>';
+         '<div class="escalonic">' + Arte.escalon(inicioSel.nivel) + '</div>' +
+         '<div style="-webkit-flex:1;flex:1;min-width:0"><div class="rot">' + esc(sel.rol) + '</div>' +
+         '<div class="ednota">' + esc(sel.nota) + '</div></div>' +
+         '<span class="tagout num">Mando ' + Math.round(sel.mando * 100) + '%</span></div></div>';
     return h;
   }
 
@@ -406,7 +407,9 @@
       'la teoría calculada en vivo con tus números, no una cita suelta.</div><div class="pilares">';
     for (i = 0; i < PILARES.length; i++) {
       c = cuenta[PILARES[i].id] || 0;
-      h += '<div class="pilfila" data-act="biblio"><div class="pilnom">' + esc(PILARES[i].nombre) + '</div>' +
+      h += '<div class="pilfila" data-act="biblio">' +
+           '<div class="pilmarca">' + Arte.pilar(PILARES[i].id) + '</div>' +
+           '<div class="pilnom">' + esc(PILARES[i].nombre) + '</div>' +
            '<div class="pilpozo"><i style="width:' + Math.round(c / max * 100) + '%"></i></div>' +
            '<div class="pilnum num">' + c + '</div></div>';
     }
@@ -426,6 +429,29 @@
   function ruido(a, b) {
     var s = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453;
     return s - Math.floor(s);
+  }
+
+  /* ---------- arte ----------
+     Las 32 imágenes de img/ son textura (placas de sector, bandas de era,
+     retratos): eso no se dibuja con geometría. Los 35 emblemas salen de
+     arte.js, que sí es geometría y toma el ámbar del token.
+
+     Todo lo de acá abajo es decorativo por contrato: si el archivo no está,
+     la pantalla se ve como antes. Por eso nunca se usa un `<img>` sin alt=""
+     ni se cuelga información de una imagen. */
+  function imgSector(id) { return id ? 'img/sector-' + id + '.png' : ''; }
+  function imgEra(id) { return id ? 'img/era-' + id + '.png' : ''; }
+
+  /* el elenco del juego tiene cinco papeles; el retrato de cada uno vive en
+     img/. Los otros retratos generados quedan listos para cuando Contenido
+     sume papeles nuevos a EVENTOS. */
+  var RETRATO = { ceo:'ceo', cto:'cto', ventas:'ventas', estrella:'eng', board:'inversor' };
+  function imgCast(rol) {
+    return RETRATO[rol] ? 'img/cast-' + RETRATO[rol] + '.png' : '';
+  }
+  /* fondo decorativo: si el archivo falta, queda la caja sin arte y ya */
+  function capaArte(src) {
+    return src ? '<div class="arte" style="background-image:url(' + src + ')"></div>' : '';
   }
 
   /* ¿el visitante pidió menos movimiento? en Safari 9 matchMedia existe pero
@@ -887,7 +913,8 @@
             (C.semana ? ' · <span class="lila">desafío semanal ' + esc(C.semana) + '</span>' : '') + '</div>' +
             '<div class="h1" style="margin-top:2px">Sobre la mesa</div>';
 
-    h += '<div class="era-banner"><span class="nombre-era">' + esc(era.nombre) + '</span>' +
+    h += '<div class="era-banner">' + capaArte(imgEra(era.id)) +
+         '<span class="nombre-era">' + esc(era.nombre) + '</span>' +
          '<div class="pq mut">' + esc(era.desc) + '</div>' +
          (M.noticias.length ? '<div class="pq" style="margin-top:5px;color:var(--color-neutral-600)">◈ ' + esc(M.noticias[0].txt) + '</div>' : '') +
          '</div>';
@@ -907,6 +934,7 @@
       var calor = o.calor > 0 ? '<span class="pill hot" data-tip="calor">sector caliente</span>' :
                   o.calor < 0 ? '<span class="pill frio" data-tip="calor">sector frío</span>' : '';
       h += '<div class="oferta' + (ofertaSel === i ? ' sel' : '') + '" data-oferta="' + i + '">' +
+        '<div class="ofplaca" style="background-image:url(' + imgSector(o.sector) + ')"></div>' +
         '<div class="cab ' + (o.fundar ? 'lila' : 'azul') + '">' + esc(o.sectorCorto) + ' · ' + esc(o.etapaNombre) + calor + '</div>' +
         '<h3>' + esc(o.nombre) + '</h3>' +
         '<div class="rolof">' + esc(o.rol) + ' · control ' + Math.round(o.mando * 100) + '%</div>' +
@@ -991,9 +1019,10 @@
                    J.calor < 0 ? '<span class="frio2">frío</span>' : 'estable';
     var m2 = mandatoPorId(J.mandatoId);
     var fclase = faseClase(J.faseCorta);
-    var h = '<div class="mision-cinta ' + fclase + '"><span class="raya"></span><b>Briefing de misión</b></div>' +
+    var h = '<div class="briefcab">' + capaArte(imgSector(J.sectorId)) +
+      '<div class="mision-cinta ' + fclase + '"><span class="raya"></span><b>Briefing de misión</b></div>' +
       '<div class="rot">' + esc(J.sector) + ' · ' + esc(ETAPAS[J.etapa].nombre) + ' · tu día uno como ' + esc(J.rol) + '</div>' +
-      '<div class="h1">' + esc(J.empresa) + '</div>';
+      '<div class="h1">' + esc(J.empresa) + '</div></div>';
 
     var calorSit = J.calor > 0 ? 'un sector caliente que todos persiguen' : J.calor < 0 ? 'un sector frío que nadie quiere fondear' : 'un sector que no se mueve para ningún lado';
     h += '<div class="situacion ' + fclase + '">Caes en paracaídas como <b>' + esc(J.rol) + '</b> en <b>' + esc(J.empresa) +
@@ -1103,8 +1132,10 @@
       '<div class="pq mut" style="margin-bottom:10px">Pueden ayudarte a aterrizar las apuestas ▲ de arriba — o bloquearlas.</div>';
     var elencoKeys = ['ceo','cto','ventas','estrella'];
     for (i = 0; i < elencoKeys.length; i++) {
-      var per = J.elenco[elencoKeys[i]];
-      h += '<div class="quien" style="margin:4px 0"><div class="avatar">' + esc(per.nombre.charAt(0)) + '</div>' +
+      var per = J.elenco[elencoKeys[i]], caraBrief = imgCast(elencoKeys[i]);
+      h += '<div class="quien" style="margin:4px 0"><div class="avatar">' +
+           (caraBrief ? '<img src="' + caraBrief + '" alt="" width="128" height="128">' : esc(per.nombre.charAt(0))) +
+           '</div>' +
            '<div><div class="qn">' + esc(per.nombre) + '</div><div class="qc">' + esc(per.cargo) + '</div></div></div>';
     }
     h += libroHoyHtml(J, C);
@@ -1782,7 +1813,10 @@
     var h = '<div class="rot">Mes ' + (J.mesPuesto + 1) + ' en ' + esc(J.empresa) + '</div>' +
             '<h2>' + esc(tx.titulo) + '</h2>';
     if (quien) {
-      h += '<div class="quien"><div class="avatar">' + esc(quien.nombre.charAt(0)) + '</div>' +
+      var retrato = imgCast(ev.quien);
+      h += '<div class="quien"><div class="avatar">' +
+           (retrato ? '<img src="' + retrato + '" alt="" width="128" height="128">' : esc(quien.nombre.charAt(0))) +
+           '</div>' +
            '<div><div class="qn">' + esc(quien.nombre) + '</div><div class="qc">' + esc(quien.cargo) + '</div></div></div>';
     }
     h += '<div class="pq mut" style="margin-bottom:4px">' + esc(tx.texto) + '</div>';
@@ -1878,7 +1912,17 @@
     marcarCodex(log);
     var todo = notasEvento.concat(log);
     guardar();
-    if (!J.vivo) { cerrarPuesto(); return; }
+    if (!J.vivo) {
+      /* El puesto se cerró en el mismo mes en que había un dilema abierto: si
+         el overlay se queda arriba, el jugador ve el dilema encima de la
+         pantalla de cierre y al tocar una opción el juego revienta, porque
+         cerrarPuesto() ya dejó J en null. Se cierra acá, que es donde termina
+         el mes. */
+      evActual = null;
+      ov('ov-evento', false);
+      cerrarPuesto();
+      return;
+    }
     mostrarResultado(todo, 'Mes ' + J.mesPuesto + ' en ' + esc(J.empresa), false);
   }
 
@@ -2039,6 +2083,17 @@
     var h = '<div class="rot">' + esc(cierre.rol) + ' · ' + cierre.meses + ' meses · ' + esc(cierre.sector) + '</div>' +
       '<div class="h1">' + esc(titulo) + '</div>';
 
+    /* cada desenlace trae su propia banda: seis finales que hasta ahora se
+       veían exactamente igual. El acento no es el ámbar de siempre — acá el
+       color ES el dato, como en el resto del juego. */
+    var FINAL_ARTE = { renuncia:'renuncia', imputado:'imputado', quiebra:'quiebra',
+                       despido:'despido', venta:'venta' };
+    /* si el contrato simplemente se venció ('plazo'), la imagen la decide el
+       mandato: cumplirlo y quedarse corto no son la misma escena, y ninguna
+       de las dos es un despido. */
+    h += '<div class="finalplaca">' + Arte.final(FINAL_ARTE[cierre.final] ||
+         (cierre.cumplido ? 'cumplido' : 'corto')) + '</div>';
+
     h += '<div class="notas">';
     h += '<div class="nota"><div class="nk">Mandato</div><div class="nv ' +
          (cierre.cumplido ? 'verde' : 'rojo') + '" style="font-size:26px;margin-top:8px">' +
@@ -2056,12 +2111,13 @@
     h += '</div>';
     if (cierre.promocion && C.nivel > nivelAntes) {
       var nuevasPalancas = ESCALAFON[C.nivel].palancas.filter(function (p) { return ESCALAFON[nivelAntes].palancas.indexOf(p) < 0; });
-      h += '<div class="age-up"><div class="rot">⬆ Subiste de Edad</div>' +
+      h += '<div class="age-up"><div class="escalonic">' + Arte.escalon(C.nivel) + '</div><div>' +
+        '<div class="rot">⬆ Subiste de Edad</div>' +
         '<h3 style="margin:4px 0">' + esc(ESCALAFON[C.nivel].rol) + '</h3>' +
         '<div class="pq">' + esc(ESCALAFON[C.nivel].nota) + '</div>' +
         (nuevasPalancas.length ? '<div class="pq mut" style="margin-top:4px">Desbloqueaste: <b>' +
           esc(nuevasPalancas.map(function (p) { return NOMBRE_PALANCA[p] || p; }).join(', ')) + '</b></div>' : '') +
-        '</div>';
+        '</div></div>';
     }
 
     h += '<div class="dosc" style="display:-webkit-flex;display:flex">';
@@ -2167,7 +2223,9 @@
 
     var h = '<div class="rot">' + b.anios + ' años · ' + b.puestos + ' puestos · ' +
             b.cumplidos + ' mandatos cumplidos · ' + b.despidos + ' despidos</div>' +
-      '<div class="h1">Tu carrera terminó como ' + esc(b.nivel.rol) + '</div>';
+      '<div class="edcab" style="margin-top:2px">' +
+      '<div class="escalonic" style="width:58px">' + Arte.escalon(b.nivel.n) + '</div>' +
+      '<div class="h1">Tu carrera terminó como ' + esc(b.nivel.rol) + '</div></div>';
 
     h += '<div class="notas">';
     h += '<div class="nota"><div class="nk">Patrimonio</div><div class="nv" style="font-size:30px;margin-top:6px">' +
@@ -2298,6 +2356,8 @@
     for (i = 0; i < LIBROS.length; i++) if (codex[LIBROS[i].id]) abiertos++;
     var h = '<div class="rot">Biblioteca</div><h2>' + abiertos + ' de ' + LIBROS.length + ' tarjetas</h2>' +
       '<div class="pq mut" style="margin-bottom:8px">Cada tarjeta se abre cuando el concepto te golpea en tu carrera. Toca una abierta para leerla.</div>' +
+      (abiertos === 0 ? '<div class="vaciocaja">' + Arte.vacio('biblio') +
+        '<div class="pq mut">Todavía no abriste ninguna. Se abren solas cuando el juego te cobra el concepto.</div></div>' : '') +
       '<div class="cuerpo2 scroll">';
     for (j = 0; j < PILARES.length; j++) {
       var pil = PILARES[j], n = 0, tot = 0, cuerpo = '';
@@ -2312,8 +2372,9 @@
           '<div class="la">' + esc(l.autor) + '</div>' +
           '<div class="lc ' + pil.cls + '">' + esc(ab ? l.concepto : 'sin abrir') + '</div></div>';
       }
-      h += '<div class="rot ' + pil.cls + '" style="margin:10px 0 6px 0">' + esc(pil.nombre) +
-           ' · ' + n + '/' + tot + '</div><div class="libs">' + cuerpo + '</div>';
+      h += '<div class="libcab rot ' + pil.cls + '" style="margin:10px 0 6px 0">' +
+           '<div class="pilmarca">' + Arte.pilar(pil.id) + '</div>' +
+           esc(pil.nombre) + ' · ' + n + '/' + tot + '</div><div class="libs">' + cuerpo + '</div>';
     }
     h += '</div><div style="margin-top:12px"><span class="btn" data-act="cerrar-biblio">Cerrar</span></div>';
     $('t-biblio').innerHTML = h;
@@ -2443,7 +2504,12 @@
   }
 
   function filasRk(arr, valor) {
-    if (!arr || !arr.length) return '<div class="pq mut">Nadie todavía. Sé el primero.</div>';
+    /* tabla vacía: un podio sin nadie arriba. Es la primera vez que alguien
+       abre el Salón de la Fama, y hasta ahora esa pantalla era un renglón. */
+    if (!arr || !arr.length) {
+      return '<div class="vaciocaja">' + Arte.vacio('ranking') +
+             '<div class="pq mut">Nadie todavía. Sé el primero.</div></div>';
+    }
     var h = '', i;
     for (i = 0; i < arr.length; i++) {
       var e = arr[i];
@@ -2627,7 +2693,7 @@
     if (v !== null) { ofertaSel = parseInt(v, 10); renderOfertas(); return; }
 
     v = attr(t, 'data-op');
-    if (v !== null && evActual) { elegirOpcion(parseInt(v, 10)); return; }
+    if (v !== null && evActual && J) { elegirOpcion(parseInt(v, 10)); return; }
 
     v = attr(t, 'data-mas');
     if (v && J) {

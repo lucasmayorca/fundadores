@@ -22,7 +22,7 @@ function ok(cond, desc) {
 
 /* ---------- 1. los modulos sin DOM cargan en node ---------- */
 console.log('\nModulos (sin DOM)');
-var SIN_DOM = ['libros', 'sectores', 'mundo', 'contenido', 'motor', 'carrera'];
+var SIN_DOM = ['libros', 'sectores', 'mundo', 'contenido', 'motor', 'carrera', 'arte'];
 var ctx = {
   console: console, Math: Math, Date: Date, JSON: JSON, parseInt: parseInt,
   parseFloat: parseFloat, isNaN: isNaN, Object: Object, Array: Array,
@@ -45,7 +45,8 @@ console.log('\nSuperficie publica');
 });
 [['Mundo', ['nuevo', 'tick', 'era']],
  ['Motor', ['nuevoPuesto', 'simular', 'fit']],
- ['Carrera', ['nueva', 'ofertas', 'aceptar', 'cerrar']]].forEach(function (par) {
+ ['Carrera', ['nueva', 'ofertas', 'aceptar', 'cerrar']],
+ ['Arte', ['escalon', 'paso', 'pilar', 'final', 'vacio', 'marca']]].forEach(function (par) {
   var m = ctx[par[0]];
   ok(!!m, par[0] + ' existe');
   if (m) par[1].forEach(function (fn) {
@@ -67,6 +68,21 @@ console.log('\nHigiene del repo');
 var indice = fs.readFileSync(path.join(RAIZ, 'index.html'), 'utf8');
 ok(indice.indexOf('?v=') === -1,
    'index.html sin ?v=N (el cache lo maneja el servidor con ETag)');
+
+/* el arte: un 404 de imagen no rompe la pantalla (por diseño), y por eso
+   mismo nadie lo nota. Que el test cuente los archivos. */
+var SECTORES_ID = ctx.SECTORES.map(function (x) { return x.id; });
+var ERAS_ID = ['longevidad', 'invierno', 'electoral', 'transicion',
+               'fiebre', 'regulacion', 'burbujaIA', 'brechas'];
+var CAST_ID = ['ceo', 'cto', 'ventas', 'eng', 'inversor'];
+[['img/sector-', SECTORES_ID], ['img/era-', ERAS_ID], ['img/cast-', CAST_ID]].forEach(function (par) {
+  var faltan = par[1].filter(function (id) {
+    return !fs.existsSync(path.join(RAIZ, par[0] + id + '.png'));
+  });
+  ok(faltan.length === 0, par[0] + '*.png completo' + (faltan.length ? ' — faltan ' + faltan.join(', ') : ''));
+});
+ok(fs.existsSync(path.join(RAIZ, 'img/og.png')), 'img/og.png existe (la tarjeta social)');
+ok(indice.indexOf('og:image') > -1, 'index.html declara og:image');
 
 var refs = indice.match(/(?:src|href)="([^"]+\.(?:js|css))"/g) || [];
 refs.forEach(function (r) {
