@@ -1587,27 +1587,47 @@
     return { n: p[1] || key };
   }
 
-  /* El desglose de una iniciativa: qué submétricas mueve, que es el "por qué"
-     de los chips de eje de arriba. Se muestran las 3 de mayor magnitud — la
-     lista entera son hasta 5 y satura la tarjeta. */
-  function chipSubmetricas(subs) {
-    if (!subs) return '';
-    var ks = [], k;
-    for (k in subs) if (subs.hasOwnProperty(k) && subs[k]) ks.push(k);
-    if (!ks.length) return '';
-    ks.sort(function (a, b) { return Math.abs(subs[b]) - Math.abs(subs[a]); });
-    var muestra = ks.slice(0, 3), h = '', i, v, def, bueno;
-    for (i = 0; i < muestra.length; i++) {
-      v = subs[muestra[i]];
-      def = defSubmetrica(muestra[i]);
-      /* el color dice si la noticia es buena, no si el número sube: en CAC,
-         churn o latencia el que baja es el bueno */
-      bueno = def.inv ? v < 0 : v > 0;
-      h += '<span class="subchip">' + esc(def.n) +
-        ' <b class="num ' + (bueno ? 'verde' : 'rojo') + '">' + (v > 0 ? '+' : '−') + Math.abs(v) + '</b></span>';
+  /* Un chip del esperado, a nivel submétrica: la palanca concreta que la
+     iniciativa toca, con el eje que alimenta como prefijo — "RET · Feature
+     stickiness +12" en vez de "RET +14.8". El prefijo es lo que conserva la
+     cadena: se ve qué se ataca y a qué métrica principal sube. */
+  function chipSub(mk, key, v, alimenta) {
+    var def = defSubmetrica(key), eje = EJES[mk] || { ab: mk };
+    /* el color dice si la noticia es buena, no si el número sube: en CAC,
+       churn o latencia el que baja es el bueno */
+    var bueno = def.inv ? v < 0 : v > 0;
+    var brillo = alimenta && bueno;
+    return '<span class="vchip ' + (bueno ? 'vpos' : 'vneg') + (brillo ? ' vmeta' : '') +
+      '" data-tip="' + mk + '"' +
+      (brillo ? ' style="box-shadow:0 0 0 1.5px ' + (SEG_COLOR[mk] || 'var(--color-accent)') + '"' : '') +
+      '><i class="chej">' + eje.ab + '</i>' + esc(def.n) +
+      ' <b>' + (v > 0 ? '+' : '−') + Math.abs(v) + '</b></span>';
+  }
+
+  /* Los chips del esperado. Cada uno es una submétrica, no el eje: el jugador
+     tiene que ver qué palanca toca la iniciativa, no solo que "Adquisición
+     sube". Se cae al chip de eje solo cuando esa dimensión no tiene submétricas
+     declaradas — Compuerta y Deuda salen de dimsExtra, que las calcula en vivo
+     por costo y por los requisitos de la compuerta, no de la apuesta. */
+  function chipsEsperado(vec, subs, ejes) {
+    var h = '', i, j, mk, otros = 0, alimenta, ks;
+    subs = subs || {};
+    for (i = 0; i < ORDEN_EJES.length; i++) {
+      mk = ORDEN_EJES[i];
+      if (!vec[mk]) continue;
+      alimenta = !!(ejes && ejes[mk]);
+      if (!alimenta && mk !== 'deuda' && otros >= 2) continue;
+      if (!alimenta && mk !== 'deuda') otros++;
+      ks = [];
+      for (j in subs) {
+        if (subs.hasOwnProperty(j) && subs[j] && j.split(':')[0] === mk) ks.push(j);
+      }
+      if (!ks.length) { h += chipEje(mk, vec[mk], alimenta); continue; }
+      /* dos por eje como mucho: con 6 submétricas y 4 ejes la tarjeta se llena */
+      ks.sort(function (a, b) { return Math.abs(subs[b]) - Math.abs(subs[a]); });
+      for (j = 0; j < Math.min(2, ks.length); j++) h += chipSub(mk, ks[j], subs[ks[j]], alimenta);
     }
-    if (ks.length > muestra.length) h += '<span class="subchip mut">+' + (ks.length - muestra.length) + ' más</span>';
-    return '<div class="subrow">' + h + '</div>';
+    return h || '<span class="vchip vnull">sin efecto medible</span>';
   }
 
   /* Cuánto aporta una iniciativa al mandato: sus chips × el peso de cada eje,
@@ -1721,12 +1741,10 @@
           '<span class="mut">' + d.tiempo + ' · ' + d.costo + ' pts</span>' +
         '</div>' +
         '<div class="inie">' +
-          '<span class="ml tipped" data-tip="vec">Esperado</span>' + chipsVec(d.vec, ejesAqui) +
+          '<span class="ml tipped" data-tip="vec">Esperado</span>' +
+          chipsEsperado(d.vec, d.subs, ejesAqui) +
           '<span class="sello' + (aporte > 0 ? ' on' : '') + '">' +
             (aporte > 0 ? '↑ mandato' : 'no mueve el mandato') + '</span>' +
-          /* va después del sello a propósito: el sello se ancla a la derecha de
-             la primera línea con margin-left:auto, y el desglose baja entero */
-          chipSubmetricas(d.subs) +
         '</div></div>';
     }
     $('backlog').innerHTML = h;
