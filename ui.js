@@ -1183,11 +1183,16 @@
      iniciativa con el chip celeste encendido empuja la parte celeste de la
      barra. Y el tramo rayado del final es la proyeccion: hasta donde llegaria
      el mandato si cerraras el mes con el plan que tenes puesto ahora. */
-  var SEG_COLOR = { act:'var(--color-accent-300)', ret:'var(--color-accent-500)',
-                    rel:'var(--color-accent-700)', adq:'var(--color-accent-400)',
-                    rev:'var(--color-accent-600)', ref:'var(--color-accent-500)',
-                    evid:'var(--color-accent-400)', deuda:'var(--color-accent-600)',
-                    gate:'var(--color-accent-500)' };
+  /* Un tinte por eje, todos de la misma familia ambar: es lo unico que ata el
+     punto de un chip del esperado con el icono de su eje en el panel. Por eso
+     no pueden repetirse — dos ejes con el mismo tinte no es una pista sutil,
+     es una pista falsa. Deuda y Evidencia salen a la escala neutra: no son
+     metricas del embudo, son el costo y el respaldo. */
+  var SEG_COLOR = { act:'var(--color-accent-300)', adq:'var(--color-accent-400)',
+                    ret:'var(--color-accent-500)', rev:'var(--color-accent-600)',
+                    rel:'var(--color-accent-700)', ref:'var(--color-accent-200)',
+                    gate:'var(--color-accent-800)', deuda:'var(--color-neutral-500)',
+                    evid:'var(--color-neutral-400)' };
 
   /* Cuanto avanzaria el mandato si el mes cerrara con el plan de ahora: las
      iniciativas que van a salir este mes, mas lo que rinden las estaciones.
@@ -1588,19 +1593,20 @@
   }
 
   /* Un chip del esperado, a nivel submétrica: la palanca concreta que la
-     iniciativa toca, con el eje que alimenta como prefijo — "RET · Feature
-     stickiness +12" en vez de "RET +14.8". El prefijo es lo que conserva la
-     cadena: se ve qué se ataca y a qué métrica principal sube. */
+     iniciativa toca. A qué eje sube no se dice con texto — lo dice el punto de
+     color, que es el mismo tinte con el que ese eje se pinta en el panel de la
+     derecha. Que el jugador tenga que atar ese cabo es parte del juego: qué
+     palanca mueve qué métrica es justo lo que tiene que aprender. */
   function chipSub(mk, key, v, alimenta) {
-    var def = defSubmetrica(key), eje = EJES[mk] || { ab: mk };
-    /* el color dice si la noticia es buena, no si el número sube: en CAC,
-       churn o latencia el que baja es el bueno */
+    var def = defSubmetrica(key), col = SEG_COLOR[mk] || 'var(--color-accent)';
+    /* el color del número dice si la noticia es buena, no si el número sube:
+       en CAC, churn o latencia el que baja es el bueno */
     var bueno = def.inv ? v < 0 : v > 0;
     var brillo = alimenta && bueno;
     return '<span class="vchip ' + (bueno ? 'vpos' : 'vneg') + (brillo ? ' vmeta' : '') +
       '" data-tip="' + mk + '"' +
-      (brillo ? ' style="box-shadow:0 0 0 1.5px ' + (SEG_COLOR[mk] || 'var(--color-accent)') + '"' : '') +
-      '><i class="chej">' + eje.ab + '</i>' + esc(def.n) +
+      (brillo ? ' style="box-shadow:0 0 0 1.5px ' + col + '"' : '') +
+      '><i class="chpt" style="background:' + col + '"></i>' + esc(def.n) +
       ' <b>' + (v > 0 ? '+' : '−') + Math.abs(v) + '</b></span>';
   }
 
@@ -1831,7 +1837,13 @@
       h += '<div class="fun' + (mide ? ' funmide' : '') + (conSubmetricas ? ' funexp' : '') + '"' +
         (conSubmetricas ? ' onclick="var s=this.querySelector(\'.submetricas\');if(s)s.classList.toggle(\'open\')"' : '') + '>' +
         '<div class="funtop">' +
-          '<span class="funic' + (mide ? ' mide' : '') + '">' + svgIc(EJES[k].ic) + '</span>' +
+          /* el icono lleva el tinte del eje, el mismo que el punto de los chips
+             del esperado: es el unico hilo entre "Tasa de conversion +10" y
+             Adquisicion. Atenuado cuando el eje no entra en el mandato, para no
+             perder esa segunda lectura. */
+          '<span class="funic' + (mide ? ' mide' : '') + '" style="color:' +
+            (SEG_COLOR[k] || 'var(--color-accent)') + (mide ? '' : ';opacity:.55') + '">' +
+            svgIc(EJES[k].ic) + '</span>' +
           '<span class="fk">' + nombreEje(k) + '</span>' +
           '<span class="fv num">' + VALOR[k] + '</span>' +
         '</div>';

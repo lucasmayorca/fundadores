@@ -1208,11 +1208,11 @@ body.movil .shipc { -webkit-flex:1 1 100%; flex:1 1 100%; }
 .ini .sello.on { background:var(--color-accent-800); color:var(--color-accent-100); }
 .ini .masdet { color:var(--color-accent-300); cursor:pointer; }
 
-/* El chip del esperado lleva la submetrica, y el eje al que alimenta va de
-   prefijo apagado adentro del mismo chip: el dato es la palanca, el eje es
-   nada mas la referencia de a donde sube. */
-.vchip .chej { font-style:normal; margin-right:6px; font-size:9.5px;
-  letter-spacing:0.05em; color:var(--color-neutral-600); }
+/* El chip del esperado nombra la palanca, no el eje. A que metrica sube lo
+   dice este punto, con el mismo tinte que el icono de ese eje en el panel de
+   la derecha — la pista esta puesta, atarla es del jugador. */
+.vchip .chpt { display:inline-block; width:5px; height:5px; border-radius:50%;
+  margin-right:6px; vertical-align:middle; opacity:.9; }
 .vchip b { font-weight:500; margin-left:3px; }
 
 /* ---------- panel: radar de estado y metricas del mandato ---------- */
