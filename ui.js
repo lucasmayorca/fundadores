@@ -1770,25 +1770,23 @@
       var eje = EJES[k];
       var subs = Motor.submetricasDelEje(J, k);
       h += '<div class="fun' + (mide ? ' funmide' : '') + '" ' +
-        'onclick="this.querySelector(\'.submetricas\').classList.toggle(\'open\')" style="cursor:pointer"' +
-        (mide ? ' style="border-left-color:' + (SEG_COLOR[k] || 'var(--color-accent)') + '"' : '') + '>' +
-        '<div style="display:flex;justify-content:space-between;align-items:center">' +
-          '<div style="display:flex;align-items:center;gap:8px">' +
-            '<span class="funic' + (mide ? ' mide' : '') + '"' +
-              (mide ? ' style="color:' + (SEG_COLOR[k] || 'var(--color-accent)') + '"' : '') + '>' +
-              svgIc(EJES[k].ic) + '</span>' +
+        'onclick="var s=this.querySelector(\'.submetricas\');s.classList.toggle(\'open\');s.style.maxHeight=s.classList.contains(\'open\')?\'400px\':\'0px\';" ' +
+        'style="cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:8px 0">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:3.5px 0">' +
+          '<div style="display:flex;align-items:center;flex:1 1 auto">' +
+            '<span class="funic' + (mide ? ' mide' : '') + '">' + svgIc(EJES[k].ic) + '</span>' +
             '<span class="fk">' + nombreEje(k) + '</span>' +
           '</div>' +
           '<span class="fv num">' + VALOR[k] + '</span>' +
         '</div>' +
-        '<div class="submetricas" style="max-height:0;overflow:hidden;transition:max-height 0.3s;background:rgba(0,0,0,0.1);margin-top:6px;border-radius:4px">';
+        '<div class="submetricas" style="max-height:0;overflow:hidden;transition:max-height 0.2s ease;display:flex;flex-direction:column;gap:3px;padding:0 0 0 32px;border-left:1px solid var(--color-divider);margin-left:-2px">';
       if (eje && eje.submetricas) {
         for (var si = 0; si < eje.submetricas.length; si++) {
           var sub = eje.submetricas[si];
           var valor = subs[sub.id] || 0;
-          h += '<div style="padding:6px 12px;border-top:1px solid rgba(0,0,0,0.05);display:flex;justify-content:space-between;font-size:11px">' +
-            '<span style="color:#999">' + esc(sub.n) + '</span>' +
-            '<span style="font-weight:500;color:#ccc;min-width:40px;text-align:right">' + Math.round(valor * 10) / 10 + '</span>' +
+          h += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--color-neutral-600);padding:2px 0 2px 8px">' +
+            '<span style="flex:1 1 auto;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">' + esc(sub.n) + '</span>' +
+            '<span style="font-weight:500;color:var(--color-neutral-500);min-width:50px;text-align:right;margin-left:12px;font-family:\'IBM Plex Mono\'">' + Math.round(valor * 10) / 10 + '</span>' +
           '</div>';
         }
       }
