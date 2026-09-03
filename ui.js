@@ -1753,36 +1753,47 @@
     return h + '</svg>';
   }
 
-  function renderSubmetricasPanel() {
+  function renderMetricasExpandibles() {
+    /* Reemplaza la sección de métricas del embudo con versión expandible + submétricas */
     if (!J || !J.submetricas) return '';
-    var h = '<div class="caja2"><div class="rot">Submétricas del mes' + ayuda('submetricas') + '</div>';
-    var orden = ORDEN_EJES;
-    for (var ei = 0; ei < orden.length; ei++) {
-      var ejeId = orden[ei];
-      var eje = EJES[ejeId];
-      if (!eje || !eje.submetricas) continue;
-      var subs = Motor.submetricasDelEje(J, ejeId);
-      var valorEje = Motor.metricaEje ? Motor.metricaEje(J, ejeId) : 0;
-      h += '<div class="metric-card" style="background:#f5f5f5;border:1px solid #ddd;border-radius:6px;margin-bottom:10px;overflow:hidden">' +
-        '<div class="metric-header" onclick="this.nextElementSibling.classList.toggle(\'open\')" style="padding:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd">' +
-          '<div class="metric-left">' +
-            '<div style="font-weight:600;font-size:14px">' + esc(eje.n) + '</div>' +
-            '<div style="font-size:18px;font-weight:700;color:#6b5acd;margin-top:2px">' + Math.round(valorEje * 10) / 10 + '%</div>' +
+    var h = '';
+    var VALOR = {
+      adq: '+' + mil(J.adqMes || 0) + '<span class="mut fsub">/mes</span>',
+      act: Math.round(0.35 * 100 + (J.usabilidad / 100) * 65) + '%',
+      ret: Math.round(Motor.retencionMedia(J) * 100) + '%',
+      rel: Math.round(J.fiabPercibida) + '%',
+      rev: money(J.mrr) + '<span class="mut fsub">/mes</span>',
+      ref: (Math.round(J.viral * Motor.fitMax(J) * 100) / 100)
+    };
+    for (var i = 0; i < EJES_EMBUDO.length; i++) {
+      var k = EJES_EMBUDO[i], mide = pesoEje(k) > 0;
+      var eje = EJES[k];
+      var subs = Motor.submetricasDelEje(J, k);
+      h += '<div class="fun' + (mide ? ' funmide' : '') + '" ' +
+        'onclick="this.querySelector(\'.submetricas\').classList.toggle(\'open\')" style="cursor:pointer"' +
+        (mide ? ' style="border-left-color:' + (SEG_COLOR[k] || 'var(--color-accent)') + '"' : '') + '>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<div style="display:flex;align-items:center;gap:8px">' +
+            '<span class="funic' + (mide ? ' mide' : '') + '"' +
+              (mide ? ' style="color:' + (SEG_COLOR[k] || 'var(--color-accent)') + '"' : '') + '>' +
+              svgIc(EJES[k].ic) + '</span>' +
+            '<span class="fk">' + nombreEje(k) + '</span>' +
           '</div>' +
-          '<div class="metric-toggle" style="font-size:12px">▼</div>' +
+          '<span class="fv num">' + VALOR[k] + '</span>' +
         '</div>' +
-        '<div class="metric-submenu" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease;background:#fff">';
-      for (var si = 0; si < eje.submetricas.length; si++) {
-        var sub = eje.submetricas[si];
-        var valor = subs[sub.id] || 0;
-        h += '<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;font-size:12px">' +
-          '<span style="color:#666">' + esc(sub.n) + '</span>' +
-          '<span style="font-weight:500;color:#1a1a1a;min-width:50px;text-align:right">' + Math.round(valor * 10) / 10 + '</span>' +
-        '</div>';
+        '<div class="submetricas" style="max-height:0;overflow:hidden;transition:max-height 0.3s;background:rgba(0,0,0,0.1);margin-top:6px;border-radius:4px">';
+      if (eje && eje.submetricas) {
+        for (var si = 0; si < eje.submetricas.length; si++) {
+          var sub = eje.submetricas[si];
+          var valor = subs[sub.id] || 0;
+          h += '<div style="padding:6px 12px;border-top:1px solid rgba(0,0,0,0.05);display:flex;justify-content:space-between;font-size:11px">' +
+            '<span style="color:#999">' + esc(sub.n) + '</span>' +
+            '<span style="font-weight:500;color:#ccc;min-width:40px;text-align:right">' + Math.round(valor * 10) / 10 + '</span>' +
+          '</div>';
+        }
       }
       h += '</div></div>';
     }
-    h += '</div>';
     return h;
   }
 
@@ -1797,32 +1808,13 @@
     h += '<div class="caja2"><div class="rot">Estado de la empresa' + ayuda('aarrr') + '</div>';
     h += radarEstado();
     h += '<div class="rleg"><span>— hoy</span><span class="mut">- - mes pasado</span></div>';
-    var VALOR = {
-      adq: '+' + mil(J.adqMes || 0) + '<span class="mut fsub">/mes</span>',
-      act: Math.round(0.35 * 100 + (J.usabilidad / 100) * 65) + '%',
-      ret: Math.round(Motor.retencionMedia(J) * 100) + '%',
-      rel: Math.round(J.fiabPercibida) + '%',
-      rev: money(J.mrr) + '<span class="mut fsub">/mes</span>',
-      ref: (Math.round(J.viral * Motor.fitMax(J) * 100) / 100)
-    };
-    for (i = 0; i < EJES_EMBUDO.length; i++) {
-      var k = EJES_EMBUDO[i], mide = pesoEje(k) > 0;
-      h += '<div class="fun' + (mide ? ' funmide' : '') + '"' +
-        (mide ? ' style="border-left-color:' + (SEG_COLOR[k] || 'var(--color-accent)') + '"' : '') + '>' +
-        '<span class="funic' + (mide ? ' mide' : '') + '"' +
-          (mide ? ' style="color:' + (SEG_COLOR[k] || 'var(--color-accent)') + '"' : '') + '>' +
-          svgIc(EJES[k].ic) + '</span>' +
-        '<span class="fk">' + nombreEje(k) + '</span>' +
-        '<span class="fv num">' + VALOR[k] + '</span></div>';
-    }
+    /* Métricas con submétricas expandibles */
+    h += renderMetricasExpandibles();
     h += '<div class="rleg2"><i></i>lo que mide tu mandato</div>';
     var run = Motor.runwayMeses(J);
     h += '<div class="pq mut" style="margin-top:8px">Caja ' + money(J.caja) + ' · runway ' +
       (run > 90 ? '∞' : run.toFixed(0) + ' m') + ' · valoración ' + money(J.valoracion) + '</div>';
     h += '</div>';
-
-    /* ---- Submétricas derivadas: desglose de cada eje ---- */
-    h += renderSubmetricasPanel();
 
     /* ---- Impacto reciente: lo último entregado, real contra esperado ---- */
     if (J.historialImpacto && J.historialImpacto.length) {
