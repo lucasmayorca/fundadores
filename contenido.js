@@ -1607,6 +1607,46 @@ var EVENTOS = [
       libro:'hard',
       ef:function(e,log){ e.foco += 6; e.moral -= 3;
         nota(log,'neutro','Todo o nada, entonces. El directorio anotó la frase para citarla después, gane quien gane.','hard'); } }
+  ]},
+
+/* El primer dilema con probabilidad visible: cada opción muestra su % de
+   antemano y el resultado se juega en el momento, no está escrito de
+   antemano como en el resto de EVENTOS. `ok`/`ko` son cada uno un
+   {nota,libro,ef} — el mismo shape que ya usa `op` en cualquier evento
+   viejo, así que mostrarEvento()/elegirOpcion() tratan uno y otro sin
+   distinguirlos salvo por la barra de %. */
+{ id:'comite', libro:'hard', prio:82, quien:'ceo',
+  cuando:function(e){ return e.mesPuesto > 1 && Object.keys(e.enVuelo || {}).length > 0; },
+  titulo:'El CEO quiere la API pública para el demo del board',
+  texto:'Faltan tres semanas para la reunión de inversionistas. El CEO entra a tu 1:1 con una idea: mostrar una API pública "aunque sea de mentira". Tu equipo está a mitad de una iniciativa que mueve tu mandato. Decir que no cuesta capital político; decir que sí cuesta el mes.',
+  opciones:[
+    { txt:'Sostenés el plan y le mostrás los números', prob:65,
+      ok:{ libro:'hard',
+        nota:'Le mostraste la barra de tu mandato y de dónde sale. Aceptó a regañadientes: el demo va con lo que ya estaba en curso.',
+        ef:function(e,log){ e.politico -= 4; e.usabilidad = Math.min(100, e.usabilidad + 1.2);
+          nota(log,'bueno','El CEO se bajó del pedido. El plan sigue intacto.','hard'); } },
+      ko:{ libro:'hard',
+        nota:'"Los números no ganan boards", te dijo. Lo llevó él mismo — sin vos en la sala.',
+        ef:function(e,log){ e.politico -= 10;
+          nota(log,'malo','No lo compraste a tiempo. Ahora el board escuchó su versión, no la tuya.','hard'); } } },
+    { txt:'Armás una demo de humo en una semana', prob:45,
+      ok:{ libro:'hard',
+        nota:'La demo salió redonda. Nadie preguntó qué había atrás.',
+        ef:function(e,log){ e.politico += 3; e.deuda = Math.min(100, e.deuda + 3);
+          nota(log,'bueno','El board se fue conforme. Ganaste tres semanas sin tocar el roadmap real — a cuenta de deuda técnica.','hard'); } },
+      ko:{ libro:'hard',
+        nota:'La demo falló en vivo. El board lo tomó con humor; el equipo no.',
+        ef:function(e,log){ e.politico -= 2; e.usabilidad = Math.max(0, e.usabilidad - 1.8); e.moral -= 4;
+          nota(log,'malo','Perdiste una semana de la iniciativa real, y el equipo se enteró por qué.','hard'); } } },
+    { txt:'Le pedís que lo lleve él al board', prob:30,
+      ok:{ libro:'hard',
+        nota:'Lo llevó, y por una vez el board se lo compró sin vos en el medio.',
+        ef:function(e,log){ e.politico -= 2;
+          nota(log,'bueno','Ganaste el mes. El CEO se guardó el crédito, pero el plan no se movió.','hard'); } },
+      ko:{ libro:'hard',
+        nota:'Lo llevó. Y dijo que producto "no tenía tiempo". Desde entonces te enterás de las prioridades por Slack.',
+        ef:function(e,log){ e.politico -= 9;
+          nota(log,'malo','Delegar hacia arriba salió caro: perdiste la silla aunque conservás el título.','hard'); } } }
   ]}
 ];
 
