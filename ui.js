@@ -236,7 +236,16 @@
     apuestas:'Prob es la chance de que la apuesta salga como la planeaste. Esfuerzo son los puntos de equipo que consume. El impacto se paga distinto según si está alineado a tu mandato.',
     aarrr:'Métricas pirata (AARRR): ADQ Adquisición · ACT Activación · RET Retención · CONF Confiabilidad · Ingresos · Referidos — los números con los que te van a juzgar al cierre del mes.',
     gate:'La compuerta al mercado grande: cada sector exige algo distinto para dejarte crecer en serio. No cumplirla te deja pegado a tu nicho actual.',
-    usabilidad:'Usabilidad no es una métrica suelta: es 50% Activación + 30% Retención + 20% Confiabilidad. Cada iniciativa mueve esas tres, y de ahí sale cuánto aporta al mandato. Las iniciativas alineadas a la etapa rinden un 30% más.'
+    usabilidad:'Usabilidad no es una métrica suelta: es 50% Activación + 30% Retención + 20% Confiabilidad. Cada iniciativa mueve esas tres, y de ahí sale cuánto aporta al mandato. Las iniciativas alineadas a la etapa rinden un 30% más.',
+    /* un tip por eje, para el chip suelto de cada iniciativa — ret, gate y
+       evid ya tenian el suyo mas arriba; estos son los que faltaban. */
+    adq:'Adquisición. Cuánta gente nueva te encuentra este mes. La mueven la estación Crecimiento y las iniciativas con ADQ+. Sin esto no hay a quién retener ni a quién cobrarle después.',
+    act:'Activación. Cuántos de los que llegan encuentran el valor central rápido. Es el 50% de Usabilidad — el eje que más pesa de los tres. La mueven las iniciativas con ACT+ y la estación Descubrir.',
+    rel:'Confiabilidad. Que el producto no se caiga. Es el 20% de Usabilidad, protege Retención (nadie vuelve a lo que se cae) y es uno de los requisitos de la Compuerta al mercado grande. La sube la estación Fiabilidad.',
+    rev:'Ingresos. Lo que los clientes pagan de verdad, cada mes. Lo mueven la estación Crecimiento y las iniciativas con REV+. Compone el MRR y, en escala logarítmica, tu patrimonio final.',
+    ref:'Referidos. Usuarios que traen otros usuarios sin que se lo pidas. Depende de tu fit con el segmento: cuanto mejor resolvés lo que necesitan, más referidos salen gratis.',
+    deuda:'Deuda técnica. Cada iniciativa que construís la sube un poco — es el precio de la velocidad. Cobra interés: con deuda alta, la misma iniciativa rinde menos puntos de esfuerzo. La baja la estación Plataforma.',
+    calor:'Sector caliente: +35% de alcance, pero la competencia también se amontona (+60% de atención). Sector frío: -30% de alcance, pero -40% de atención — más chico, más tranquilo. Lo decide la era del mundo, no vos.'
   };
   var tipTimer = null;
   function mostrarTip(clave) {
@@ -1438,10 +1447,12 @@
       txt = eje.ab + ' ' + (v > 0 ? '+' : '') + v;
     }
     var brillo = alimenta && v > 0 && cls === 'vpos';
-    return '<span class="vchip ' + cls + (brillo ? ' vmeta' : '') +
-      (brillo ? '" style="box-shadow:0 0 0 1.5px ' + (SEG_COLOR[mk] || 'var(--color-accent)') +
-        ',0 0 8px color-mix(in srgb,' + (SEG_COLOR[mk] || 'var(--color-accent)') + ' 45%, transparent)' : '') +
-      '">' + txt + '</span>';
+    /* cada chip explica su propio eje al tocarlo — antes no tenían ningún
+       tip, y "Compuerta +60" o "Deuda +4.3" no se entienden solos. */
+    return '<span class="vchip ' + cls + (brillo ? ' vmeta' : '') + '" data-tip="' + mk + '"' +
+      (brillo ? ' style="box-shadow:0 0 0 1.5px ' + (SEG_COLOR[mk] || 'var(--color-accent)') +
+        ',0 0 8px color-mix(in srgb,' + (SEG_COLOR[mk] || 'var(--color-accent)') + ' 45%, transparent)"' : '') +
+      '>' + txt + '</span>';
   }
 
   /* Solo los chips que valen algo. Los que alimentan el mandato van
@@ -1887,8 +1898,13 @@
                                           : 'justo lo que habías estimado.');
     }
     if (mandatoItem && mandatoItem.tipo === 'bueno') {
-      return 'Jugada del mes: moviste tu mandato de <b>' + esc(mandatoItem.mandato.antes) + '</b> a <b>' +
-             esc(mandatoItem.mandato.despues) + '</b> sin entregar nada — el equipo estacionado hizo el trabajo.';
+      var mov = 'Jugada del mes: moviste tu mandato de <b>' + esc(mandatoItem.mandato.antes) + '</b> a <b>' +
+                esc(mandatoItem.mandato.despues) + '</b> ';
+      /* solo es "sin entregar nada" si de verdad no salio nada este mes; si
+         salio algo pero rindio por debajo, el titular es que el mandato se
+         movio a pesar de las entregas cortas */
+      if (!mejor) return mov + 'sin entregar nada — el equipo estacionado hizo el trabajo.';
+      return mov + 'aunque las entregas rindieron por debajo de lo estimado — el equipo estacionado compensó.';
     }
     for (i = 0; i < eventos.length; i++) {
       if (eventos[i].tipo === 'bueno') return 'Jugada del mes: ' + esc(primeraOracion(eventos[i].texto));
