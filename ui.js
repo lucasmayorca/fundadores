@@ -11,6 +11,8 @@
   var plan = null, evActual = null, notasEvento = [], ofertaSel = -1, detalleAbierto = {};
   /* filtro del backlog: ver solo los proyectos que mueven el eje del mandato */
   var soloMandato = false;
+  /* el cuerpo de "La teoría" en el cierre del mes: plegado por defecto */
+  var teoriaAbierta = false;
   /* secciones plegadas del panel derecho: por defecto solo se ve lo que decide
      el mes; el resto está a un click, no a la vista */
   var secAbierta = {};
@@ -1099,31 +1101,49 @@
     return '<div class="v num ' + (cls || '') + (cambio ? ' latido' : '') + '">' + txt + '</div>';
   }
 
+  /* La cabecera del mes, en UNA fila.
+     Antes eran dos: un HUD con siete numeros (empresa, mes, usuarios,
+     retencion, ingresos, caja, runway, Lupa, biblioteca) y debajo la barra de
+     mandato. Cinco de esos siete ya viven en el panel de la derecha, asi que
+     el HUD era una segunda copia compitiendo por la atencion con lo unico que
+     de verdad manda la partida. El diseno guardado lo resuelve en una sola
+     fila: fase, mandato con su barra, capital politico y edad. Lo demas baja
+     al panel; la Lupa y la biblioteca se van al ticker de era. */
   function renderHud() {
-    var u2 = Motor.usuarios(J), run = Motor.runwayMeses(J);
-    var h = '';
-    h += '<div class="hudi"><div class="k">' + esc(J.empresa) + '</div><div class="v num">' +
-         'Mes ' + (J.mesPuesto + 1) + '<span class="mut" style="font-size:13px"> de ' + J.meses + '</span></div></div>';
-    h += '<div class="hudi"><div class="k">Usuarios</div>' + vHud('u', Math.round(u2 / 10), mil(u2), '') + '</div>';
-    h += '<div class="hudi"><div class="k">' + tip('ret','Retención') + '</div>' + vHud('ret', Math.round(Motor.retencionMedia(J) * 100), pct(Motor.retencionMedia(J)), '') + '</div>';
-    if (J.rolN >= 1) {
-      h += '<div class="hudi"><div class="k">' + tip('mrr','Ingresos/mes') + '</div>' + vHud('mrr', Math.round(J.mrr / 1000), money(J.mrr), '') + '</div>';
-    }
-    if (J.rolN >= 3) {
-      h += '<div class="hudi"><div class="k">Caja</div>' + vHud('caja', Math.round(J.caja / 10000), money(J.caja), J.caja < Motor.burnMensual(J) * 3 ? 'rojo' : '') + '</div>';
-      h += '<div class="hudi"><div class="k">' + tip('runway','Runway') + '</div>' + vHud('run', Math.round(run), run > 90 ? '∞' : run.toFixed(1) + ' meses', run < 4 ? 'rojo' : run < 8 ? 'ambar' : '') + '</div>';
-    } else if (run < 5) {
-      h += '<div class="hudi"><div class="k">&nbsp;</div><div class="v rojo" style="font-size:13px">En los pasillos se habla de la caja</div></div>';
-    }
-    h += '<div class="hudi der">' + lupaHtml() +
-         '<span class="btn chico" data-act="biblio">Biblioteca ' + Object.keys(C.codex).length + '/' + LIBROS.length + '</span></div>';
+    var m = mandatoPorId(J.mandatoId);
+    var prog = Motor.progresoMandato(J);
+    var esperado = (J.mesPuesto + 1) / J.meses;
+    var cls = prog >= 1 ? 'v' : prog >= esperado ? 'a' : 'r';
+    var eje = ejeDe(J.mandatoId);
+    var pol = Math.round(J.politico);
+    var sig = siguienteDesbloqueo(C.nivel);
+    var val = m.fmt(m.valor(J)), meta = m.fmt(m.meta(J));
+
+    var h = '<span class="fasechip mini ' + faseClase(J.faseCorta) + '" data-act="ver-objetivo">' +
+      svgIc(faseIcono(J.faseCorta)) + esc(J.faseCorta) + '</span>';
+    h += '<div class="hmand">' +
+      '<div class="hmt"><span class="mut">Mandato:</span> <b>' + esc(m.txt) + '</b>' +
+        (eje ? '<span class="ejechip" data-tip="eje">' + esc(nombreEje(eje)) + '</span>' : '') + '</div>' +
+      '<div class="hmb"><span class="track"><i class="' + cls + '" style="width:' +
+        Math.round(Math.min(1, prog) * 100) + '%"></i></span>' +
+      vHud('mand', val, esc(val) + '<span class="mut"> · meta ' + esc(meta) + '</span>', 'hmv') +
+      '</div></div>';
+    h += '<div class="hudi der">' +
+      '<div class="hi"><div class="k">' + esc(J.empresa) + '</div><div class="v num">Mes ' + (J.mesPuesto + 1) +
+        '<span class="mut" style="font-size:13px"> de ' + J.meses + '</span></div></div>' +
+      '<div class="hi"><div class="k">' + tip('pol','Capital político') + '</div>' +
+        '<div class="v num ' + (pol < 25 ? 'rojo' : pol < 45 ? 'ambar' : '') + '">' + pol + '</div></div>' +
+      '<div class="hi"><div class="k">Edad</div><div class="v" style="font-size:13px">' +
+        esc(ESCALAFON[C.nivel].corto) + (sig ? ' <span class="mut">→ ' + esc(NOMBRE_PALANCA[sig.palanca] || sig.palanca) + '</span>' : '') +
+        '</div></div>' +
+      '</div>';
     $('hud').innerHTML = h;
   }
 
   /* La Lupa del regulador como fila de iconos que se llenan, estilo wanted
-     level: cinco calaveras, una por cada 20 puntos. Es el unico medidor del
-     HUD que no es un numero — se lee de reojo, que es exactamente lo que hace
-     falta cuando esta subiendo. */
+     level: cinco calaveras, una por cada 20 puntos. Es el unico medidor que no
+     es un numero — se lee de reojo, que es exactamente lo que hace falta
+     cuando esta subiendo. */
   function lupaHtml() {
     var lupa = Math.max(0, Math.min(100, Math.round(J.lupa || 0)));
     var enc = Math.ceil(lupa / 20), i;
@@ -1133,27 +1153,11 @@
     return h + '</span>';
   }
 
-  function renderMandato() {
-    var m = mandatoPorId(J.mandatoId);
-    var prog = Motor.progresoMandato(J);
-    var esperado = (J.mesPuesto + 1) / J.meses;
-    var cls = prog >= 1 ? 'v' : prog >= esperado ? 'a' : 'r';
-    var pol = Math.round(J.politico);
-    /* el mandato no vale nada si no dice con qué se mueve: el nombre del eje
-       aquí es literalmente el mismo que el chip de las tarjetas de abajo */
-    var eje = ejeDe(J.mandatoId);
-    var h = '<span class="fasechip mini ' + faseClase(J.faseCorta) + '" data-act="ver-objetivo">' + svgIc(faseIcono(J.faseCorta)) + esc(J.faseCorta) + '</span>' +
-      '<span class="mut">Mandato:</span>&nbsp;<b>' + esc(m.txt) + '</b>' +
-      (eje ? '<span class="ejechip" data-tip="eje">' + esc(nombreEje(eje)) + '</span>' : '') +
-      '<div class="track"><i class="' + cls + '" style="width:' + Math.round(Math.min(1, prog) * 100) + '%"></i></div>' +
-      '<span class="num ' + (pol < 25 ? 'rojo' : pol < 45 ? 'ambar' : 'mut') + '">' + tip('pol','Capital político ' + pol) + '</span>';
-    var sig = siguienteDesbloqueo(C.nivel);
-    h += '<span class="mut" style="margin-left:14px">Edad: <b>' + esc(ESCALAFON[C.nivel].corto) + '</b>' +
-      (sig ? ' → la siguiente desbloquea ' + esc(NOMBRE_PALANCA[sig.palanca] || sig.palanca) : '') + '</span>';
-    $('mandato').innerHTML = h;
-  }
-
-  /* ritmo vs. runway: ¿el mandato se cumple antes del plazo — y antes que la caja? */
+  /* Ritmo y retos en UNA barra. Eran dos filas de cromo separadas que decian
+     lo mismo en dos alturas: "vas a llegar o no" y "estos otros dos numeros
+     tambien te miden". Van juntas — el pronostico manda a la izquierda, los
+     retos quedan a la derecha como marcadores chicos. El "lo mueve: ..." se va
+     de aca: es una instruccion sobre el backlog, y su lugar es el backlog. */
   function renderRitmo() {
     var r = Motor.ritmoMandato(J);
     var runTxt = r.runway > 90 ? '∞' : r.runway.toFixed(1) + ' meses';
@@ -1161,27 +1165,45 @@
     if (r.cumplido) {
       h = '<span class="verde">✓ Mandato cumplido.</span> <span class="mut">Asegúralo — runway ' + runTxt + '.</span>';
     } else {
-      var mesesTxt = isFinite(r.mesesMeta) ? ('~' + Math.max(1, Math.ceil(r.mesesMeta)) + ' meses') : 'nunca';
+      var nm = Math.max(1, Math.ceil(r.mesesMeta));
+      var mesesTxt = isFinite(r.mesesMeta) ? ('~' + nm + (nm === 1 ? ' mes' : ' meses')) : 'nunca';
       if (r.ritmo <= 0.0005) {
         cls = 'rojo';
-        h = '<span class="' + cls + '">A este ritmo: no estás moviendo la aguja — esto no se cumple nunca por sí solo.</span>';
+        h = '<span class="' + cls + '">A este ritmo no estás moviendo la aguja: esto no se cumple solo.</span>';
       } else if (!r.llegaAntesDeCash) {
         cls = 'rojo';
-        h = '<span class="' + cls + '">A este ritmo: te quedas sin caja antes de lograrlo (necesitas ' + mesesTxt + ', runway ' + runTxt + ').</span>';
+        h = '<span class="' + cls + '">Te quedas sin caja antes de lograrlo: necesitas ' + mesesTxt + ', runway ' + runTxt + '.</span>';
       } else if (!r.llegaEnPlazo) {
         cls = 'ambar';
-        h = '<span class="' + cls + '">A este ritmo: la caja no es el problema — el tiempo sí. Lo logras en ' + mesesTxt +
-          ', pasado tu plazo de ' + r.restantesPuesto + ' meses.</span>';
+        h = '<span class="' + cls + '">Lo logras en ' + mesesTxt + ', pasado tu plazo de ' + r.restantesPuesto + ' meses.</span>';
       } else {
         cls = 'verde';
-        h = '<span class="' + cls + '">A este ritmo: lo logras en ' + mesesTxt + ' — la caja aguanta ' + runTxt + '.</span>';
+        h = '<span class="' + cls + '">Lo logras en ' + mesesTxt + ' — la caja aguanta ' + runTxt + '.</span>';
       }
       h += ' ' + chip('pgdefault');
-      /* y, en la misma línea, con QUÉ se mueve — antes esto no estaba escrito
-         en ninguna parte y había que deducirlo del modelo */
-      if (COMO_MOVER[J.mandatoId]) h += '<span class="comomover">Lo mueve: ' + COMO_MOVER[J.mandatoId] + '</span>';
     }
-    $('ritmo').innerHTML = h;
+    $('ritmo').innerHTML = h + retosHtml();
+  }
+
+  function retosHtml() {
+    if (!J.retos || !J.retos.length) return '';
+    var h = '<span class="retos">', i, hay = false;
+    for (i = 0; i < J.retos.length; i++) {
+      var reto = J.retos[i], m = mandatoPorId(reto.id);
+      if (!m) continue;
+      hay = true;
+      var prog = reto.hecho ? 1 : Motor.progresoDe(J, reto.id);
+      var cls = reto.hecho ? 'v' : prog >= 0.66 ? 'a' : 'r';
+      var ejeR = ejeDe(reto.id);
+      h += '<span class="reto' + (reto.hecho ? ' hecho' : '') + '" title="' + esc(m.txt) + '">' +
+        (reto.hecho ? '✓ ' : '◇ ') + esc(ejeR ? nombreEje(ejeR) : m.txt) +
+        '<span class="track mini"><i class="' + cls + '" style="width:' + Math.round(Math.min(1, prog) * 100) + '%"></i></span>' +
+        '</span>';
+    }
+    if (J.fichasCap > 0) {
+      h += '<span class="reto ficha">🏅 ' + J.fichasCap + ' ficha' + (J.fichasCap > 1 ? 's' : '') + '</span>';
+    }
+    return hay || J.fichasCap > 0 ? h + '</span>' : '';
   }
 
   function renderEra() {
@@ -1196,9 +1218,16 @@
     for (i = 0; i < ESCALAFON.length; i++) {
       pips += '<i class="' + (i < C.nivel ? 'on' : i === C.nivel ? 'on hoy' : '') + '"></i>';
     }
+    /* la Lupa y la biblioteca bajan del HUD a este ticker: son estado del
+       mundo, no numeros de tu mes, y aca no compiten con el mandato */
     $('era').innerHTML = '<span class="nombre-era">' + esc(era.nombre) + '</span>' + calor +
       (not ? '<span class="noticia" style="margin-left:14px">◈ ' + esc(not) + '</span>' : '') +
-      '<span class="erapips" data-tip="edad" title="Edad ' + esc(ESCALAFON[C.nivel].corto) + '">' + pips + '</span>';
+      '<span class="eraDer">' +
+        '<span class="erapips" data-tip="edad" title="Edad ' + esc(ESCALAFON[C.nivel].corto) + '">' + pips + '</span>' +
+        /* cinco calaveras vacias no dicen nada: la Lupa aparece cuando existe */
+        ((J.lupa || 0) >= 10 ? lupaHtml() : '') +
+        '<span class="btn chico" data-act="biblio">Biblioteca ' + Object.keys(C.codex).length + '/' + LIBROS.length + '</span>' +
+      '</span>';
   }
 
   /* Age track: el ESCALAFON de carrera (8 niveles, cada uno desbloquea una
@@ -1213,29 +1242,6 @@
       if (nuevas.length) return { nivel:k, palanca:nuevas[0] };
     }
     return null;
-  }
-
-  function renderRetos() {
-    if (!J.retos || !J.retos.length) { $('retos').innerHTML = ''; return; }
-    var h = '', i;
-    for (i = 0; i < J.retos.length; i++) {
-      var reto = J.retos[i], m = mandatoPorId(reto.id);
-      if (!m) continue;
-      var prog = reto.hecho ? 1 : Motor.progresoDe(J, reto.id);
-      var cls = reto.hecho ? 'v' : prog >= 0.66 ? 'a' : 'r';
-      /* el reto lleva el nombre de su eje igual que el mandato: es el mismo
-         catálogo, así que tiene que leerse con las mismas palabras */
-      var ejeR = ejeDe(reto.id);
-      h += '<span class="reto' + (reto.hecho ? ' hecho' : '') + '">' +
-        (reto.hecho ? '✓ ' : '◇ ') + '<span class="mut">Reto:</span> ' + esc(m.txt) +
-        (ejeR && !reto.hecho ? '<span class="ejechip chico">' + esc(nombreEje(ejeR)) + '</span>' : '') +
-        '<span class="track mini"><i class="' + cls + '" style="width:' + Math.round(Math.min(1, prog) * 100) + '%"></i></span>' +
-        '</span>';
-    }
-    if (J.fichasCap > 0) {
-      h += '<span class="reto ficha">🏅 ' + J.fichasCap + ' ficha' + (J.fichasCap > 1 ? 's' : '') + ' de capacidad para gastar ↓</span>';
-    }
-    $('retos').innerHTML = h;
   }
 
   /* El mes como recurso, estilo Age of Empires: tu equipo produce puntos;
@@ -1267,11 +1273,9 @@
   function renderAsignacion() {
     var mio = Motor.capacidadPropia(J), ocio = sinUsar(), ejes = ejesEnJuego();
     /* el rótulo largo se come tres renglones en un teléfono */
-    var h = esMovil ?
-      ('<div class="rot" style="margin-bottom:6px">1 · Coloca tus <b class="num">' + mio +
-       ' puntos</b> · lo que no estaciones va a los proyectos</div>') :
-      ('<div class="rot" style="margin-bottom:6px">1 · Coloca los ' +
-       '<b class="num">' + mio + ' puntos</b> de tu equipo · primero estaciones, el resto va a los proyectos de abajo</div>');
+    /* el rotulo era una instruccion de dos renglones; el numero solo ya dice
+       todo lo que hace falta, y la barra de abajo cuenta lo que falta poner */
+    var h = '<div class="rot" style="margin-bottom:6px">Estaciona a tu equipo · <b class="num">' + mio + ' pts</b></div>';
 
     h += '<div class="ebar">';
     var i;
@@ -1401,7 +1405,7 @@
       mk = ORDEN_EJES[i];
       if (puestos[mk] || !vec[mk]) continue;
       var esMeta = mk === metaEje;
-      if (!esMeta && mk !== 'deuda' && otros >= 3) continue;
+      if (!esMeta && mk !== 'deuda' && otros >= 2) continue;
       if (!esMeta && mk !== 'deuda') otros++;
       puestos[mk] = 1;
       h += chipEje(mk, vec[mk], esMeta);
@@ -1430,11 +1434,11 @@
   function renderBacklog() {
     var usados = slotsUsados(), i2, cajas = '';
     for (i2 = 0; i2 < J.slots; i2++) cajas += '<span class="slot' + (i2 < usados ? ' lleno' : '') + '"></span>';
-    var h = '<div class="rot" style="margin:8px 0 7px 0">2 · ' +
-      (esMovil ? 'Tus proyectos' : 'Pon puntos en tus proyectos') + ' · slots ' + cajas +
-      ' <span class="pill libro" data-lib="momtest">confianza ' + Motor.confianza(J) + '</span></div>';
-
+    var h = '';
     var id, i, a, d;
+    /* el rotulo de "Tus proyectos" con la fila de slots vacia y nada debajo
+       era una seccion fantasma en el mes 1: solo aparece cuando hay algo */
+    if (plan.orden.length) h += '<div class="rot" style="margin:8px 0 7px 0">Tus proyectos ' + cajas + '</div>';
 
     /* tu tablero: los proyectos que reciben puntos este mes */
     for (i = 0; i < plan.orden.length; i++) {
@@ -1470,52 +1474,53 @@
       di = Motor.estimacionDetalle(J, id);
       if (metaEje && metaEje !== 'deuda' && (di.vec[metaEje] || 0) > 0) mueven.push(id);
     }
-    h += '<div class="rot" style="margin:10px 0 6px 0">Backlog · toca para sumar' +
+    h += '<div class="rot" style="margin:' + (plan.orden.length ? '12px' : '8px') + ' 0 6px 0">Backlog ' +
+      (plan.orden.length ? '' : cajas) +
+      '<span class="conf" data-lib="momtest">confianza ' + Motor.confianza(J) + '</span>' +
       (metaEje && metaEje !== 'deuda' ?
         '<span class="filtroeje' + (soloMandato ? ' on' : '') + '" data-act="filtro-eje">' +
-          (soloMandato ? '✓ ' : '') + 'solo los que suben <b>' + nombreEje(metaEje) + '</b> (' + mueven.length + ')</span>' : '') +
+          (soloMandato ? '✓ ' : '') + 'solo suben <b>' + nombreEje(metaEje) + '</b> (' + mueven.length + ')</span>' : '') +
       '</div>';
+    /* El "lo mueve: ..." aterriza aca, no en la barra de ritmo: es una
+       instruccion sobre esta lista, y se lee justo antes de tocarla. Una sola
+       linea, y solo cuando hace falta decir algo que la lista no dice sola. */
+    var ejesAqui = ejesEnJuego();
     if (metaEje && metaEje !== 'deuda' && !mueven.length) {
-      h += '<div class="avisoeje">Ningún proyecto del backlog sube <b>' + nombreEje(metaEje) +
-        '</b> ahora mismo. Tu palanca este mes es la estación <b>' +
+      h += '<div class="avisoeje">Nada de acá sube <b>' + nombreEje(metaEje) + '</b>. Tu palanca es la estación <b>' +
         (EJES[metaEje].est === 'desc' ? 'Descubrir' : EJES[metaEje].est === 'crec' ? 'Crecimiento' :
          EJES[metaEje].est === 'fiab' ? 'Fiabilidad' : EJES[metaEje].est === 'plat' ? 'Plataforma' : '—') +
         '</b>, arriba.</div>';
-    }
-    /* la deuda es el caso contraintuitivo: ninguna tarjeta la baja, todas la
-       suben. Si te están midiendo por ella — de mandato o de reto — hay que
-       decirlo, porque leer el backlog buscando "Deuda −" no lleva a nada. */
-    var ejesAqui = ejesEnJuego();
-    if (ejesAqui.deuda) {
-      h += '<div class="avisoeje">' + (ejesAqui.deuda === 'reto' ? 'Reto de deuda: n' : 'N') +
-        'ingún proyecto la <b>baja</b> — construir siempre la sube, y el chip <b>Deuda</b> de cada tarjeta dice ' +
-        'cuánto. Se baja con la estación <b>Plataforma</b>, arriba.</div>';
+    } else if (ejesAqui.deuda) {
+      h += '<div class="avisoeje">Ningún proyecto <b>baja</b> la deuda — todos la suben, y el chip lo dice. ' +
+        'Se baja con la estación <b>Plataforma</b>.</div>';
+    } else if (COMO_MOVER[J.mandatoId]) {
+      h += '<div class="avisoeje mini">Lo mueve: ' + COMO_MOVER[J.mandatoId] + '</div>';
     }
 
     for (i = 0; i < J.backlog.length; i++) {
       id = J.backlog[i]; a = Motor.apuesta(id);
       if (plan.orden.indexOf(id) >= 0) continue;
       if (soloMandato && metaEje && metaEje !== 'deuda' && mueven.indexOf(id) < 0) continue;
-      var nec = null, k;
-      for (k = 0; k < NECESIDADES.length; k++) if (NECESIDADES[k].id === a.nec) nec = NECESIDADES[k];
       d = Motor.estimacionDetalle(J, id);
       var cabe = slotsUsados() < J.slots && sinUsar() > 0;
-      var obj = J.prima.indexOf(a.nec) >= 0 ? '<span class="tagobj mini">▲</span>' :
-                J.castiga.indexOf(a.nec) >= 0 ? '<span class="tagobj down mini">▽</span>' : '';
+      /* la flecha de etapa viaja pegada al talle, no como un chip suelto al
+         lado del nombre: es una nota sobre el precio, no sobre el titulo */
+      var obj = J.prima.indexOf(a.nec) >= 0 ? '<span class="etapa up">▲</span>' :
+                J.castiga.indexOf(a.nec) >= 0 ? '<span class="etapa down">▽</span>' : '';
       var esNueva = J.backlogNuevo && J.backlogNuevo[id] === J.mesPuesto;
       var abierta = !!detalleAbierto[id];
+      /* Tres cosas por tarjeta y nada mas: nombre, una linea de que es, y la
+         fila de decision (confianza + que mueve). Se fueron la pill de
+         necesidad — que ya esta dicha en la descripcion —, los rotulos PROB y
+         ESPERADO — las formas se explican solas y el tooltip esta ahi — y el
+         "mas detalle" permanente, que ahora se abre tocando la descripcion. */
       h += '<div class="ap' + (cabe ? '' : ' nocabe') + '" data-ap="' + id + '">' +
-        '<div class="t"><div class="n2">' + esc(a.n) + '<span class="pill">' + esc(nec.corto) + '</span>' + obj +
+        '<div class="t"><div class="n2">' + esc(a.n) +
           (esNueva ? '<span class="pill nueva">nuevo</span>' : '') + '</div>' +
-        '<div class="d2" style="margin-top:2px">' + esc(a.d) + ' ' +
-          '<span class="masdet" data-detalle="' + id + '">' + (abierta ? 'ocultar detalle' : 'más detalle') + '</span></div>' +
-        (abierta && a.d2 ? '<div class="d2 mut" style="margin-top:4px;line-height:1.4">' + esc(a.d2) + '</div>' : '') +
-        '<div class="viz">' +
-          '<span class="vlbl">' + tip('prob','prob') + '</span>' + dots(d.prob) +
-          '<span class="vlbl">' + tip('vec','esperado') + '</span>' + chipsVec(d.vec, metaEje, true) +
-        '</div></div>' +
-        '<div class="c"><span class="tipped" data-tip="esf"><span class="esf e' + d.esf + '">' + d.esf + '</span></span>' +
-        '<div class="cst num">' + d.tiempo + ' · ' + d.costo + ' pts</div></div></div>';
+        '<div class="d2" data-detalle="' + id + '">' + esc(abierta && a.d2 ? a.d2 : a.d) + '</div>' +
+        '<div class="viz">' + dots(d.prob) + chipsVec(d.vec, metaEje, true) + '</div></div>' +
+        '<div class="c"><span class="tipped" data-tip="esf"><span class="esf e' + d.esf + '">' + d.esf + obj + '</span></span>' +
+        '<div class="cst num">' + d.costo + ' pts</div></div></div>';
     }
     $('backlog').innerHTML = h;
   }
@@ -1549,132 +1554,135 @@
   function renderPanel() {
     var h = '', i;
     var ejes = ejesEnJuego();
-    /* marca de eje: el mismo nombre que el chip del proyecto y que el mandato */
-    var mk2 = function (k) {
-      return ejes[k] ? '<span class="ejechip chico ' + (ejes[k] === 'reto' ? 'reto' : '') + '">' +
-        (ejes[k] === 'reto' ? 'reto' : 'mandato') + '</span>' : '';
-    };
+    var funIc = function (id, cls) { return '<span class="funic' + (cls ? ' ' + cls : '') + '">' + svgIc(id) + '</span>'; };
 
-    /* Recursos: lo que te mata si lo ignoras. El resto (valoración,
-       reputación, Lupa baja) es contexto y vive plegado. */
-    h += '<div class="caja2">' + rotPleg('rec', 'Recursos', 2 + ((J.lupa || 0) >= 10 ? 1 : 0));
-    h += '<div class="fun"><span class="fk">Caja</span><span class="fv num">' + money(J.caja) + '</span></div>';
-    h += '<div class="fun"><span class="fk">Runway</span><span class="fv num">' + (Motor.runwayMeses(J) > 90 ? '∞' : Motor.runwayMeses(J).toFixed(1) + ' meses') + '</span></div>';
-    h += '<div class="fun"><span class="fk">' + tip('pol','Capital político') + '</span><span class="fv num ' + (J.politico < 25 ? 'rojo' : J.politico < 45 ? 'ambar' : '') + '">' + Math.round(J.politico) + '</span></div>';
-    if (secAbierta.rec) {
-      h += '<div class="fun"><span class="fk">Valoración</span><span class="fv num">' + money(J.valoracion) + '</span></div>';
-      h += '<div class="fun"><span class="fk">Reputación</span><span class="fv num">' + Math.round(C.reputacion) + '</span></div>';
-      if ((J.lupa || 0) >= 10) h += '<div class="fun"><span class="fk">' + tip('heat','la Lupa') + '</span><span class="fv num ' + (J.lupa >= 60 ? 'rojo' : 'ambar') + '">' + Math.round(J.lupa) + '</span></div>';
-    }
-    if (J.fichasCap > 0) h += '<div class="fun"><span class="fk">🏅 Fichas de capacidad</span><span class="fv num ambar">' + J.fichasCap + '</span></div>';
-    h += '</div>';
+    /* Tira de supervivencia: caja, runway y usuarios sin caja ni titulo. Son
+       tres numeros que se miran de reojo, no una seccion. */
+    var run = Motor.runwayMeses(J);
+    h += '<div class="tira">' +
+      '<span><i>Caja</i><b class="num' + (J.caja < Motor.burnMensual(J) * 3 ? ' rojo' : '') + '">' + money(J.caja) + '</b></span>' +
+      '<span><i>' + tip('runway','Runway') + '</i><b class="num' + (run < 4 ? ' rojo' : run < 8 ? ' ambar' : '') + '">' +
+        (run > 90 ? '∞' : run.toFixed(1) + ' m') + '</b></span>' +
+      '<span><i>Usuarios</i><b class="num">' + mil(Motor.usuarios(J)) + '</b></span>' +
+      '</div>';
 
-    /* Los ejes: exactamente los mismos ocho que pueden ser mandato o reto, con
-       exactamente los mismos nombres que llevan los chips de cada proyecto.
-       Antes esto eran dos cajas separadas ("Embudo" y "Dónde estamos") donde la
-       misma variable aparecía dos veces con dos nombres: Activación en una y
-       Usabilidad en la otra. Ahora es una fila por eje, y se lee de arriba
-       abajo contra las tarjetas del backlog. */
+    /* Los ejes, partidos en dos: arriba los que te estan midiendo — que en la
+       practica son dos o tres, los mismos que el diseno guardado muestra en
+       "Donde estamos" — y el resto plegado. Antes eran ocho filas con el mismo
+       peso mas una caja de Recursos y otra de Salud compitiendo al lado. */
     var actPct = Math.round((0.35 + (J.usabilidad / 100) * 0.65) * 100);
     var retPct = Math.round(Motor.retencionMedia(J) * 100);
-    var profit = J.mrr - Motor.burnMensual(J);
-    var funIc = function (id, cls) { return '<span class="funic' + (cls ? ' ' + cls : '') + '">' + svgIc(id) + '</span>'; };
-    var fila = function (k, ic, val, cls) {
-      return '<div class="fun' + (ejes[k] ? ' funmeta' : '') + '"><span class="fk">' + funIc(ic, cls) +
-        nombreEje(k) + mk2(k) + '</span><span class="fv num' + (cls ? ' ' + cls : '') + '">' + val + '</span></div>';
-    };
-    h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">' + tip('funnel','Los ejes') +
-      ' <span class="mut" style="text-transform:none;letter-spacing:0">· lo que miden los chips</span></div>';
-    h += fila('adq', 'acquisition', '+' + mil(J.adqMes || 0) + '<span class="mut fsub"> nuevos/mes</span>');
-    h += fila('act', 'activation', Math.round(J.usabilidad) + '<span class="mut fsub"> → ' + actPct + '% convierte</span>');
-    h += fila('ret', 'retention', retPct + '%', retPct >= 88 ? 'verde' : retPct >= 80 ? '' : 'rojo');
-    if (J.rolN >= 1) h += fila('rev', 'revenue', money(J.mrr) + '<span class="mut fsub">/mes</span>');
-    h += fila('rel', 'reliability', Math.round(J.fiabPercibida) + (J.incidentesPuesto ? '<span class="mut fsub"> · ' + J.incidentesPuesto + ' caídas</span>' : ''));
-    h += fila('evid', 'evidence', Math.round(J.evidencia));
-    h += fila('deuda', 'debt', Math.round(J.deuda), J.deuda >= 60 ? 'rojo' : J.deuda >= 40 ? 'ambar' : '');
+    var okGate = null;
     if (J.gateRevelado) {
       var rq = Motor.requisitosGate(J), okn = 0;
       for (i = 0; i < rq.length; i++) if (rq[i].ok) okn++;
-      h += fila('gate', 'pmf', okn + '/' + rq.length, okn === rq.length ? 'verde' : '');
+      okGate = { ok:okn, total:rq.length, reqs:rq };
     }
-    if (J.rolN >= 1) h += '<div class="fun"><span class="fk">' + funIc('revenue', profit >= 0 ? 'verde' : 'rojo') + 'Ganancia</span><span class="fv num ' + (profit >= 0 ? 'verde' : 'rojo') + '">' + (profit >= 0 ? '+' : '') + money(profit) + '</span></div>';
+    var FILAS = [
+      { k:'act',   ic:'activation',  v:Math.round(J.usabilidad) + '<span class="mut fsub"> → ' + actPct + '% convierte</span>' },
+      { k:'ret',   ic:'retention',   v:retPct + '%', cls:retPct >= 88 ? 'verde' : retPct >= 80 ? '' : 'rojo' },
+      { k:'adq',   ic:'acquisition', v:'+' + mil(J.adqMes || 0) + '<span class="mut fsub">/mes</span>' },
+      { k:'rev',   ic:'revenue',     v:money(J.mrr) + '<span class="mut fsub">/mes</span>', si:J.rolN >= 1 },
+      { k:'rel',   ic:'reliability', v:Math.round(J.fiabPercibida) + (J.incidentesPuesto ? '<span class="mut fsub"> · ' + J.incidentesPuesto + ' caídas</span>' : '') },
+      { k:'evid',  ic:'evidence',    v:Math.round(J.evidencia) },
+      { k:'deuda', ic:'debt',        v:Math.round(J.deuda), cls:J.deuda >= 60 ? 'rojo' : J.deuda >= 40 ? 'ambar' : '' },
+      { k:'gate',  ic:'pmf',         v:okGate ? okGate.ok + '/' + okGate.total : '', si:!!okGate, cls:okGate && okGate.ok === okGate.total ? 'verde' : '' }
+    ];
+    var mios = [], otros = [], f;
+    for (i = 0; i < FILAS.length; i++) {
+      f = FILAS[i];
+      if (f.si === false) continue;
+      (ejes[f.k] ? mios : otros).push(f);
+    }
+    var filaHtml = function (f) {
+      return '<div class="fun' + (ejes[f.k] ? ' funmeta' : '') + '"><span class="fk">' + funIc(f.ic, f.cls) +
+        nombreEje(f.k) + (ejes[f.k] ? '<span class="ejechip chico' + (ejes[f.k] === 'reto' ? ' reto' : '') + '">' +
+        (ejes[f.k] === 'reto' ? 'reto' : 'mandato') + '</span>' : '') +
+        '</span><span class="fv num' + (f.cls ? ' ' + f.cls : '') + '">' + f.v + '</span></div>';
+    };
+    h += '<div class="caja2">' + rotPleg('ejes', tip('funnel','Te miden por'), otros.length);
+    for (i = 0; i < mios.length; i++) h += filaHtml(mios[i]);
+    if (secAbierta.ejes) for (i = 0; i < otros.length; i++) h += filaHtml(otros[i]);
     h += '</div>';
 
-    /* Salud del equipo y de la máquina: nada de esto es un mandato, pero se
-       cobra solo. Tres a la vista, el resto plegado. */
-    var extras = (J.rolN >= 2 ? 1 : 0) + (J.rolN >= 3 ? 2 : 0) + ((J.lupa || 0) >= 25 ? 1 : 0);
-    h += '<div class="caja2">' + (extras ? rotPleg('salud', 'Salud', extras) : '<div class="rot" style="margin-bottom:6px">Salud</div>');
-    h += barraEstado(tip('morale','Moral'), J.moral, false, null, 'morale');
-    if (secAbierta.salud) {
-      if ((J.lupa || 0) >= 25) h += barraEstado(tip('heat','la Lupa'), J.lupa, true, null, 'heat');
-      if (J.rolN >= 2) h += barraEstado(tip('load','Carga'), Motor.carga(J) * 100, true, 'ddia', 'load');
-      if (J.rolN >= 3) {
-        h += barraEstado(tip('ebudget','Presupuesto de error'), J.presupuestoError, false, 'sre', 'errorbudget');
-        h += barraEstado(tip('focus','Foco'), J.foco, false, 'grove', 'focus');
-      }
-    }
-    h += '<div class="pq mut" style="margin-top:6px">' + J.ing + ' ing · ' + J.prod + ' prod · ' + J.gtm + ' gtm' +
-         (J.rampa.length ? ' · <span class="ambar">' + J.rampa.length + ' en rampa</span>' : '') + '</div></div>';
-
-    h += '<div class="caja2">' + rotPleg('cap', tip('capfondeo','Capacidades'), 5);
-    if (secAbierta.cap || J.fichasCap > 0) {
-      h += barraEstado(tip('cap_prod','Producto'), J.capacidades.producto, false, null, null);
-      h += barraEstado(tip('cap_tec','Tecnología'), J.capacidades.tecnologia, false, null, null);
-      h += barraEstado(tip('cap_gtm','GTM'), J.capacidades.gtm, false, null, null);
-      h += barraEstado(tip('cap_gente','Org'), J.capacidades.gente, false, null, null);
-      h += barraEstado(tip('cap_cap','Fondeo'), J.capacidades.capital, false, null, null);
-    }
-    h += '<div class="pq mut" style="margin-top:6px">' + (J.capFondeo > 0 ?
-      'Fondeo para construir: quedan ' + money(J.capFondeo) + ' de capital levantado por convertir en capacidad.' :
-      '<span class="rojo">Sin combustible de fondeo</span> — las capacidades se erosionan. Levanta una ronda para reactivar el crecimiento.') + '</div>';
-    if (J.fichasCap > 0) {
-      var EJES = [['producto','Producto'],['tecnologia','Tecnología'],['gtm','GTM'],['gente','Org'],['capital','Fondeo']];
-      h += '<div class="pq mut" style="margin-top:8px">Gastar una ficha de capacidad (+8):</div><div style="margin-top:4px">';
-      for (i = 0; i < EJES.length; i++) {
-        h += '<span class="btn chico" data-act="gastar-ficha" data-eje="' + EJES[i][0] + '" style="margin:2px 4px 0 0">' + EJES[i][1] + '</span>';
-      }
-      h += '</div>';
-    }
-    h += '</div>';
-
-    /* Impacto: dónde vive de forma persistente el real-vs-esperado de cada
-       proyecto entregado, en vez de aparecer solo una vez en el resumen del
-       mes y desaparecer. */
+    /* Impacto: real contra esperado de lo ultimo entregado. Es la unica caja
+       que mira hacia atras, y por eso se queda corta — tres lineas. */
     if (J.historialImpacto && J.historialImpacto.length) {
-      h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Impacto</div>';
-      for (i = 0; i < J.historialImpacto.length; i++) {
+      h += '<div class="caja2"><div class="rot" style="margin-bottom:6px">Impacto reciente</div>';
+      for (i = 0; i < Math.min(3, J.historialImpacto.length); i++) {
         var hi = J.historialImpacto[i];
         var sub = hi.real < hi.esperado * 0.55 ? 'rojo' : hi.real >= hi.esperado * 0.8 ? 'verde' : 'ambar';
-        h += '<div class="pq" style="margin-top:4px"><b>' + esc(hi.n) + '</b> — <span class="' + sub + ' num">real ' + hi.real +
-          '</span> <span class="mut num">· esperabas ' + hi.esperado + '</span>' +
+        h += '<div class="pq" style="margin-top:4px"><b>' + esc(hi.n) + '</b> <span class="mut num">· real ' +
+          '</span><span class="' + sub + ' num">' + hi.real + '</span><span class="mut num"> de ' + hi.esperado + '</span>' +
           (hi.vec ? '<div style="margin-top:2px">' + chipsVec(hi.vec, ejeDe(J.mandatoId), true) + '</div>' : '') + '</div>';
       }
       h += '</div>';
     }
 
-    if (J.rolN >= 1) {
-      h += '<div class="caja2"><div class="rot" style="margin-bottom:4px">A quién estás llegando · ' + tip('fit','encaje') + '</div>';
-      for (i = 0; i < SEGMENTOS.length; i++) {
-        var s = SEGMENTOS[i], u2 = J.usuarios[s.id] || 0, f = Motor.fit(J, s.id);
-        var ab = Motor.abierto(J, s.id), g = Motor.compuerta(J, s.id);
-        var cls = f > 0.65 ? 'v' : f > 0.35 ? 'a' : 'r';
-        h += '<div class="seg"><div class="l"><span class="nm">' + esc(s.nombre) +
-          (!ab ? ' <span class="pill">todavía no</span>' : (g < 0.5 ? ' <span class="pill rojo">bloqueado</span>' : '')) +
-          '</span><span class="num mut">' + mil(u2) + '</span></div>' +
-          '<div class="track"><i class="' + cls + '" style="width:' + Math.round(f * 100) + '%"></i></div></div>';
+    if (okGate) {
+      h += '<div class="caja2"><div class="rot" style="margin-bottom:5px">' + esc(J.gateNombre) +
+        ' <span class="mut">' + okGate.ok + ' de ' + okGate.total + '</span> ' + chip('chasm') + '</div>';
+      for (i = 0; i < okGate.reqs.length; i++) {
+        h += '<div class="req ' + (okGate.reqs[i].ok ? 'verde' : 'mut') + '">' + (okGate.reqs[i].ok ? '✓' : '○') + ' ' + esc(okGate.reqs[i].txt) + '</div>';
       }
       h += '</div>';
     }
 
-    if (J.gateRevelado) {
-      var r = Motor.requisitosGate(J);
-      h += '<div class="caja2"><div class="rot" style="margin-bottom:5px">' + esc(J.gateNombre) + ' ' + chip('chasm') + '</div>';
-      for (i = 0; i < r.length; i++) {
-        h += '<div class="req ' + (r[i].ok ? 'verde' : 'mut') + '">' + (r[i].ok ? '✓' : '○') + ' ' + esc(r[i].txt) + '</div>';
+    /* Todo lo de abajo es contexto: se consulta, no se decide con ello cada
+       mes. Vive plegado detras de un solo click. */
+    h += '<div class="caja2">' + rotPleg('mas', 'La empresa', 4);
+    if (secAbierta.mas) {
+      h += '<div class="fun"><span class="fk">Valoración</span><span class="fv num">' + money(J.valoracion) + '</span></div>';
+      h += '<div class="fun"><span class="fk">Reputación</span><span class="fv num">' + Math.round(C.reputacion) + '</span></div>';
+      var profit = J.mrr - Motor.burnMensual(J);
+      if (J.rolN >= 1) h += '<div class="fun"><span class="fk">Ganancia</span><span class="fv num ' + (profit >= 0 ? 'verde' : 'rojo') + '">' + (profit >= 0 ? '+' : '') + money(profit) + '</span></div>';
+      if ((J.lupa || 0) >= 10) h += '<div class="fun"><span class="fk">' + tip('heat','la Lupa') + '</span><span class="fv num ' + (J.lupa >= 60 ? 'rojo' : 'ambar') + '">' + Math.round(J.lupa) + '</span></div>';
+
+      h += '<div class="subrot">Salud</div>';
+      h += barraEstado(tip('morale','Moral'), J.moral, false, null, 'morale');
+      if (J.rolN >= 2) h += barraEstado(tip('load','Carga'), Motor.carga(J) * 100, true, 'ddia', 'load');
+      if (J.rolN >= 3) {
+        h += barraEstado(tip('ebudget','Presupuesto de error'), J.presupuestoError, false, 'sre', 'errorbudget');
+        h += barraEstado(tip('focus','Foco'), J.foco, false, 'grove', 'focus');
+      }
+
+      h += '<div class="subrot">' + tip('capfondeo','Capacidades') + '</div>';
+      var EJC = [['producto','Producto'],['tecnologia','Tecnología'],['gtm','GTM'],['gente','Org'],['capital','Fondeo']];
+      for (i = 0; i < EJC.length; i++) {
+        var cv = Math.round(J.capacidades[EJC[i][0]]);
+        h += '<div class="capf"><span class="capn">' + EJC[i][1] + '</span>' +
+          '<span class="track"><i class="l" style="width:' + Math.max(2, Math.min(100, cv)) + '%"></i></span>' +
+          '<span class="capv num">' + cv + '</span></div>';
+      }
+
+      if (J.rolN >= 1) {
+        h += '<div class="subrot">A quién estás llegando · ' + tip('fit','encaje') + '</div>';
+        for (i = 0; i < SEGMENTOS.length; i++) {
+          var sg = SEGMENTOS[i], u2 = J.usuarios[sg.id] || 0, ft = Motor.fit(J, sg.id);
+          var ab = Motor.abierto(J, sg.id), g = Motor.compuerta(J, sg.id);
+          h += '<div class="seg"><div class="l"><span class="nm">' + esc(sg.nombre) +
+            (!ab ? ' <span class="pill">todavía no</span>' : (g < 0.5 ? ' <span class="pill rojo">bloqueado</span>' : '')) +
+            '</span><span class="num mut">' + mil(u2) + '</span></div>' +
+            '<div class="track"><i class="' + (ft > 0.65 ? 'v' : ft > 0.35 ? 'a' : 'r') + '" style="width:' + Math.round(ft * 100) + '%"></i></div></div>';
+        }
+      }
+      h += '<div class="pq mut" style="margin-top:8px">' + J.ing + ' ing · ' + J.prod + ' prod · ' + J.gtm + ' gtm' +
+(J.rampa.length ? ' · <span class="ambar">' + J.rampa.length + ' en rampa</span>' : '') + '</div>';
+    }
+    /* el combustible de fondeo si falta: no es contexto, es una alarma */
+    if (!(J.capFondeo > 0)) {
+      h += '<div class="alarma">' + svgIc('debt') + '<span><b>Sin combustible de fondeo</b> — las capacidades se erosionan. Levanta una ronda para reactivar el crecimiento.</span></div>';
+    }
+    if (J.fichasCap > 0) {
+      var EJF = [['producto','Producto'],['tecnologia','Tecnología'],['gtm','GTM'],['gente','Org'],['capital','Fondeo']];
+      h += '<div class="pq" style="margin-top:8px"><b class="ambar">🏅 ' + J.fichasCap + ' ficha' + (J.fichasCap > 1 ? 's' : '') +
+        '</b> — gástala en una capacidad (+8):</div><div style="margin-top:4px">';
+      for (i = 0; i < EJF.length; i++) {
+        h += '<span class="btn chico" data-act="gastar-ficha" data-eje="' + EJF[i][0] + '" style="margin:2px 4px 0 0">' + EJF[i][1] + '</span>';
       }
       h += '</div>';
     }
-
+    h += '</div>';
 
     $('panel').innerHTML = h;
   }
@@ -1684,18 +1692,19 @@
     for (id in plan.asig) if (plan.asig.hasOwnProperty(id)) {
       if ((J.enVuelo[id] || 0) + plan.asig[id] >= Motor.costoDe(J, id)) saliendo++;
     }
-    var h = '<div class="pts"><span class="ambar">⚒ ' + enProyectos() + ' pts</span> en ' +
-      plan.orden.length + ' proyecto' + (plan.orden.length === 1 ? '' : 's') +
-      (saliendo ? ' · <span class="verde">' + saliendo + ' por salir</span>' : '') +
-      (ocio > 0 ? ' · <span class="rojo">' + ocio + ' ociosos</span>' : '') + '</div>';
+    /* una sola cuenta: cuantos de tus puntos estan colocados. Lo demas
+       (proyectos abiertos, cuantos salen) ya se ve en las tarjetas. */
+    var total = Motor.capacidadPropia(J), puestos = total - ocio;
+    var h = '<div class="pts"><b class="num' + (ocio > 0 ? ' ambar' : '') + '">' + puestos + ' de ' + total +
+      '</b> puntos asignados' + (saliendo ? ' · <span class="verde">' + saliendo + ' sale' + (saliendo === 1 ? '' : 'n') + ' este mes</span>' : '') + '</div>';
     if (J.esFundador && !J.levantando) h += '<span class="btn chico" data-act="ronda" style="margin-right:10px">Salir a levantar</span>';
-    h += '<span class="btn pri" data-act="ejecutar">3 · Cerrar el mes</span>';
+    h += '<span class="btn pri" data-act="ejecutar">Cerrar el mes</span>';
     $('barra').innerHTML = h;
   }
 
   function renderJuego() {
     ir('p-juego');
-    renderHud(); renderMandato(); renderRitmo(); renderEra(); renderRetos();
+    renderHud(); renderRitmo(); renderEra();
     renderTabs();
     renderAsignacion(); renderBacklog(); renderPanel(); renderBarra();
   }
@@ -1827,7 +1836,11 @@
     return null;
   }
 
+  /* el ultimo cierre mostrado, para poder repintarlo cuando se abre o cierra
+     el bloque de teoria sin volver a simular nada */
+  var ultimoResultado = null;
   function mostrarResultado(log, titulo, esDecision, libroTeoria, decisionTxt) {
+    ultimoResultado = [log, titulo, esDecision, libroTeoria, decisionTxt];
     var h = '<div class="rot">' + titulo + '</div><h2>' +
             (esDecision ? 'Decidido' : 'Qué pasó') + '</h2><div class="cuerpo2 scroll">';
     if (!log.length) h += '<div class="pq mut">Un mes sin sorpresas. A veces es justo lo que necesitas.</div>';
@@ -1861,20 +1874,30 @@
       h += '<div class="jugada">' + svgIc('trophy') + '<div class="jtx">' + jug + '</div></div>';
     }
 
+    /* Lo entregado en grilla de dos columnas, como el diseno guardado: cuatro
+       entregas ocupaban cuatro filas anchas y empujaban todo lo demas fuera de
+       la pantalla. Cada tarjeta dice nombre, real contra esperado, y los
+       chips — nada mas. */
     if (ships.length) {
-      h += '<div class="rot" style="margin:12px 0 4px">Salió este mes</div>';
+      h += '<div class="rot" style="margin:14px 0 6px">Salió este mes</div><div class="shipgrid">';
       for (i = 0; i < ships.length; i++) {
         var s2 = ships[i].ship;
         var metaMet3 = ejeDe(J.mandatoId);
-        h += '<div class="res-ship"><div class="ic">' + (ships[i].tipo === 'bueno' ? '<span class="verde">▲</span>' : '<span class="rojo">▼</span>') + '</div>' +
-          '<div class="tx"><b>' + esc(s2.n) + '</b> — impacto real ' + s2.real + ', esperabas ' + s2.esperado +
-          (s2.real < s2.esperado * 0.55 ? ' <span class="rojo">(construiste sin saber)</span>' : '') +
-          '<div style="margin-top:4px">' + chipsVec(s2.vec, metaMet3, true) + '</div></div></div>';
+        var ciego = s2.real < s2.esperado * 0.55;
+        h += '<div class="shipc' + (ships[i].tipo === 'bueno' ? ' ok' : ' mal') + '">' +
+          '<div class="sn">' + (ships[i].tipo === 'bueno' ? '<span class="verde">▲</span>' : '<span class="rojo">▼</span>') +
+            '<b>' + esc(s2.n) + '</b></div>' +
+          '<div class="sm mut">real <b class="num">' + s2.real + '</b> · esperabas ' + s2.esperado +
+            (ciego ? ' <span class="rojo">(a ciegas)</span>' : '') + '</div>' +
+          '<div class="sc">' + chipsVec(s2.vec, metaMet3, true) + '</div></div>';
       }
+      h += '</div>';
     }
 
-    if (eventos.length) {
-      h += '<div class="rot" style="margin:12px 0 4px">' + (esDecision ? 'Lo que siguió' : 'También este mes') + '</div>';
+    /* Los eventos y las fichas nuevas de la biblioteca eran dos secciones con
+       dos titulos para el mismo tipo de renglon. Van juntas. */
+    if (eventos.length || notas.length) {
+      h += '<div class="rot" style="margin:14px 0 4px">' + (esDecision ? 'Lo que siguió' : 'También este mes') + '</div>';
       for (i = 0; i < eventos.length; i++) {
         var l = eventos[i];
         var ic = l.tipo === 'bueno' ? '<span class="verde">▲</span>' :
@@ -1882,20 +1905,17 @@
         h += '<div class="linea"><div class="ic">' + ic + '</div><div class="tx">' +
              esc(l.texto) + ' ' + (l.libro ? chip(l.libro) : '') + '</div></div>';
       }
-    }
-
-    if (notas.length) {
-      h += '<div class="rot" style="margin:12px 0 4px">Nuevo en la biblioteca</div>';
-      for (i = 0; i < notas.length; i++) {
-        var ln = notas[i];
-        h += '<div class="linea"><div class="ic"><span class="azul">✎</span></div><div class="tx">' +
-             esc(ln.texto) + ' ' + (ln.libro ? chip(ln.libro) : '') + '</div></div>';
+      if (notas.length) {
+        var chipsN = '';
+        for (i = 0; i < notas.length; i++) if (notas[i].libro) chipsN += chip(notas[i].libro) + ' ';
+        h += '<div class="linea"><div class="ic"><span class="azul">✎</span></div><div class="tx mut">' +
+             notas.length + (notas.length === 1 ? ' tarjeta nueva' : ' tarjetas nuevas') + ' en la biblioteca ' + chipsN + '</div></div>';
       }
     }
 
-    /* la teoria del mes: en una decision es el libro del dilema; en un mes
-       normal, el libro que la situacion dispara hoy. Antes solo aparecia al
-       decidir — y el mes corriente es justo cuando hace falta el porque. */
+    /* La teoria del mes ocupaba un bloque de cinco renglones al pie de cada
+       cierre. Queda el titular — el libro y su autor — y el cuerpo se abre
+       tocandolo. En una decision arranca abierto: ahi el porque ES el premio. */
     if (!esDecision && !libroTeoria && J) {
       var lm = libroDelDia(J, C);
       if (lm) libroTeoria = lm.id;
@@ -1904,11 +1924,13 @@
       var lt = libroPorId(libroTeoria);
       var ap2 = J ? aplicarLibro(libroTeoria, J) : null;
       if (lt) {
-        h += '<div class="teoria-caso" style="margin-top:8px">' +
+        var abierto = esDecision || teoriaAbierta;
+        h += '<div class="teoria-caso' + (abierto ? ' on' : '') + '" style="margin-top:12px">' +
           (decisionTxt ? '<div class="pq mut" style="margin-bottom:6px">Elegiste: “' + esc(decisionTxt) + '”</div>' : '') +
-          '<div class="rot" style="margin-bottom:4px">La teoría · ' + esc(lt.titulo) + ' — ' + esc(lt.autor) + '</div>' +
-          '<div class="pq" style="line-height:1.5">' + esc(lt.idea) + '</div>' +
-          (ap2 ? '<div class="pq caso-linea">' + esc(ap2) + '</div>' : '') +
+          '<div class="rot teoriat" data-act="teoria">La teoría · ' + esc(lt.titulo) + ' — ' + esc(lt.autor) +
+            (esDecision ? '' : '<span class="verplus">' + (abierto ? 'ocultar' : 'leer') + '</span>') + '</div>' +
+          (abierto ? '<div class="pq" style="line-height:1.5;margin-top:6px">' + esc(lt.idea) + '</div>' +
+            (ap2 ? '<div class="pq caso-linea">' + esc(ap2) + '</div>' : '') : '') +
           '</div>';
       }
     }
@@ -2585,6 +2607,11 @@
     if (!v) return;
 
     if (v === 'filtro-eje') { soloMandato = !soloMandato; renderBacklog(); return; }
+    if (v === 'teoria') {
+      teoriaAbierta = !teoriaAbierta;
+      if (ultimoResultado) mostrarResultado.apply(null, ultimoResultado);
+      return;
+    }
     if (v === 'ir-perfil') { renderPerfil(); ir('p-perfil'); }
     else if (v === 'nueva') { empezarCarrera(false); }
     else if (v === 'semanal') { empezarCarrera(true); }
@@ -2608,7 +2635,7 @@
     else if (v === 'gastar-ficha') {
       if (J) {
         var eje = attr(t, 'data-eje');
-        if (eje && Motor.gastarFicha(J, eje)) { guardar(); renderRetos(); renderPanel(); }
+        if (eje && Motor.gastarFicha(J, eje)) { guardar(); renderRitmo(); renderPanel(); }
       }
     }
     else if (v === 'continuar') {

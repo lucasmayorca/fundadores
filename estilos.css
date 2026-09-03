@@ -190,11 +190,13 @@ h2, h3 { font-weight:500; }
   display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
   padding:0 22px; font-size:12px; overflow:hidden; white-space:nowrap;
 }
-.era .nombre-era { color:var(--color-accent-300); font-weight:500; margin-right:12px; }
+.era > * { -webkit-flex-shrink:0; flex-shrink:0; }
+.era .nombre-era { color:var(--color-accent-300); font-weight:500; margin-right:12px;
+  overflow:hidden; text-overflow:ellipsis; }
 /* la noticia cede el ancho: sin flex:1 + min-width:0 no se recorta y empuja
    los pips fuera del ticker (en un telefono se los come enteros) */
 .era .noticia { color:var(--color-neutral-600); overflow:hidden; text-overflow:ellipsis;
-  -webkit-flex:1; flex:1; min-width:0; }
+  -webkit-flex:1 1 auto; flex:1 1 auto; min-width:0; }
 /* pips estilo Age of Empires, pegados al ticker: a la izquierda la Era del
    mundo (exogena), a la derecha tu Edad — el escalon del ESCALAFON en el que
    estas. Lo unico de esa barra que depende de vos. */
@@ -211,16 +213,25 @@ h2, h3 { font-weight:500; }
 .era-banner .pq { margin-top:2px; }
 
 /* ---------- HUD ---------- */
+/* Cabecera del mes: una sola fila. Fase, mandato con su barra, y a la derecha
+   los tres datos de contexto. El HUD viejo repetia aca cinco numeros que ya
+   estan en el panel; el diseno guardado los saca y deja solo el mandato. */
 .hud {
-  height:64px; border-bottom:1px solid var(--color-divider); padding:0 22px;
+  min-height:58px; border-bottom:1px solid var(--color-divider); padding:8px 22px;
   display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
   background:var(--color-surface);
 }
+.hmand { -webkit-flex:1; flex:1; min-width:0; margin:0 18px; }
+.hmt { font-size:14px; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hmb { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:10px; }
+.hmb .track { -webkit-flex:1; flex:1; max-width:340px; }
+.hmb .hmv { font-size:12px; color:var(--color-neutral-300); white-space:nowrap; }
 .hudi { margin-right:22px; }
 .hudi .k { font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--color-neutral-600); }
 .hudi .v { font-size:17px; font-weight:400; margin-top:2px; }
-.hud .der { margin-left:auto; text-align:right;
-  display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:12px; }
+.hud .der { margin-left:auto; margin-right:0; text-align:right;
+  display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:22px; }
+.hud .der .hi { text-align:right; }
 
 /* Lupa del regulador: cinco calaveras estilo "wanted level". Es la unica
    metrica del HUD que no es un numero — se lee de reojo, que es justo lo que
@@ -235,12 +246,8 @@ h2, h3 { font-weight:500; }
 .lupa.alta .ic.on:last-of-type { -webkit-animation:latir 1.6s infinite; animation:latir 1.6s infinite; }
 
 /* barra de mandato + político */
-.mandatobar {
-  height:42px; border-bottom:1px solid var(--color-divider); background:var(--color-bg);
-  display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
-  padding:0 22px; font-size:12.5px;
-}
-.mandatobar .track { -webkit-flex:1; flex:1; margin:0 12px; }
+.eraDer { margin-left:auto; display:-webkit-flex; display:flex;
+  -webkit-align-items:center; align-items:center; gap:14px; -webkit-flex-shrink:0; flex-shrink:0; }
 .ritmobar {
   min-height:28px; border-bottom:1px solid var(--color-divider); background:var(--color-sunken);
   display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
@@ -254,13 +261,10 @@ h2, h3 { font-weight:500; }
 .track.mini i { height:4px; }
 
 /* ---------- challenges + age track ---------- */
-.retosbar {
-  min-height:28px; border-bottom:1px solid var(--color-divider); background:var(--color-sunken);
-  display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
-  -webkit-flex-wrap:wrap; flex-wrap:wrap; padding:5px 22px; font-size:12px; gap:14px;
-}
-.retosbar:empty { display:none; border-bottom:none; }
-.reto { color:var(--color-neutral-400); }
+/* los retos ya no tienen barra propia: viajan a la derecha de la de ritmo */
+.ritmobar .retos { margin-left:auto; display:-webkit-flex; display:flex;
+  -webkit-align-items:center; align-items:center; gap:16px; -webkit-flex-shrink:0; flex-shrink:0; }
+.reto { color:var(--color-neutral-500); font-size:11.5px; white-space:nowrap; }
 .reto.hecho { color:#35c46a; }
 .reto.ficha { color:#e8a33d; }
 
@@ -396,7 +400,9 @@ h2, h3 { font-weight:500; }
 .post .ps { font-size:10.5px; color:var(--color-neutral-600); margin-top:1px; }
 
 /* ---------- backlog visual ---------- */
-.viz { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; margin-top:4px; }
+.viz { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  -webkit-flex-wrap:wrap; flex-wrap:wrap; margin-top:5px; gap:2px 0; }
+.viz .dots { -webkit-flex-shrink:0; flex-shrink:0; }
 .vlbl { font-size:9.5px; letter-spacing:0.8px; text-transform:uppercase; color:var(--color-neutral-700); margin:0 5px 0 0; }
 .dots { margin-right:12px; }
 .dots i { display:inline-block; width:8px; height:8px; border-radius:4px; background:var(--color-neutral-800); margin-right:3px; }
@@ -871,19 +877,30 @@ body.movil .hudi .v { font-size:16px; }
 body.movil .hud .der { margin-left:0; width:auto; padding:0; text-align:left; }
 body.movil .hud .der .btn.chico { padding:5px 9px; min-height:0; font-size:11px; }
 
-body.movil .mandatobar {
-  height:auto; -webkit-flex-wrap:wrap; flex-wrap:wrap;
-  padding:6px 12px 7px 12px; font-size:11.5px; line-height:1.5;
-}
-body.movil .mandatobar .track { -webkit-flex:none; flex:none; width:100%; margin:5px 0 3px 0; }
-/* las sangrías de 14px del layout ancho dejan huecos raros al envolver */
-body.movil .mandatobar span[style] { margin-left:8px !important; }
-body.movil .mandatobar .fasechip.mini { margin-right:8px; }
-body.movil .ritmobar { padding:5px 12px; font-size:11.5px; }
+/* en telefono la cabecera envuelve: mandato arriba, los tres datos de
+   contexto abajo en una fila propia */
+body.movil .hud { -webkit-flex-wrap:wrap; flex-wrap:wrap; padding:7px 12px; }
+body.movil .hmand { -webkit-flex:1 1 100%; flex:1 1 100%; margin:6px 0 0 0; }
+body.movil .hmt { white-space:normal; font-size:13px; }
+body.movil .hmb .track { max-width:none; }
+body.movil .hud .der { -webkit-flex:1 1 100%; flex:1 1 100%; margin-top:7px; gap:16px; }
+body.movil .hud .der .hi { text-align:left; }
+body.movil .ritmobar { padding:5px 12px; font-size:11.5px;
+  -webkit-flex-wrap:wrap; flex-wrap:wrap; }
+body.movil .ritmobar .retos { margin-left:0; -webkit-flex:1 1 100%; flex:1 1 100%;
+  margin-top:4px; gap:12px; }
 body.movil .era { height:29px; padding:0 12px; font-size:11.5px; }
-body.movil .era .erapips { padding-left:10px; gap:3px; }
-body.movil .era .erapips i { width:9px; }
-body.movil .retosbar { padding:5px 12px; font-size:11.5px; gap:10px; }
+/* en telefono no entran los pips, la Lupa y la biblioteca en el mismo
+   renglon: los pips se van — la Edad ya esta escrita en la cabecera */
+body.movil .era .erapips { display:none; }
+/* en telefono no entran el nombre de la era, la noticia, la Lupa y la
+   biblioteca: la noticia se va (ya sale entera en el cierre del mes) y el
+   nombre de la era cede el ancho que haga falta */
+body.movil .era .noticia, body.movil .era .pill { display:none; }
+body.movil .era .nombre-era { -webkit-flex:1 1 auto; flex:1 1 auto; min-width:0; margin-right:8px; }
+body.movil .eraDer { gap:9px; }
+body.movil .eraDer .btn.chico { padding:4px 8px; min-height:0; font-size:10.5px; }
+body.movil .lupa .lupak { display:none; }
 
 /* ---------- pantalla de juego: dos pestañas en vez de dos columnas ---------- */
 /* ojo: `.der` tambien es la clase del hueco derecho del HUD, asi que estas
@@ -993,3 +1010,64 @@ body.movil.paisaje .girar {
 /* en telefono el filtro no cabe al lado del rotulo: baja a su propia linea */
 body.movil .filtroeje { float:none; display:inline-block; margin:5px 0 0 0; }
 body.movil .comomover { margin-left:0; display:block; margin-top:3px; }
+
+/* ---------- panel: tira de supervivencia y bloques plegados ---------- */
+/* caja, runway y usuarios no son una seccion: son tres numeros que se miran
+   de reojo, sin titulo ni caja alrededor */
+.tira { display:-webkit-flex; display:flex; gap:18px; padding:2px 2px 12px 2px; }
+.tira span { display:block; }
+.tira i { display:block; font-style:normal; font-size:9.5px; letter-spacing:0.08em;
+  text-transform:uppercase; color:var(--color-neutral-600); }
+.tira b { display:block; font-size:15px; font-weight:400; margin-top:2px; }
+
+/* subtitulo dentro de un bloque plegado: separa sin abrir otra caja */
+.subrot { font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--color-neutral-600); margin:12px 0 5px 0;
+  padding-top:9px; border-top:1px solid var(--color-divider); }
+
+/* capacidades en una linea: nombre, barra, numero — como el diseno guardado */
+.capf { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  gap:8px; margin-top:7px; }
+.capf .capn { width:64px; font-size:12px; color:var(--color-neutral-300); -webkit-flex-shrink:0; flex-shrink:0; }
+.capf .track { -webkit-flex:1; flex:1; }
+.capf .capv { width:22px; text-align:right; font-size:11.5px; color:var(--color-neutral-500); }
+
+/* la falta de fondeo no es contexto plegable: es una alarma */
+.alarma { display:-webkit-flex; display:flex; gap:8px; margin-top:10px; padding:9px 10px;
+  border-radius:var(--radius-sm); background:color-mix(in srgb, #e2564a 12%, var(--color-neutral-900));
+  font-size:11.5px; line-height:1.45; color:#f3b0aa; }
+.alarma .ic { width:14px; height:14px; -webkit-flex-shrink:0; flex-shrink:0; margin-top:2px; color:#e2564a; }
+.alarma b { color:#f7cdc9; }
+
+/* ---------- backlog: menos elementos por tarjeta ---------- */
+/* la confianza es una nota al margen del rotulo, no otra pill compitiendo */
+.conf { text-transform:none; letter-spacing:0; font-size:11px; margin-left:8px;
+  color:var(--color-neutral-600); cursor:pointer; }
+.conf:hover { color:var(--color-accent-100); }
+/* la flecha de etapa viaja dentro del talle: es una nota sobre el precio */
+.esf .etapa { margin-left:3px; font-size:8px; vertical-align:1px; opacity:0.9; }
+/* la descripcion es el disparador de "mas detalle": un elemento menos */
+.ap .d2[data-detalle] { cursor:pointer; }
+.ap .d2[data-detalle]:hover { color:var(--color-neutral-400); }
+.avisoeje.mini { border-left-color:var(--color-neutral-700); padding:5px 10px;
+  color:var(--color-neutral-500); }
+
+/* ---------- cierre del mes: la grilla de entregas ---------- */
+/* cuatro entregas eran cuatro filas anchas que empujaban el resto fuera de la
+   pantalla; en dos columnas el mes entra de una sola mirada */
+.shipgrid { display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap; gap:9px; }
+.shipc { -webkit-flex:1 1 calc(50% - 5px); flex:1 1 calc(50% - 5px); min-width:0;
+  padding:11px 13px; border-radius:var(--radius-md); background:var(--color-neutral-900);
+  box-shadow:var(--shadow-sm); }
+.shipc.ok { box-shadow:inset 0 0 0 1px color-mix(in srgb, #35c46a 30%, transparent); }
+.shipc.mal { box-shadow:inset 0 0 0 1px color-mix(in srgb, #e2564a 26%, transparent); }
+.shipc .sn { font-size:13.5px; display:-webkit-flex; display:flex; gap:7px; -webkit-align-items:baseline; align-items:baseline; }
+.shipc .sn b { -webkit-flex:1; flex:1; font-weight:500; min-width:0; }
+.shipc .sm { font-size:11.5px; margin:4px 0 7px 0; }
+.shipc .sc { display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap; }
+/* la teoria se pliega: queda el titular, el cuerpo se abre tocandolo */
+.teoriat { cursor:pointer; }
+.teoriat .verplus { float:right; text-transform:none; letter-spacing:0; font-size:10.5px;
+  color:var(--color-neutral-600); }
+.teoriat:hover .verplus { color:var(--color-accent-100); }
+body.movil .shipc { -webkit-flex:1 1 100%; flex:1 1 100%; }
