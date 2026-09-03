@@ -1233,6 +1233,28 @@ body.movil .shipc { -webkit-flex:1 1 100%; flex:1 1 100%; }
 /* el riel de acento marca las metricas que componen tu mandato */
 .fun.funmide { padding-left:8px; margin-left:-2px; border-left:2px solid var(--color-accent); }
 .funic.mide { color:var(--color-accent); }
+
+/* Eje desplegable: al tocarlo abre sus submetricas debajo, en la misma fila
+   donde ya estaba el numero — no en un cuadro aparte. El eje pasa a columna, y
+   align-items:stretch tiene que pisar el center que .fun trae de arriba: en un
+   contenedor column, center encoge cada fila al ancho de su propio texto y el
+   desglose queda en un tercio del panel, con los nombres cortados. */
+.fun.funexp { -webkit-flex-direction:column; flex-direction:column;
+  -webkit-align-items:stretch; align-items:stretch; padding:5px 0; cursor:pointer; }
+.fun.funexp .funtop { display:-webkit-flex; display:flex;
+  -webkit-align-items:center; align-items:center; }
+.submetricas { max-height:0; overflow:hidden;
+  -webkit-transition:max-height .2s ease; transition:max-height .2s ease;
+  /* 25px = el ancho del icono (19) mas su margen (6): alinea los nombres del
+     desglose con el nombre del eje de arriba */
+  margin:0 0 0 -2px; padding-left:25px; border-left:1px solid var(--color-divider); }
+.submetricas.open { max-height:400px; }
+.submet { display:-webkit-flex; display:flex; -webkit-align-items:baseline; align-items:baseline;
+  gap:8px; padding:3px 0 0; font-size:11px; color:var(--color-neutral-600); }
+.submet .sn { -webkit-flex:1 1 auto; flex:1 1 auto;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.submet .sv { -webkit-flex:0 0 auto; flex:0 0 auto; color:var(--color-neutral-400); }
+.submetricas.open .submet:last-child { padding-bottom:4px; }
 .rot .rotv { float:right; text-transform:none; letter-spacing:0; font-size:11px; color:var(--color-accent-300); }
 .imp { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:8px;
   padding:5px 0; border-bottom:1px solid var(--color-divider); font-size:12px; }

@@ -1805,31 +1805,20 @@
       var eje = EJES[k];
       var subs = tieneSubs ? Motor.submetricasDelEje(J, k) : null;
       var conSubmetricas = tieneSubs && eje && eje.submetricas && subs;
-      h += '<div class="fun' + (mide ? ' funmide' : '') + '" ' +
-        (conSubmetricas ? 'onclick="var s=this.querySelector(\'.submetricas\');if(s){s.classList.toggle(\'open\');s.style.maxHeight=s.classList.contains(\'open\')?\'400px\':\'0px\';}" style="cursor:pointer"' : '') +
-        /* align-items:stretch pisa el center de .fun en estilos.css: en un
-           contenedor column, center encoge las filas al ancho de su texto y las
-           submétricas quedaban en 138px de los 338 del panel, truncadas. */
-        'style="display:flex;flex-direction:column;align-items:stretch;gap:' +
-        (conSubmetricas ? '6' : '0') + 'px;padding:8px 0">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:3.5px 0">' +
-          '<div style="display:flex;align-items:center;flex:1 1 auto">' +
-            '<span class="funic' + (mide ? ' mide' : '') + '">' + svgIc(EJES[k].ic) + '</span>' +
-            '<span class="fk">' + nombreEje(k) + '</span>' +
-          '</div>' +
+      h += '<div class="fun' + (mide ? ' funmide' : '') + (conSubmetricas ? ' funexp' : '') + '"' +
+        (conSubmetricas ? ' onclick="var s=this.querySelector(\'.submetricas\');if(s)s.classList.toggle(\'open\')"' : '') + '>' +
+        '<div class="funtop">' +
+          '<span class="funic' + (mide ? ' mide' : '') + '">' + svgIc(EJES[k].ic) + '</span>' +
+          '<span class="fk">' + nombreEje(k) + '</span>' +
           '<span class="fv num">' + VALOR[k] + '</span>' +
         '</div>';
       if (conSubmetricas) {
-        /* el indent de 25px alinea los nombres con el label del eje de arriba
-           (ícono de 19px + su margen de 6px) */
-        h += '<div class="submetricas" style="max-height:0;overflow:hidden;transition:max-height 0.2s ease;display:flex;flex-direction:column;gap:3px;padding:0 0 0 25px;border-left:1px solid var(--color-divider);margin-left:-2px">';
+        h += '<div class="submetricas">';
         for (var si = 0; si < eje.submetricas.length; si++) {
           var sub = eje.submetricas[si];
           var valor = subs[sub.id] || 0;
-          h += '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--color-neutral-600);padding:2px 0">' +
-            '<span style="flex:1 1 auto;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">' + esc(sub.n) + '</span>' +
-            '<span class="num" style="color:var(--color-neutral-400);text-align:right;margin-left:8px;flex:0 0 auto">' + Math.round(valor * 10) / 10 + '</span>' +
-          '</div>';
+          h += '<div class="submet"><span class="sn">' + esc(sub.n) + '</span>' +
+            '<span class="sv num">' + (Math.round(valor * 10) / 10) + '</span></div>';
         }
         h += '</div>';
       }
