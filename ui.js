@@ -1415,15 +1415,87 @@
      segmento de la barra del mandato y con el riel de la metrica en el panel:
      el mismo eje se ve igual en los tres lugares. */
   var EJES = {
-    adq:   { n:'Adquisición',  ab:'ADQ',  ic:'acquisition', est:'crec' },
-    act:   { n:'Activación',   ab:'ACT',  ic:'activation',  est:'desc' },
-    ret:   { n:'Retención',    ab:'RET',  ic:'retention',   est:null   },
-    rel:   { n:'Confiabilidad',ab:'CONF', ic:'reliability', est:'fiab' },
-    rev:   { n:'Ingresos',     ab:'REV',  ic:'revenue',     est:'crec' },
-    ref:   { n:'Referidos',    ab:'REF',  ic:'referral',    est:'crec' },
-    gate:  { n:'Compuerta',    ab:'Compuerta', ic:'pmf',    est:null   },
-    evid:  { n:'Evidencia',    ab:'Evidencia', ic:'evidence', est:'desc' },
-    deuda: { n:'Deuda',        ab:'Deuda', ic:'debt',       est:'plat', invertido:true }
+    adq: {
+      n:'Adquisición', ab:'ADQ', ic:'acquisition', est:'crec',
+      submetricas: [
+        { id:'cac', n:'CAC (costo/cliente)', fmt:'num' },
+        { id:'mix_canal', n:'Mix de canales', fmt:'pct' },
+        { id:'conv_rate', n:'Tasa de conversión', fmt:'pct' },
+        { id:'visit_signup', n:'Visit-to-signup', fmt:'pct' }
+      ]
+    },
+    act: {
+      n:'Activación', ab:'ACT', ic:'activation', est:'desc',
+      submetricas: [
+        { id:'time_value', n:'Time-to-value (d1)', fmt:'num' },
+        { id:'feature_adopt', n:'Core feature adoption', fmt:'pct' },
+        { id:'onboard', n:'Onboarding completion', fmt:'pct' },
+        { id:'task_success', n:'Task success rate', fmt:'pct' }
+      ]
+    },
+    ret: {
+      n:'Retención', ab:'RET', ic:'retention', est:null,
+      submetricas: [
+        { id:'churn', n:'Churn rate mensual', fmt:'pct' },
+        { id:'dau_mau', n:'DAU/MAU ratio', fmt:'pct' },
+        { id:'reactivation', n:'Reactivation rate', fmt:'pct' },
+        { id:'stickiness', n:'Feature stickiness', fmt:'pct' }
+      ]
+    },
+    rel: {
+      n:'Fiabilidad', ab:'CONF', ic:'reliability', est:'fiab',
+      submetricas: [
+        { id:'uptime', n:'Uptime %', fmt:'pct' },
+        { id:'error_rate', n:'Error rate por request', fmt:'pct' },
+        { id:'mttr', n:'MTTR (minutos)', fmt:'num' },
+        { id:'latency_p95', n:'API latency p95', fmt:'num' }
+      ]
+    },
+    rev: {
+      n:'Ingresos', ab:'REV', ic:'revenue', est:'crec',
+      submetricas: [
+        { id:'arpu', n:'ARPU ($/usuario)', fmt:'num' },
+        { id:'ltv_cac', n:'LTV/CAC ratio', fmt:'ratio' },
+        { id:'expansion', n:'Expansion revenue', fmt:'pct' },
+        { id:'payment_friction', n:'Fricción en pago', fmt:'pct' }
+      ]
+    },
+    ref: {
+      n:'Referidos', ab:'REF', ic:'referral', est:'crec',
+      submetricas: [
+        { id:'viral_k', n:'Viral coefficient (k)', fmt:'ratio' },
+        { id:'nps', n:'Net Promoter Score', fmt:'pts' },
+        { id:'referral_rate', n:'Referral rate', fmt:'pct' },
+        { id:'neg_churn', n:'Negative churn', fmt:'pct' }
+      ]
+    },
+    gate: {
+      n:'Compuerta', ab:'Compuerta', ic:'pmf', est:null,
+      submetricas: [
+        { id:'gate_fit', n:'Product-Market Fit', fmt:'pct' },
+        { id:'gate_escala', n:'Escalabilidad', fmt:'pct' },
+        { id:'gate_unit', n:'Unit economics sano', fmt:'pct' },
+        { id:'gate_foso', n:'Ventaja defensible', fmt:'pct' }
+      ]
+    },
+    evid: {
+      n:'Evidencia', ab:'Evidencia', ic:'evidence', est:'desc',
+      submetricas: [
+        { id:'reviews', n:'Reviews y rating', fmt:'num' },
+        { id:'cases', n:'Casos de éxito', fmt:'num' },
+        { id:'press', n:'Menciones en prensa', fmt:'num' },
+        { id:'community', n:'Actividad comunidad', fmt:'num' }
+      ]
+    },
+    deuda: {
+      n:'Deuda', ab:'Deuda', ic:'debt', est:'plat', invertido:true,
+      submetricas: [
+        { id:'deprecations', n:'Warnings de deprecación', fmt:'num' },
+        { id:'test_cov', n:'Test coverage %', fmt:'pct' },
+        { id:'security_p1', n:'Issues P1 security', fmt:'num' },
+        { id:'refactor_backlog', n:'Items de refactor', fmt:'num' }
+      ]
+    }
   };
   /* los seis del embudo, en el orden en que se leen de arriba abajo */
   var EJES_EMBUDO = ['adq','act','ret','rel','rev','ref'];
@@ -1681,6 +1753,39 @@
     return h + '</svg>';
   }
 
+  function renderSubmetricasPanel() {
+    if (!J || !J.submetricas) return '';
+    var h = '<div class="caja2"><div class="rot">Submétricas del mes' + ayuda('submetricas') + '</div>';
+    var orden = ORDEN_EJES;
+    for (var ei = 0; ei < orden.length; ei++) {
+      var ejeId = orden[ei];
+      var eje = EJES[ejeId];
+      if (!eje || !eje.submetricas) continue;
+      var subs = Motor.submetricasDelEje(J, ejeId);
+      var valorEje = Motor.metricaEje ? Motor.metricaEje(J, ejeId) : 0;
+      h += '<div class="metric-card" style="background:#f5f5f5;border:1px solid #ddd;border-radius:6px;margin-bottom:10px;overflow:hidden">' +
+        '<div class="metric-header" onclick="this.nextElementSibling.classList.toggle(\'open\')" style="padding:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd">' +
+          '<div class="metric-left">' +
+            '<div style="font-weight:600;font-size:14px">' + esc(eje.n) + '</div>' +
+            '<div style="font-size:18px;font-weight:700;color:#6b5acd;margin-top:2px">' + Math.round(valorEje * 10) / 10 + '%</div>' +
+          '</div>' +
+          '<div class="metric-toggle" style="font-size:12px">▼</div>' +
+        '</div>' +
+        '<div class="metric-submenu" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease;background:#fff">';
+      for (var si = 0; si < eje.submetricas.length; si++) {
+        var sub = eje.submetricas[si];
+        var valor = subs[sub.id] || 0;
+        h += '<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;font-size:12px">' +
+          '<span style="color:#666">' + esc(sub.n) + '</span>' +
+          '<span style="font-weight:500;color:#1a1a1a;min-width:50px;text-align:right">' + Math.round(valor * 10) / 10 + '</span>' +
+        '</div>';
+      }
+      h += '</div></div>';
+    }
+    h += '</div>';
+    return h;
+  }
+
   function renderPanel() {
     var h = '', i;
     var ejes = ejesEnJuego();
@@ -1715,6 +1820,9 @@
     h += '<div class="pq mut" style="margin-top:8px">Caja ' + money(J.caja) + ' · runway ' +
       (run > 90 ? '∞' : run.toFixed(0) + ' m') + ' · valoración ' + money(J.valoracion) + '</div>';
     h += '</div>';
+
+    /* ---- Submétricas derivadas: desglose de cada eje ---- */
+    h += renderSubmetricasPanel();
 
     /* ---- Impacto reciente: lo último entregado, real contra esperado ---- */
     if (J.historialImpacto && J.historialImpacto.length) {

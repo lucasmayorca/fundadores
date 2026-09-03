@@ -100,6 +100,8 @@ var Motor = (function () {
     e.lupaBase = LUPA_BASE[sec.id] || 0;
     e.lupa = e.lupaBase;
 
+    /* Inicializar submétricas derivadas */
+    setearSubmetricasBase(e);
 
     for (i = 0; i < NECESIDADES.length; i++) e.cobertura[NECESIDADES[i].id] = 0;
 
@@ -989,6 +991,10 @@ var Motor = (function () {
     else if (e.mesPuesto >= e.meses) { e.vivo = false; e.final = 'plazo'; }
 
     e.hist.push({ m:e.mesPuesto, u:usuarios(e), mrr:e.mrr, caja:Math.round(e.caja), pol:Math.round(e.politico), pm:progresoMandato(e) });
+
+    /* Actualizar submétricas derivadas al final del mes */
+    updateSubmetricasMonth(e);
+
     return log;
   }
 
@@ -1108,6 +1114,108 @@ var Motor = (function () {
     return { salida:salida, mult:mult, aInv:Math.round(aInv), aFund:Math.round(aFund), pref:pref };
   }
 
+  /* ===== SUBMÉTRICAS DERIVADAS ===== */
+  var SUBMETRICAS_BASE_POR_IDEA = {
+    cobranzas: {
+      'adq:cac': 800, 'adq:mix_canal': 40, 'adq:conv_rate': 4.0, 'adq:visit_signup': 10,
+      'act:time_value': 3.5, 'act:feature_adopt': 75, 'act:onboard': 85, 'act:task_success': 95,
+      'ret:churn': 3.2, 'ret:dau_mau': 45, 'ret:reactivation': 20, 'ret:stickiness': 65,
+      'rev:arpu': 120, 'rev:ltv_cac': 2.8, 'rev:expansion': 8, 'rev:payment_friction': 2.5,
+      'ref:viral_k': 0.8, 'ref:nps': 35, 'ref:referral_rate': 5, 'ref:neg_churn': -2,
+      'rel:uptime': 99.5, 'rel:error_rate': 0.3, 'rel:mttr': 45, 'rel:latency_p95': 200,
+      'evid:reviews': 12, 'evid:cases': 2, 'evid:press': 1, 'evid:community': 30
+    },
+    datos: {
+      'adq:cac': 2200, 'adq:mix_canal': 30, 'adq:conv_rate': 2.0, 'adq:visit_signup': 6,
+      'act:time_value': 8.0, 'act:feature_adopt': 55, 'act:onboard': 65, 'act:task_success': 80,
+      'ret:churn': 1.8, 'ret:dau_mau': 55, 'ret:reactivation': 25, 'ret:stickiness': 72,
+      'rev:arpu': 580, 'rev:ltv_cac': 3.2, 'rev:expansion': 18, 'rev:payment_friction': 1.2,
+      'ref:viral_k': 1.1, 'ref:nps': 48, 'ref:referral_rate': 12, 'ref:neg_churn': 2,
+      'rel:uptime': 99.8, 'rel:error_rate': 0.15, 'rel:mttr': 30, 'rel:latency_p95': 150,
+      'evid:reviews': 8, 'evid:cases': 5, 'evid:press': 3, 'evid:community': 45
+    },
+    habitos: {
+      'adq:cac': 45, 'adq:mix_canal': 70, 'adq:conv_rate': 5.5, 'adq:visit_signup': 14,
+      'act:time_value': 2.0, 'act:feature_adopt': 90, 'act:onboard': 92, 'act:task_success': 98,
+      'ret:churn': 8.5, 'ret:dau_mau': 85, 'ret:reactivation': 28, 'ret:stickiness': 88,
+      'rev:arpu': 18, 'rev:ltv_cac': 4.2, 'rev:expansion': 12, 'rev:payment_friction': 3.5,
+      'ref:viral_k': 2.8, 'ref:nps': 72, 'ref:referral_rate': 35, 'ref:neg_churn': 8,
+      'rel:uptime': 99.9, 'rel:error_rate': 0.1, 'rel:mttr': 15, 'rel:latency_p95': 100,
+      'evid:reviews': 450, 'evid:cases': 0, 'evid:press': 8, 'evid:community': 2000
+    }
+  };
+
+  var SUBMETRICAS_LIMITES = {
+    'adq:cac': { min: 50, max: 5000 }, 'adq:mix_canal': { min: 0, max: 100 },
+    'adq:conv_rate': { min: 0.1, max: 15 }, 'adq:visit_signup': { min: 0.5, max: 50 },
+    'act:time_value': { min: 0.5, max: 30 }, 'act:feature_adopt': { min: 5, max: 100 },
+    'act:onboard': { min: 10, max: 100 }, 'act:task_success': { min: 20, max: 100 },
+    'ret:churn': { min: 0, max: 20 }, 'ret:dau_mau': { min: 10, max: 100 },
+    'ret:reactivation': { min: 0, max: 50 }, 'ret:stickiness': { min: 20, max: 100 },
+    'rev:arpu': { min: 1, max: 10000 }, 'rev:ltv_cac': { min: 0.5, max: 10 },
+    'rev:expansion': { min: 0, max: 50 }, 'rev:payment_friction': { min: 0, max: 10 },
+    'ref:viral_k': { min: 0, max: 5 }, 'ref:nps': { min: -100, max: 100 },
+    'ref:referral_rate': { min: 0, max: 60 }, 'ref:neg_churn': { min: -20, max: 20 },
+    'rel:uptime': { min: 90, max: 100 }, 'rel:error_rate': { min: 0, max: 5 },
+    'rel:mttr': { min: 5, max: 480 }, 'rel:latency_p95': { min: 50, max: 2000 },
+    'evid:reviews': { min: 0, max: 1000 }, 'evid:cases': { min: 0, max: 100 },
+    'evid:press': { min: 0, max: 50 }, 'evid:community': { min: 0, max: 5000 }
+  };
+
+  function setearSubmetricasBase(e) {
+    var ideaId = e.idea ? e.idea.id : 'cobranzas';
+    var base = SUBMETRICAS_BASE_POR_IDEA[ideaId] || SUBMETRICAS_BASE_POR_IDEA.cobranzas;
+    e.submetricas = {};
+    var key;
+    for (key in base) {
+      if (base.hasOwnProperty(key)) {
+        e.submetricas[key] = base[key];
+      }
+    }
+  }
+
+  function calcularDeltaSubmetrica(e, key) {
+    var delta = 0, id;
+    for (id in e.enVuelo) {
+      if (!e.enVuelo.hasOwnProperty(id) || e.enVuelo[id] <= 0) continue;
+      var ap = apuesta(id);
+      if (ap && ap.impactoSubmetricas && ap.impactoSubmetricas[key]) {
+        var progreso = e.enVuelo[id] / costoDe(e, id);
+        delta += ap.impactoSubmetricas[key] * Math.min(1, progreso);
+      }
+    }
+    return delta;
+  }
+
+  function updateSubmetricasMonth(e) {
+    if (!e.submetricas) setearSubmetricasBase(e);
+    var key;
+    for (key in e.submetricas) {
+      if (!e.submetricas.hasOwnProperty(key)) continue;
+      var base = e.submetricas[key];
+      var delta = calcularDeltaSubmetrica(e, key);
+      var nuevo = base + delta;
+      var limites = SUBMETRICAS_LIMITES[key] || {};
+      if (limites.min !== undefined) nuevo = Math.max(limites.min, nuevo);
+      if (limites.max !== undefined) nuevo = Math.min(limites.max, nuevo);
+      e.submetricas[key] = nuevo;
+    }
+  }
+
+  function submetricasDelEje(e, ejeId) {
+    if (!e.submetricas) return {};
+    var result = {};
+    var claves = Object.keys(e.submetricas);
+    for (var i = 0; i < claves.length; i++) {
+      var k = claves[i];
+      if (k.indexOf(ejeId + ':') === 0) {
+        var subId = k.split(':')[1];
+        result[subId] = e.submetricas[k];
+      }
+    }
+    return result;
+  }
+
   return {
     nuevoPuesto:nuevoPuesto, simular:simular,
     capacidad:capacidad, capacidadPropia:capacidadPropia, desgloseCapacidad:desgloseCapacidad,
@@ -1118,6 +1226,7 @@ var Motor = (function () {
     estimacion:estimacion, estimacionDetalle:estimacionDetalle, costoDe:costoDe, comprometido:comprometido, confianza:confianza, requisitosGate:requisitosGate, compuerta:compuerta,
     abierto:abierto, contratar:contratar, ronda:ronda, pivotar:pivotar,
     progresoMandato:progresoMandato, progresoDe:progresoDe, ritmoMandato:ritmoMandato, alineacion:alineacion, cascada:cascada,
-    seg:seg, apuesta:apuesta
+    seg:seg, apuesta:apuesta,
+    setearSubmetricasBase:setearSubmetricasBase, updateSubmetricasMonth:updateSubmetricasMonth, submetricasDelEje:submetricasDelEje
   };
 })();
