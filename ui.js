@@ -1418,7 +1418,7 @@
     adq: {
       n:'Adquisición', ab:'ADQ', ic:'acquisition', est:'crec',
       submetricas: [
-        { id:'cac', n:'CAC (costo/cliente)', fmt:'num' },
+        { id:'cac', n:'CAC (costo/cliente)', fmt:'num', inv:true },
         { id:'mix_canal', n:'Mix de canales', fmt:'pct' },
         { id:'conv_rate', n:'Tasa de conversión', fmt:'pct' },
         { id:'visit_signup', n:'Visit-to-signup', fmt:'pct' }
@@ -1436,7 +1436,7 @@
     ret: {
       n:'Retención', ab:'RET', ic:'retention', est:null,
       submetricas: [
-        { id:'churn', n:'Churn rate mensual', fmt:'pct' },
+        { id:'churn', n:'Churn rate mensual', fmt:'pct', inv:true },
         { id:'dau_mau', n:'DAU/MAU ratio', fmt:'pct' },
         { id:'reactivation', n:'Reactivation rate', fmt:'pct' },
         { id:'stickiness', n:'Feature stickiness', fmt:'pct' }
@@ -1446,9 +1446,9 @@
       n:'Fiabilidad', ab:'CONF', ic:'reliability', est:'fiab',
       submetricas: [
         { id:'uptime', n:'Uptime %', fmt:'pct' },
-        { id:'error_rate', n:'Error rate por request', fmt:'pct' },
-        { id:'mttr', n:'MTTR (minutos)', fmt:'num' },
-        { id:'latency_p95', n:'API latency p95', fmt:'num' }
+        { id:'error_rate', n:'Error rate por request', fmt:'pct', inv:true },
+        { id:'mttr', n:'MTTR (minutos)', fmt:'num', inv:true },
+        { id:'latency_p95', n:'API latency p95', fmt:'num', inv:true }
       ]
     },
     rev: {
@@ -1457,7 +1457,7 @@
         { id:'arpu', n:'ARPU ($/usuario)', fmt:'num' },
         { id:'ltv_cac', n:'LTV/CAC ratio', fmt:'ratio' },
         { id:'expansion', n:'Expansion revenue', fmt:'pct' },
-        { id:'payment_friction', n:'Fricción en pago', fmt:'pct' }
+        { id:'payment_friction', n:'Fricción en pago', fmt:'pct', inv:true }
       ]
     },
     ref: {
@@ -1490,10 +1490,10 @@
     deuda: {
       n:'Deuda', ab:'Deuda', ic:'debt', est:'plat', invertido:true,
       submetricas: [
-        { id:'deprecations', n:'Warnings de deprecación', fmt:'num' },
+        { id:'deprecations', n:'Warnings de deprecación', fmt:'num', inv:true },
         { id:'test_cov', n:'Test coverage %', fmt:'pct' },
-        { id:'security_p1', n:'Issues P1 security', fmt:'num' },
-        { id:'refactor_backlog', n:'Items de refactor', fmt:'num' }
+        { id:'security_p1', n:'Issues P1 security', fmt:'num', inv:true },
+        { id:'refactor_backlog', n:'Items de refactor', fmt:'num', inv:true }
       ]
     }
   };
@@ -1574,16 +1574,17 @@
     return h || '<span class="vchip vnull">sin efecto medible</span>';
   }
 
-  /* Nombre legible de una submétrica a partir de su clave "eje:submetrica".
-     Sin esto los chips dirían "time_value" o "conv_rate". */
-  function nombreSubmetrica(key) {
+  /* La definición de una submétrica a partir de su clave "eje:submetrica" —
+     de ahí salen su nombre legible (sin esto los chips dirían "time_value") y
+     su `inv`, que dice si el número que baja es el bueno. */
+  function defSubmetrica(key) {
     var p = key.split(':'), eje = EJES[p[0]], i;
     if (eje && eje.submetricas) {
       for (i = 0; i < eje.submetricas.length; i++) {
-        if (eje.submetricas[i].id === p[1]) return eje.submetricas[i].n;
+        if (eje.submetricas[i].id === p[1]) return eje.submetricas[i];
       }
     }
-    return p[1] || key;
+    return { n: p[1] || key };
   }
 
   /* El desglose de una iniciativa: qué submétricas mueve, que es el "por qué"
@@ -1595,11 +1596,15 @@
     for (k in subs) if (subs.hasOwnProperty(k) && subs[k]) ks.push(k);
     if (!ks.length) return '';
     ks.sort(function (a, b) { return Math.abs(subs[b]) - Math.abs(subs[a]); });
-    var muestra = ks.slice(0, 3), h = '', i, v;
+    var muestra = ks.slice(0, 3), h = '', i, v, def, bueno;
     for (i = 0; i < muestra.length; i++) {
       v = subs[muestra[i]];
-      h += '<span class="subchip">' + esc(nombreSubmetrica(muestra[i])) +
-        ' <b class="num ' + (v > 0 ? 'verde' : 'rojo') + '">' + (v > 0 ? '+' : '−') + Math.abs(v) + '</b></span>';
+      def = defSubmetrica(muestra[i]);
+      /* el color dice si la noticia es buena, no si el número sube: en CAC,
+         churn o latencia el que baja es el bueno */
+      bueno = def.inv ? v < 0 : v > 0;
+      h += '<span class="subchip">' + esc(def.n) +
+        ' <b class="num ' + (bueno ? 'verde' : 'rojo') + '">' + (v > 0 ? '+' : '−') + Math.abs(v) + '</b></span>';
     }
     if (ks.length > muestra.length) h += '<span class="subchip mut">+' + (ks.length - muestra.length) + ' más</span>';
     return '<div class="subrow">' + h + '</div>';
