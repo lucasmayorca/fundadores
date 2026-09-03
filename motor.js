@@ -189,11 +189,15 @@ var Motor = (function () {
 
     e.mrr = calcularMrr(e);
     e.usuariosInicio = usuarios(e);
-    e.usabilidadInicio = e.usabilidad;
+    e.usabilidadInicio = usabilidadIndice(e);
     e.moralMin = e.moral;
     e.precioInicio = e.precio;
     e.mrrInicio = e.mrr;
     e.evidenciaInicio = e.evidencia;
+    /* el punto cero de la barra de mandato: de donde arrancaste, para que el
+       progreso se dibuje contra tu propia linea de partida y no contra 0 */
+    e.retencionInicio = retencionMedia(e);
+    e.deudaInicio = e.deuda;
     return e;
   }
 
@@ -333,6 +337,36 @@ var Motor = (function () {
     r -= (1 - e.fiabPercibida / 100) * s.exigFiab * 0.25;
     return clamp(r, 0.35, 0.99);
   }
+  /* Los seis ejes del estado de la empresa, todos en 0-100 para que se puedan
+     comparar, graficar en el radar y componer en un indice. `e.usabilidad` es
+     la ACTIVACION cruda (que tan poco tienen que pensar los usuarios); la
+     "usabilidad" del mandato es el indice compuesto de mas abajo. */
+  function ejeValor(e, k) {
+    if (k === 'act') return clamp(e.usabilidad, 0, 100);
+    if (k === 'ret') return clamp(retencionMedia(e) * 100, 0, 100);
+    if (k === 'rel') return clamp(e.fiabPercibida, 0, 100);
+    if (k === 'adq') return clamp(e.marca, 0, 100);
+    if (k === 'rev') return clamp(Math.log(1 + Math.max(0, e.mrr) / 1000) / Math.log(1 + 1000) * 100, 0, 100);
+    if (k === 'ref') return clamp((e.viral || 0) * fitMax(e) * 100, 0, 100);
+    if (k === 'evid') return clamp(e.evidencia, 0, 100);
+    if (k === 'deuda') return clamp(100 - e.deuda, 0, 100);
+    if (k === 'gate') return clamp(compuerta(e, 'pragm') * 100, 0, 100);
+    return 0;
+  }
+
+  /* Usabilidad como INDICE, no como metrica suelta: 50% activacion, 30%
+     retencion, 20% confiabilidad. Es lo que mide el mandato 'activacion' y lo
+     que la barra segmentada de la cabecera dibuja por partes. */
+  function usabilidadIndice(e) {
+    return ejeValor(e, 'act') * 0.5 + ejeValor(e, 'ret') * 0.3 + ejeValor(e, 'rel') * 0.2;
+  }
+
+  function snapshotEjes(e) {
+    var out = {}, ks = ['adq','act','ret','rel','rev','ref'], i;
+    for (i = 0; i < ks.length; i++) out[ks[i]] = ejeValor(e, ks[i]);
+    return out;
+  }
+
   function retencionMedia(e) {
     var tot = usuarios(e), acc = 0, i;
     if (!tot) return retencion(e, 'innov');
@@ -579,6 +613,9 @@ var Motor = (function () {
   function simular(e, plan, mundo) {
     var log = [], i, id;
     asegurarCapacidades(e);
+    /* foto de los seis ejes ANTES de simular: es el contorno punteado del
+       radar, el "mes pasado" contra el que se lee el de hoy */
+    e.ejesPrev = snapshotEjes(e);
     if (mundo) { e.calor = Mundo.calorSector(mundo, e.sectorId); e.eraId = mundo.eraId; }
 
     /* 1. contrataciones nuevas: dos meses hasta que producen */
@@ -1075,6 +1112,7 @@ var Motor = (function () {
     nuevoPuesto:nuevoPuesto, simular:simular,
     capacidad:capacidad, capacidadPropia:capacidadPropia, desgloseCapacidad:desgloseCapacidad,
     usuarios:usuarios, mixSegmentos:mixSegmentos, fit:fit, fitMax:fitMax, retencion:retencion, retencionMedia:retencionMedia,
+    ejeValor:ejeValor, usabilidadIndice:usabilidadIndice, snapshotEjes:snapshotEjes,
     carga:carga, capacidadSistema:capacidadSistema, burnMensual:burnMensual, runwayMeses:runwayMeses,
     nomina:nomina, infra:infra, calcularMrr:calcularMrr,
     estimacion:estimacion, estimacionDetalle:estimacionDetalle, costoDe:costoDe, comprometido:comprometido, confianza:confianza, requisitosGate:requisitosGate, compuerta:compuerta,

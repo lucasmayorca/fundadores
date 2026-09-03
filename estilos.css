@@ -248,11 +248,19 @@ h2, h3 { font-weight:500; }
 /* barra de mandato + político */
 .eraDer { margin-left:auto; display:-webkit-flex; display:flex;
   -webkit-align-items:center; align-items:center; gap:14px; -webkit-flex-shrink:0; flex-shrink:0; }
+/* La alerta de ritmo va arriba de todo: lo primero que hay que saber del mes
+   es si vas a llegar. Se tiñe según eso, no siempre igual. */
 .ritmobar {
-  min-height:28px; border-bottom:1px solid var(--color-divider); background:var(--color-sunken);
+  min-height:30px; border-bottom:1px solid var(--color-divider);
   display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
-  padding:5px 22px; font-size:12px; line-height:1.4;
+  gap:8px; padding:5px 22px; font-size:12px; line-height:1.4;
+  background:color-mix(in srgb, #e8a33d 10%, var(--color-bg)); color:#e8a33d;
 }
+.ritmobar .ic { width:13px; height:13px; -webkit-flex-shrink:0; flex-shrink:0; }
+.ritmobar .rtx { -webkit-flex:1; flex:1; }
+.ritmobar.ok { background:color-mix(in srgb, #35c46a 8%, var(--color-bg)); color:#8fd39a; }
+.ritmobar.mal { background:color-mix(in srgb, #e2564a 12%, var(--color-bg)); color:#f3b0aa; }
+.ritmobar .pill { -webkit-flex-shrink:0; flex-shrink:0; }
 .track { height:5px; background:var(--color-neutral-900); border-radius:var(--radius-sm); overflow:hidden; }
 .track i { display:block; height:5px; background:var(--color-accent);
   -webkit-transition:width .6s ease; transition:width .6s ease; }
@@ -1051,3 +1059,134 @@ body.movil .comomover { margin-left:0; display:block; margin-top:3px; }
   color:var(--color-neutral-600); }
 .teoriat:hover .verplus { color:var(--color-accent-100); }
 body.movil .shipc { -webkit-flex:1 1 100%; flex:1 1 100%; }
+
+/* ---------- el "?" de ayuda ---------- */
+/* el mismo tooltip de siempre, con un disparador propio: un circulito que no
+   depende de subrayar una palabra dentro de una frase */
+.ayuda { display:-webkit-inline-flex; display:inline-flex;
+  -webkit-align-items:center; align-items:center; -webkit-justify-content:center; justify-content:center;
+  width:14px; height:14px; margin-left:6px; border-radius:50%; vertical-align:middle;
+  border:1px solid var(--color-neutral-600); color:var(--color-neutral-500);
+  font-size:9px; line-height:1; cursor:pointer; -webkit-flex-shrink:0; flex-shrink:0; }
+.ayuda:hover { border-color:var(--color-accent); color:var(--color-accent-100); }
+
+/* ---------- barra de mandato segmentada ---------- */
+/* la barra no es un relleno liso: se parte en los ejes que COMPONEN el
+   mandato, con el color que despues llevan los chips de las iniciativas y el
+   riel de las metricas del panel. El tramo rayado es la proyeccion del mes. */
+.track.segs { display:-webkit-flex; display:flex; height:7px; }
+.track.segs i { height:7px; -webkit-transition:width .5s ease; transition:width .5s ease; }
+.track.segs i.ghost { opacity:.8;
+  background:repeating-linear-gradient(45deg, var(--color-accent-400) 0 1px, transparent 1px 3px); }
+.hmb .hmv .proy { color:var(--color-accent-300); }
+.hmleg { display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap;
+  gap:4px 12px; margin-top:5px; font-size:10px; color:var(--color-neutral-500); }
+.hmleg span { display:-webkit-inline-flex; display:inline-flex; -webkit-align-items:center; align-items:center; gap:4px; }
+.hmleg i { width:7px; height:7px; border-radius:2px; display:block; }
+.hmleg i.ghost { background:repeating-linear-gradient(45deg, var(--color-accent-400) 0 1px, transparent 1px 3px); }
+
+/* ---------- el Regulador (ex Lupa) ---------- */
+/* cinco barritas y el estado dicho en palabras: "te mira" se entiende sin
+   traducir un numero */
+.regu { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:7px; }
+.regu > .ic { width:14px; height:14px; color:var(--color-neutral-500); }
+.regu .k { font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--color-neutral-600);
+  display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; }
+.regur { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:6px; margin-top:3px; }
+.regupips { display:-webkit-flex; display:flex; gap:2px; }
+.regupips i { display:block; width:14px; height:5px; border-radius:2px; background:var(--color-neutral-800); }
+.regupips i.on { background:var(--color-accent); }
+.regu.medio .regupips i.on { background:#e8a33d; }
+.regu.alto .regupips i.on { background:#e2564a; }
+.regue { font-size:12px; color:var(--color-neutral-300); white-space:nowrap; }
+.regu.alto .regue { color:#f3b0aa; }
+
+/* ---------- la tira de Equipo ---------- */
+/* un ajuste, no el protagonista: una linea de chips y listo */
+.equipo { display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap;
+  -webkit-align-items:center; align-items:center; gap:6px; }
+.equipo .eqk { font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase;
+  color:var(--color-neutral-600); margin-right:2px; }
+.eqchip { display:-webkit-inline-flex; display:inline-flex; -webkit-align-items:center; align-items:center;
+  gap:4px; padding:3px 6px; border-radius:var(--radius-sm); background:var(--color-neutral-900); }
+.eqchip.viva { box-shadow:inset 0 0 0 1px var(--color-accent-700); }
+.eqchip .ic { width:12px; height:12px; color:var(--color-neutral-500); }
+.eqchip.viva .ic { color:var(--color-accent); }
+.eqchip .eqn { font-size:10.5px; color:var(--color-neutral-400); }
+.eqchip.viva .eqn { color:var(--color-neutral-100); }
+.eqchip .ayuda { width:12px; height:12px; font-size:8px; margin-left:0; }
+.eqchip .b { display:-webkit-inline-flex; display:inline-flex;
+  -webkit-align-items:center; align-items:center; -webkit-justify-content:center; justify-content:center;
+  width:16px; height:16px; border-radius:4px; border:1px solid var(--color-divider);
+  font-size:11px; cursor:pointer; color:var(--color-neutral-300); }
+.eqchip .b.off { opacity:0.3; cursor:default; }
+.eqchip .eqv { width:12px; text-align:center; font-size:11.5px; }
+.eqchip .eqr { font-size:10px; color:var(--color-accent-300); margin-left:2px; }
+.eqlock { font-size:10.5px; color:var(--color-neutral-600); }
+
+/* ---------- la iniciativa como protagonista ---------- */
+.inicrot { display:-webkit-flex; display:flex; -webkit-align-items:baseline; align-items:baseline;
+  -webkit-justify-content:space-between; justify-content:space-between; gap:12px; }
+.inicrot .init { display:-webkit-inline-flex; display:inline-flex; -webkit-align-items:center; align-items:center; }
+.inicrot .inihint { text-transform:none; letter-spacing:0; font-size:11px;
+  color:var(--color-neutral-600); text-align:right; }
+.ini { padding:16px 18px; margin-bottom:12px; border-radius:var(--radius-md);
+  background:var(--color-surface); box-shadow:var(--shadow-sm); cursor:pointer; }
+.ini.aporta { box-shadow:0 0 0 1px var(--color-accent-700); }
+.ini.nocabe { opacity:0.5; cursor:default; }
+.ini .inih { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  gap:8px; margin-bottom:6px; }
+.ini .inin { -webkit-flex:1; flex:1; font-size:16px; font-weight:500; min-width:0; }
+.ini .inid { font-size:13px; color:var(--color-neutral-400); line-height:1.55; margin-bottom:12px; }
+.ini .inid2 { display:block; margin-top:5px; color:var(--color-neutral-600); }
+.ini .inim { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  -webkit-flex-wrap:wrap; flex-wrap:wrap; gap:6px 16px; font-size:12px; margin-bottom:12px; }
+.ini .ml { font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--color-neutral-600); }
+.ini .inie { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  -webkit-flex-wrap:wrap; flex-wrap:wrap; gap:6px; padding-top:11px;
+  border-top:1px solid var(--color-divider); }
+.ini .sello { margin-left:auto; -webkit-flex-shrink:0; flex-shrink:0;
+  padding:2px 9px; border-radius:999px; font-size:10.5px;
+  background:var(--color-neutral-900); color:var(--color-neutral-600); }
+.ini .sello.on { background:var(--color-accent-800); color:var(--color-accent-100); }
+.ini .masdet { color:var(--color-accent-300); cursor:pointer; }
+
+/* ---------- panel: radar de estado y metricas del mandato ---------- */
+.radar2 { display:block; margin:4px auto 0; max-width:100%; }
+.radar2 .rg { fill:none; stroke:var(--color-neutral-800); stroke-width:1; }
+.radar2 .rp { fill:none; stroke:var(--color-neutral-500); stroke-width:1; stroke-dasharray:3 3; }
+.radar2 .rn { fill:var(--color-accent-800); fill-opacity:.55; stroke:var(--color-accent); stroke-width:1.6; }
+.radar2 .rl { font-size:9.5px; fill:var(--color-neutral-500); }
+.radar2 .rl.mide { fill:var(--color-accent-300); }
+.rleg { display:-webkit-flex; display:flex; gap:12px; -webkit-justify-content:center; justify-content:center;
+  font-size:10px; color:var(--color-neutral-400); margin-bottom:6px; }
+.rleg2 { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:6px;
+  margin-top:8px; font-size:10.5px; color:var(--color-neutral-500); }
+.rleg2 i { width:14px; height:2px; border-radius:1px; background:var(--color-accent); }
+/* el riel de acento marca las metricas que componen tu mandato */
+.fun.funmide { padding-left:8px; margin-left:-2px; border-left:2px solid var(--color-accent); }
+.funic.mide { color:var(--color-accent); }
+.rot .rotv { float:right; text-transform:none; letter-spacing:0; font-size:11px; color:var(--color-accent-300); }
+.imp { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:8px;
+  padding:5px 0; border-bottom:1px solid var(--color-divider); font-size:12px; }
+.imp .impn { -webkit-flex:1; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.imp .vchip { margin:0; -webkit-flex-shrink:0; flex-shrink:0; }
+.req { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:8px;
+  font-size:12px; padding:3px 0; color:var(--color-neutral-600); }
+.req .ic { width:14px; height:14px; color:var(--color-neutral-700); -webkit-flex-shrink:0; flex-shrink:0; }
+.req.ok { color:var(--color-neutral-200); }
+.req.ok .ic { color:var(--color-accent); }
+
+/* ---------- movil ---------- */
+body.movil .hmleg { gap:3px 10px; }
+body.movil .regu .k { display:none; }
+body.movil .ini { padding:14px 15px; }
+body.movil .ini .inin { font-size:15px; }
+body.movil .inicrot { -webkit-flex-wrap:wrap; flex-wrap:wrap; }
+body.movil .inicrot .inihint { text-align:left; -webkit-flex:1 1 100%; flex:1 1 100%; }
+body.movil .ini .sello { margin-left:0; }
+
+/* la columna derecha de la cabecera no se parte en dos renglones */
+.hud .der .hi .k, .hud .der .hi .v { white-space:nowrap; }
+.hud .der { -webkit-flex-wrap:nowrap; flex-wrap:nowrap; }
+.hmb .hmv { -webkit-flex-shrink:0; flex-shrink:0; }

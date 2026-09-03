@@ -465,29 +465,41 @@ function empresaPorId(id) {
    Para qué te contrataron. Se evalúa al final del puesto.
    alinea: las partidas en las que esperan que gastes. Gastar en otra cosa
    cuesta capital político, incluso cuando tienes razón. */
+/* De qué está hecho cada mandato: los ejes de la empresa que lo mueven y con
+   qué peso. Es lo que deja segmentar la barra de progreso, teñir los chips de
+   las iniciativas con el color del eje al que alimentan, y proyectar cuánto
+   avanzaría el mandato si cerraras el mes con el plan de ahora.
+   Casi todos los mandatos miden un solo eje. La usabilidad es la excepción:
+   NO es una métrica suelta, es un índice — 50% activación, 30% retención,
+   20% confiabilidad — y de ahí sale cuánto aporta cada iniciativa. */
 var MANDATOS = [
-  { id:'retencion', txt:'Lleva la retención al 88%', alinea:['desc','cons'],
+  { id:'retencion', txt:'Lleva la retención al 88%', alinea:['desc','cons'], fuentes:[['ret',1]],
     meta:function(e){ return 0.88; }, valor:function(e){ return Motor.retencionMedia(e); },
     fmt:function(v){ return Math.round(v*100)+'%'; }, libro:'hooked' },
-  { id:'crecer', txt:'Multiplica los usuarios activos', alinea:['crec','cons'],
+  { id:'crecer', txt:'Multiplica los usuarios activos', alinea:['crec','cons'], fuentes:[['adq',1]],
     meta:function(e){ return e.usuariosInicio * (1 + 2 * e.meses / 14); }, valor:function(e){ return Motor.usuarios(e); },
     fmt:function(v){ return Math.round(v).toLocaleString ? Math.round(v).toLocaleString('en') : Math.round(v); }, libro:'chasm' },
-  { id:'abismo', txt:'Abre el gran mercado', alinea:['cons','desc','fiab'],
+  { id:'abismo', txt:'Abre el gran mercado', alinea:['cons','desc','fiab'], fuentes:[['gate',1]],
     meta:function(e){ return 1; }, valor:function(e){ return Motor.compuerta(e,'pragm'); },
     fmt:function(v){ return v>=1?'abierta':'bloqueada'; }, libro:'chasm' },
-  { id:'ingresos', txt:'Duplica el ingreso mensual', alinea:['crec','cons'],
+  { id:'ingresos', txt:'Duplica el ingreso mensual', alinea:['crec','cons'], fuentes:[['rev',1]],
     meta:function(e){ return Math.max(20000, e.mrrInicio * (1 + e.meses / 14)); }, valor:function(e){ return e.mrr; },
     fmt:function(v){ return '$'+Math.round(v/1000)+'k'; }, libro:'analytics' },
-  { id:'estabilidad', txt:'Termina el año con cero caídas', alinea:['fiab','plat'],
+  { id:'estabilidad', txt:'Termina el año con cero caídas', alinea:['fiab','plat'], fuentes:[['rel',1]],
     meta:function(e){ return 0; }, valor:function(e){ return e.incidentesPuesto; },
     fmt:function(v){ return v+' caídas'; }, invertido:true, libro:'sre' },
-  { id:'deuda', txt:'Baja la deuda técnica a 25', alinea:['plat'],
+  { id:'deuda', txt:'Baja la deuda técnica a 25', alinea:['plat'], fuentes:[['deuda',1]],
     meta:function(e){ return 25; }, valor:function(e){ return e.deuda; },
     fmt:function(v){ return Math.round(v)+''; }, invertido:true, libro:'fowler' },
+  /* el unico mandato compuesto: usabilidad = 0.5 activacion + 0.3 retencion +
+     0.2 confiabilidad. El tope sube a 95 porque el indice arranca mas alto que
+     la activacion cruda — con el viejo tope de 82 la meta quedaba servida. */
   { id:'activacion', txt:'Sube la usabilidad 20 puntos', alinea:['desc','cons'],
-    meta:function(e){ return Math.min(82, e.usabilidadInicio + 20 * e.meses / 12); }, valor:function(e){ return e.usabilidad; },
+    fuentes:[['act',0.5],['ret',0.3],['rel',0.2]],
+    meta:function(e){ return Math.min(95, e.usabilidadInicio + 20 * e.meses / 12); },
+    valor:function(e){ return Motor.usabilidadIndice(e); },
     fmt:function(v){ return Math.round(v)+''; }, libro:'krug' },
-  { id:'descubrir', txt:'Instala discovery continuo (evidencia 70)', alinea:['desc'],
+  { id:'descubrir', txt:'Instala discovery continuo (evidencia 70)', alinea:['desc'], fuentes:[['evid',1]],
     meta:function(e){ return 70; }, valor:function(e){ return e.evidencia; },
     fmt:function(v){ return Math.round(v)+''; }, libro:'torres' }
 ];
