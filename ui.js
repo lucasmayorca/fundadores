@@ -1774,7 +1774,11 @@
 
   function renderMetricasExpandibles() {
     /* Reemplaza la sección de métricas del embudo con versión expandible + submétricas */
-    if (!J || !J.submetricas) return '';
+    if (!J) return '';
+    /* Inicializar submétricas si no existen */
+    if (!J.submetricas) {
+      Motor.setearSubmetricasBase(J);
+    }
     var h = '';
     var VALOR = {
       adq: '+' + mil(J.adqMes || 0) + '<span class="mut fsub">/mes</span>',
