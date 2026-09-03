@@ -1773,12 +1773,8 @@
   }
 
   function renderMetricasExpandibles() {
-    /* Reemplaza la sección de métricas del embudo con versión expandible + submétricas */
+    /* Renderiza métricas del embudo con submétricas expandibles (si existen) */
     if (!J) return '';
-    /* Inicializar submétricas si no existen */
-    if (!J.submetricas) {
-      Motor.setearSubmetricasBase(J);
-    }
     var h = '';
     var VALOR = {
       adq: '+' + mil(J.adqMes || 0) + '<span class="mut fsub">/mes</span>',
@@ -1788,22 +1784,24 @@
       rev: money(J.mrr) + '<span class="mut fsub">/mes</span>',
       ref: (Math.round(J.viral * Motor.fitMax(J) * 100) / 100)
     };
+    var tieneSubs = J.submetricas && Object.keys(J.submetricas).length > 0;
     for (var i = 0; i < EJES_EMBUDO.length; i++) {
       var k = EJES_EMBUDO[i], mide = pesoEje(k) > 0;
       var eje = EJES[k];
-      var subs = Motor.submetricasDelEje(J, k);
+      var subs = tieneSubs ? Motor.submetricasDelEje(J, k) : null;
+      var conSubmetricas = tieneSubs && eje && eje.submetricas && subs;
       h += '<div class="fun' + (mide ? ' funmide' : '') + '" ' +
-        'onclick="var s=this.querySelector(\'.submetricas\');s.classList.toggle(\'open\');s.style.maxHeight=s.classList.contains(\'open\')?\'400px\':\'0px\';" ' +
-        'style="cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:8px 0">' +
+        (conSubmetricas ? 'onclick="var s=this.querySelector(\'.submetricas\');if(s){s.classList.toggle(\'open\');s.style.maxHeight=s.classList.contains(\'open\')?\'400px\':\'0px\';}" style="cursor:pointer"' : '') +
+        'style="display:flex;flex-direction:column;gap:' + (conSubmetricas ? '6' : '0') + 'px;padding:8px 0">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:3.5px 0">' +
           '<div style="display:flex;align-items:center;flex:1 1 auto">' +
             '<span class="funic' + (mide ? ' mide' : '') + '">' + svgIc(EJES[k].ic) + '</span>' +
             '<span class="fk">' + nombreEje(k) + '</span>' +
           '</div>' +
           '<span class="fv num">' + VALOR[k] + '</span>' +
-        '</div>' +
-        '<div class="submetricas" style="max-height:0;overflow:hidden;transition:max-height 0.2s ease;display:flex;flex-direction:column;gap:3px;padding:0 0 0 32px;border-left:1px solid var(--color-divider);margin-left:-2px">';
-      if (eje && eje.submetricas) {
+        '</div>';
+      if (conSubmetricas) {
+        h += '<div class="submetricas" style="max-height:0;overflow:hidden;transition:max-height 0.2s ease;display:flex;flex-direction:column;gap:3px;padding:0 0 0 32px;border-left:1px solid var(--color-divider);margin-left:-2px">';
         for (var si = 0; si < eje.submetricas.length; si++) {
           var sub = eje.submetricas[si];
           var valor = subs[sub.id] || 0;
@@ -1812,8 +1810,9 @@
             '<span style="font-weight:500;color:var(--color-neutral-500);min-width:50px;text-align:right;margin-left:12px;font-family:\'IBM Plex Mono\'">' + Math.round(valor * 10) / 10 + '</span>' +
           '</div>';
         }
+        h += '</div>';
       }
-      h += '</div></div>';
+      h += '</div>';
     }
     return h;
   }
