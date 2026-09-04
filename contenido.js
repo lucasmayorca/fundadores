@@ -506,7 +506,7 @@ var EVENTOS = [
   opciones:[
     { txt:'Tómalo. Es dinero hoy',
       nota:'Es ingreso real y también una hipoteca: ese módulo se mantiene para siempre y no mueve tu producto a ninguna parte.',
-      libro:'trap',
+      libro:'pricing',
       ef:function(e,log){ e.caja += Motor.burnMensual(e) * 2.5; e.deuda += 12; e.capacidadReservada = 3;
         nota(log,'neutro','Entró el dinero, junto con una obligación a medida: +12 de deuda y tres meses de capacidad comprometida.','trap'); } },
     { txt:'Solo si sale como versión general del pedido',
@@ -619,7 +619,7 @@ var EVENTOS = [
         nota(log,'bueno','Menos titular, más dinero que es tuyo.','deals'); } },
     { txt:'No levantar todavía',
       nota:'No levantar es una opción real si el negocio lo aguanta.',
-      libro:'hard',
+      libro:'rework',
       ef:function(e,log){ e.levantando = false;
         nota(log,'neutro','Sigues corriendo con tu propia plata. Y tu propia empresa.','hard'); } }
   ]},
@@ -631,7 +631,7 @@ var EVENTOS = [
   opciones:[
     { txt:'Subir de mercado: son los que más pagan',
       nota:'Exactamente lo que hace el incumbente justo antes de perder. Subir de mercado abandona el terreno desde el que te van a atacar A TI.',
-      libro:'innov',
+      libro:'innovsol',
       ef:function(e,log){ e.precio = Math.round(e.precio*1.6); e.competidor.atencion += 0.3;
         nota(log,'neutro','Precio +60% y el líder ahora te está mirando. Más margen, menos aire.','innov'); } },
     { txt:'Quedarse abajo y automatizar el volumen',
@@ -857,12 +857,12 @@ var EVENTOS = [
   opciones:[
     { txt:'Vender ahora',
       nota:'Pájaro en mano — después de la cascada de liquidación. Estás por ver exactamente cuánto de eso era tuyo.',
-      libro:'deals',
+      libro:'wasserman',
       ef:function(e,log){ e.ventaAcordada = Math.round(e.mrr * 36);
         nota(log,'neutro','Acordado. El puesto termina y la cascada decide cuánto te llega.','deals'); } },
     { txt:'Rechazar y seguir construyendo',
       nota:'Rechazar un exit real es la apuesta más grande que vas a hacer. A veces funciona. A veces se cuenta en pasado.',
-      libro:'hard',
+      libro:'powerlaw',
       ef:function(e,log){ e.moral += 6; e.marca += 5;
         nota(log,'neutro','Dijiste que no. Ahora tienes que valer más que esa oferta.','hard'); } }
   ]},
@@ -939,12 +939,12 @@ var EVENTOS = [
   opciones:[
     { txt:'Aceptar la down round',
       nota:'Recortar la valuación duele en los titulares. La alternativa suele doler en el balance.',
-      libro:'deals',
+      libro:'lostfounder',
       ef:function(e,log){ var monto = Motor.burnMensual(e)*10; Motor.ronda(e, monto, e.valoracion*0.5, 1.5, true, 0.1, true);
         nota(log,'neutro','Plata en el banco, orgullo en el piso, empresa viva.','deals'); } },
     { txt:'Puente del directorio y un corte brutal',
       nota:'El puente compra meses; no resuelve nada. Con el corte, quizás justo alcance para llegar a la primavera.',
-      libro:'hard',
+      libro:'antifragile',
       ef:function(e,log){ e.caja += Motor.burnMensual(e)*5; e.ing = Math.max(1, Math.round(e.ing*0.6));
         e.gtm = Math.max(0, Math.round(e.gtm*0.5)); e.moral -= 15;
         nota(log,'malo','Puente + cortes. La mitad del equipo, el doble de presión.','hard'); } }
@@ -1088,12 +1088,12 @@ var EVENTOS = [
         nota(log,'bueno','Marco nuevo, mercado más apretado, victorias más limpias. Cambiaste alcance por obviedad.','dunford'); } },
     { txt:'Pelear la categoría de frente',
       nota:'Gastar más que el que nombró la categoría para recuperarla es un juego de empresas ricas. Revisa tu billetera.',
-      libro:'positioning',
+      libro:'playbigger',
       ef:function(e,log){ e.caja -= 40000; e.competidor.atencion = Math.min(0.95, e.competidor.atencion + 0.15);
         nota(log,'malo','$40.000 de contramensajes y ahora te consideran una amenaza que vale la pena vigilar.','positioning'); } },
     { txt:'Ignorarlo. El producto gana al final',
       nota:'A veces es cierto. Pero el posicionamiento ocurre en la cabeza del comprador contigo o sin ti — abstenerse solo significa que lo escriben ellos.',
-      libro:'dunford',
+      libro:'purplecow',
       ef:function(e,log){ e.marca -= 5;
         nota(log,'neutro','Te quedaste callado. El mercado se quedó con la versión de ellos.','dunford'); } }
   ]},
@@ -1279,7 +1279,11 @@ var EVENTOS = [
       nota:'Caro, vergonzoso y más barato que la alternativa — SI la investigación es sólida. Revisa el método antes que el coraje.',
       libro:'justenough',
       ef:function(e,log){
-        e.backlog = []; rellenarBacklog(e);
+        /* `rellenarBacklog` vive dentro del IIFE de Motor y no se exporta:
+           llamarla a pelo desde acá tiraba "rellenarBacklog is not defined" y
+           reventaba el juego al elegir esta rama. La puerta pública es
+           `Motor.asegurarBacklog`, que hace exactamente esto. */
+        e.backlog = []; Motor.asegurarBacklog(e);
         var i2; for (i2 in e.ruidos) if (e.ruidos.hasOwnProperty(i2)) e.ruidos[i2] *= 0.6;
         e.politico -= 6;
         nota(log,'bueno','Giraste el barco en mar abierto. El nuevo backlog se lee más cierto — tus estimaciones se afinaron.','justenough'); } },
@@ -1351,7 +1355,7 @@ var EVENTOS = [
   opciones:[
     { txt:'Nada. Pero guarda el archivo',
       nota:'Ahora tienes una póliza de seguro sobre tu propio puesto. La palanca te protege exactamente una vez — y tenerla te cambia.',
-      libro:'hard',
+      libro:'mafia',
       ef:function(e,log){ e.palancaSecreta = true; e.moral -= 2;
         nota(log,'neutro','El archivo existe. Nadie sabe que existe. Verificas que existe más seguido de lo que admitirías.','hard'); } },
     { txt:'Reportarlo al directorio, según el manual',
@@ -1361,7 +1365,7 @@ var EVENTOS = [
         nota(log,'bueno','El CTO "transicionó afuera". Hiciste lo correcto y ahora todos son muy cuidadosos a tu alrededor.','grove'); } },
     { txt:'Mostrárselo al CTO. En privado',
       nota:'La jugada de House of Cards: no es chantaje, solo... claridad entre colegas. Nunca va a moverse en tu contra. Probablemente.',
-      libro:'hard',
+      libro:'48laws',
       ef:function(e,log){ e.politico += 10; e.lupa = Math.min(100, e.lupa + 8); e.moral -= 4;
         nota(log,'malo','Entendió de inmediato. Ahora tienes un aliado — de los que se sostienen con miedo.','hard'); } }
   ]},
@@ -1373,7 +1377,7 @@ var EVENTOS = [
   opciones:[
     { txt:'Convertirte en sus ojos',
       nota:'O estás respaldando el golpe ganador o estás documentando tu propia traición. No hay tercer desenlace.',
-      libro:'hard',
+      libro:'elprincipe',
       ef:function(e,log){ e.palancaSecreta = true; e.moral -= 5;
         nota(log,'neutro','Ahora reportas mensualmente. Si salen los cuchillos, estás cubierto. Si no salen, eres la filtración.','hard'); } },
     { txt:'"Yo le reporto al CEO. Pregúntale a él"',
@@ -1395,7 +1399,7 @@ var EVENTOS = [
   opciones:[
     { txt:'Darles el nombre',
       nota:'El Príncipe, capítulo siete: los príncipes mantienen las manos limpias alquilando manos sucias. Funciona. También se convierte en lo que tu equipo sabe de ti.',
-      libro:'hard',
+      libro:'elprincipe',
       ef:function(e,log){ e.politico += 10; e.moral -= 12; e.penalCap = (e.penalCap||0) + 3;
         nota(log,'malo','Vació su escritorio antes del viernes. El directorio pasó de página. Tu equipo ahora trabaja con un ojo en la salida.','hard'); } },
     { txt:'"Fue mi decisión. Tómenme a mí o suéltenlo"',
@@ -1420,7 +1424,7 @@ var EVENTOS = [
   opciones:[
     { txt:'Contratar al "consultor"',
       nota:'Va a funcionar. Siempre funciona. Eso es exactamente lo que lo convierte en los $60.000 más caros que vas a gastar.',
-      libro:'hard',
+      libro:'mafia',
       ef:function(e,log){ e.caja -= 60000; e.cobertura.segur += 14; e.lupa = Math.min(100, e.lupa + 22);
         nota(log,'malo','La revisión concluyó favorablemente en once días. En alguna parte, un cuaderno ahora tiene tu nombre.','hard'); } },
     { txt:'Rechazar. Lo bastante fuerte para que se oiga',
@@ -1467,12 +1471,12 @@ var EVENTOS = [
   opciones:[
     { txt:'Aceptar. En silencio',
       nota:'0,5% de un quizás contra un dado mensual sobre tu reputación. La calle lo llama apuesta lateral; compliance lo llama con una palabra más corta.',
-      libro:'hard',
+      libro:'pgmean',
       ef:function(e,log){ e.conflictoInteres = true; e.ventaSecundaria = (e.ventaSecundaria||0) + 15000;
         nota(log,'malo','Acciones firmadas, llamadas agendadas. Cada mes desde ahora, rueda un dado que tú nunca ves.','hard'); } },
     { txt:'Aceptar, declarado y por escrito',
       nota:'La versión aburrida: legal lo revisa, el CEO lo firma, la ganancia se achica y la bomba también.',
-      libro:'deals',
+      libro:'sandhill',
       ef:function(e,log){ e.politico -= 4; e.ventaSecundaria = (e.ventaSecundaria||0) + 8000;
         nota(log,'bueno','La mitad de la mística, nada de la mecha. El CEO levantó una ceja y firmó.','deals'); } },
     { txt:'Pasar. Tu equity está aquí',
@@ -1517,7 +1521,7 @@ var EVENTOS = [
         nota(log,'malo','Dibujó la arquitectura de ellos en tu pizarra en la primera semana. Sus abogados dibujaron algo también: una línea de tiempo.','artofwar'); } },
     { txt:'Contratarla limpia: seis meses de cuarentena, sin interrogatorios',
       nota:'Te llevas el talento y renuncias al botín. Más lento, defendible, y ella te va a respetar por no preguntar.',
-      libro:'grove',
+      libro:'norules',
       ef:function(e,log){ Motor.contratar(e,'ing'); e.moral += 3;
         nota(log,'bueno','Notó que nunca preguntaste por los internos de ellos. "Por eso vine," dijo.','grove'); } },
     { txt:'Pasar, y avisarle al CTO del competidor que ella se está ofreciendo',
@@ -1534,7 +1538,7 @@ var EVENTOS = [
   opciones:[
     { txt:'Financiar la liga infantil',
       nota:'No es un soborno, es filantropía con recibo y guiño. Los fiscales coleccionan recibos.',
-      libro:'hard',
+      libro:'mafia',
       ef:function(e,log){ e.caja -= 35000; e.cobertura.soporte += 8; e.lupa = Math.min(100, e.lupa + 15);
         nota(log,'malo','Los niños consiguieron uniformes, tu expediente se destrabó, y una foto tuya en la ceremonia ahora existe para siempre.','hard'); } },
     { txt:'Ofrecer una alianza pública transparente',
@@ -1597,13 +1601,13 @@ var EVENTOS = [
   opciones:[
     { txt:'Cocinarlos. Solo hasta que cierre',
       nota:'El primer problema no es que te atrapen: es que el número cocinado se vuelve el número real detrás de tus propias decisiones. Ahora también te mientes a ti.',
-      libro:'analytics',
+      libro:'badblood',
       ef:function(e,log){ e.caja += Motor.burnMensual(e) * 4; e.lupa = Math.min(100, e.lupa + 25);
         e.evidencia = Math.max(0, e.evidencia - 15); e.politico += 8;
         nota(log,'malo','La ronda cerró sobre números inventados. Entró plata, la Lupa sube 25, y tu evidencia real vale menos: ni tú sabes ya el número verdadero.','analytics'); } },
     { txt:'Negarte, y guardar el correo',
       nota:'Decirle que no al CEO cuesta capital político hoy. Firmar métricas falsas cuesta la carrera entera, con intereses.',
-      libro:'hard',
+      libro:'pgmean',
       ef:function(e,log){ e.politico -= 12; e.moral += 4;
         nota(log,'bueno','Dijiste que no, por escrito. El CEO no lo va a olvidar. Los fiscales tampoco — a tu favor.','hard'); } },
     { txt:'Presentar la historia real, bien contada',
@@ -1643,7 +1647,7 @@ var EVENTOS = [
   opciones:[
     { txt:'Taparlo a cambio de lealtad total',
       nota:'Ahora tienes una empleada brillante que te debe una y un secreto que trabaja para ella. Los secretos cobran interés.',
-      libro:'grove',
+      libro:'whatyoudo',
       ef:function(e,log){ e.moral -= 4; e.lupa = Math.min(100, e.lupa + 15); e.penalCap = 0; e.foco += 4;
         nota(log,'malo','Trato sellado. Ella entrega como loca, y ahora dos personas en la empresa le mienten al resto.','grove'); } },
     { txt:'Despedirla en el acto, con auditoría completa',
@@ -1665,7 +1669,7 @@ var EVENTOS = [
   opciones:[
     { txt:'Comprar los usuarios. El mandato es el mandato',
       nota:'Los usuarios comprados no usan, no pagan y no vuelven — pero sí entran al promedio, y pudren cada métrica con la que decides.',
-      libro:'analytics',
+      libro:'trap',
       ef:function(e,log){
         e.usuarios.innov += e.tam.innov * 0.3; e.usuarios.visio += e.tam.visio * 0.15;
         e.retBonus = (e.retBonus||0) - 0.10; e.lupa = Math.min(100, e.lupa + 15);
@@ -1673,7 +1677,7 @@ var EVENTOS = [
         nota(log,'malo','El total explotó. La retención colapsó, tu evidencia vale menos y la Lupa sube: los fondos también saben leer cohortes.','analytics'); } },
     { txt:'No. Mostrar el crecimiento real y aguantar la reunión',
       nota:'El número real incómodo envejece bien. El número inflado envejece como leche al sol.',
-      libro:'analytics',
+      libro:'outcomes',
       ef:function(e,log){ e.politico -= 6; e.evidencia = Math.min(100, e.evidencia + 5);
         nota(log,'bueno','Reunión dura, métricas limpias. Todavía sabes qué es verdad en tu propia empresa.','analytics'); } }
   ]},
@@ -1685,18 +1689,18 @@ var EVENTOS = [
   opciones:[
     { txt:'Ejecutar la dilución. Que la pelee en tribunales',
       nota:'La jugada de Zuckerberg. Funciona, es legal en el papel, y vas a oír la historia recontada en una demanda con descubrimiento de correos incluido.',
-      libro:'deals',
+      libro:'hatching',
       ef:function(e,log){ e.capTable.fund = Math.min(1, e.capTable.fund + 0.12); e.moral -= 10;
         e.marca -= 6; e.lupa = Math.min(100, e.lupa + 10);
         nota(log,'malo','Tienes 12 puntos más de la empresa y una demanda en gestación. El equipo tomó nota de cómo tratas a los socios.','deals'); } },
     { txt:'Comprarle su parte a un precio justo',
       nota:'Más caro hoy, y compra algo que ningún mercado cotiza: que nadie en tu equipo piense que podría ser el próximo.',
-      libro:'deals',
+      libro:'voss',
       ef:function(e,log){ e.caja -= Motor.burnMensual(e) * 4; e.capTable.fund = Math.min(1, e.capTable.fund + 0.08); e.moral += 4;
         nota(log,'bueno','Salida limpia y firmada. Costó caja; no costó reputación.','deals'); } },
     { txt:'Dejarlo como está. Un socio dormido con 30%',
       nota:'El equity muerto en la cap table asusta a los inversionistas casi tanto como una demanda. Casi.',
-      libro:'deals',
+      libro:'wasserman',
       ef:function(e,log){
         nota(log,'neutro','Queda como está. En la próxima ronda, alguien va a preguntar quién es y por qué tiene el 30%.','deals'); } }
   ]},
@@ -1713,12 +1717,12 @@ var EVENTOS = [
         nota(log,'neutro','Cooperaste. La Lupa baja, pero ese expediente nunca se cierra del todo. Nadie en la oficina te sostiene la mirada ya.','hard'); } },
     { txt:'Abogados caros y silencio',
       nota:'La defensa clásica: costosa, lenta, y a veces funciona. La Lupa no baja; la cuenta sube.',
-      libro:'hard',
+      libro:'superpumped',
       ef:function(e,log){ e.caja -= Motor.burnMensual(e) * 2; e.infraExtra = (e.infraExtra||0) + 15000;
         nota(log,'neutro','Los abogados facturan cada mes y el expediente sigue abierto. Al menos nadie habló.','hard'); } },
     { txt:'Limpiar la casa de verdad: cortar todo lo gris, ya',
       nota:'La única salida que arregla el caso Y la causa del caso. Cuesta crecimiento hoy.',
-      libro:'grove',
+      libro:'pgmean',
       ef:function(e,log){ e.lupa = Math.max(e.lupaBase, e.lupa - 30); e.gtmBonus = -0.3; e.foco += 5;
         nota(log,'bueno','Cortaste todo lo que no sobreviviría una inspección. Creces menos este trimestre y duermes de noche.','grove'); } }
   ]},

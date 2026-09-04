@@ -2190,6 +2190,18 @@
         h += '<div class="probbar"><i class="ok" style="width:' + op.prob + '%">' + op.prob + '%</i>' +
              '<i class="ko" style="width:' + (100 - op.prob) + '%">' + (100 - op.prob) + '%</i></div>';
       }
+      /* Integración intrínseca sobre el dilema: cada opción trae su `nota` — qué
+         estás eligiendo de verdad — y el concepto que está en juego en ESA rama.
+         Las dos cosas ya venían en los datos de `contenido.js` (161 de 164
+         opciones las tienen) y no se renderizaban en ninguna parte: el jugador
+         elegía entre dos títulos y la teoría llegaba después, cuando ya no
+         cambiaba nada. Acá el concepto está sobre la decisión, que es la mesa de
+         capital, la de la Lupa y la de precio al mismo tiempo — las tres son
+         dilemas. No dice cuál conviene: dice qué se paga en cada una. */
+      if (op.nota || op.libro) {
+        h += '<div class="optn">' + (op.nota ? '<span class="onx">' + esc(op.nota) + '</span>' : '') +
+             (op.libro ? chip(op.libro) : '') + '</div>';
+      }
       h += '</div>';
     }
     h += '</div>';
@@ -2206,7 +2218,12 @@
        ok/ko tienen la misma forma {nota,libro,ef} que cualquier opcion vieja. */
     var rama = (typeof op.prob === 'number') ? (Math.random() * 100 < op.prob ? op.ok : op.ko) : op;
     rama.ef(J, log);
-    if (rama.nota) log.push({ tipo:'nota', texto:rama.nota, libro:rama.libro || ev.libro });
+    /* La `nota` de la opción ya se leyó ANTES de elegir, en la rama que el
+       jugador estaba mirando: ahí es donde dirige la atención. Empujarla otra
+       vez al resultado repetía la misma frase treinta segundos después. Lo que
+       queda en el cierre es lo que pasó (lo escribe el propio `ef`) y la
+       teoría del concepto que la rama puso en juego. */
+    if (rama.libro || ev.libro) marcarCodex([{ libro:rama.libro || ev.libro }]);
     marcarCodex(log);
     notasEvento = log;
     var libroTeoria = rama.libro || ev.libro;
