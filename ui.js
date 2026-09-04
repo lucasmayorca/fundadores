@@ -1859,7 +1859,19 @@
           chipsEsperado(d.vec, d.subs, ejesAqui) +
           '<span class="sello' + (aporte > 0 ? ' on' : '') + '">' +
             (aporte > 0 ? '↑ mandato' : 'no mueve el mandato') + '</span>' +
-        '</div></div>';
+        '</div>' +
+        /* Integración intrínseca, clase `postura`: qué decisión estratégica es
+           elegir ESTA iniciativa, con el nombre del concepto, mientras la
+           estás mirando. No es un adorno al pie: es la única línea de la
+           tarjeta que dice por qué esta apuesta y no otra — el resto son
+           números. La ficha se abre tocándola. */
+        (function () {
+          var po = Motor.posturaDe(J, id);
+          if (!po) return '';
+          return '<div class="inipos">' + svgIc('book') +
+            '<span class="ipt">' + esc(po.txt) + '</span>' +
+            (po.libro ? chip(po.libro) : '') + '</div>';
+        })() + '</div>';
     }
     $('backlog').innerHTML = h;
   }

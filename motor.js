@@ -984,6 +984,97 @@ var Motor = (function () {
     return d;
   }
 
+  /* ---------------- la postura que estás tomando ----------------
+     Integración intrínseca, clase `postura` (ver INTEGRA en libros.js). Era la
+     clase más grande de la biblioteca — 44 fichas — y la única con CERO
+     presencia en el juego: el jugador ya tomaba estas decisiones (a qué
+     segmento le cumplo, qué necesidad profundizo, subo el precio o no) y
+     ningún concepto tenía su nombre puesto sobre ellas. Aparecían después, en
+     un panel, cuando una variable cruzaba un umbral.
+
+     Esto lo da vuelta: cada iniciativa del backlog declara QUÉ POSTURA
+     ESTRATÉGICA es elegirla, con el nombre del concepto, mientras el jugador
+     la está mirando. Elegir la apuesta ES aplicar el concepto — que es
+     exactamente lo que pide Habgood: el contenido entregado a través de la
+     mecánica, no pegado encima.
+
+     Devuelve UNA sola postura, la más informativa para el estado de hoy, y el
+     orden de las ramas es la prioridad. Una tarjeta con cuatro etiquetas no
+     dirige la atención a ninguna parte. */
+  function posturaDe(e, id) {
+    var a = apuesta(id);
+    if (!a) return null;
+    var nec = a.nec, cob = e.cobertura[nec] || 0, i;
+
+    /* señuelo: la apuesta que se ve grande y no mueve nada */
+    if (a.senuelo) return { txt:'Se ve grande y no mueve la métrica que firmaste',
+      libro:e.evidencia < 50 ? 'analytics' : 'trap' };
+
+    /* Requisito de la compuerta. Solo habla cuando ESTE requisito es el que
+       más traba: etiquetar las seis necesidades del gate hacía que un tercio
+       de las tarjetas dijeran lo mismo, y una etiqueta que está en todas no
+       dirige la atención a ninguna parte. Cuando falta mucho manda Moore
+       (cruzar el abismo); cuando falta poco manda Ries & Trout, porque a un
+       requisito de distancia la decisión ya es de posicionamiento. */
+    var pide = null, brechaMax = 0, brechaMia = null;
+    for (i = 0; i < e.gateReqs.length; i++) {
+      var gn = e.gateReqs[i][0], gu = e.gateReqs[i][1], gap = gu - (e.cobertura[gn] || 0);
+      if (gn === nec && gap > 0) brechaMia = gap;
+      if (gap > brechaMax) { brechaMax = gap; pide = gn; }
+    }
+    if (brechaMia !== null && pide === nec) {
+      var reqs = requisitosGate(e), ok = 0;
+      for (i = 0; i < reqs.length; i++) if (reqs[i].ok) ok++;
+      return { txt:'Lo que más traba "' + e.gateNombre + '" — ' + ok + ' de ' + reqs.length + ' requisitos',
+        libro:ok >= reqs.length - 1 ? 'positioning' : 'chasm' };
+    }
+
+    /* necesidad saturada: retorno decreciente, el trabajo ya está hecho */
+    if (cob >= COBERTURA_PLENA) return { txt:'Ya saturada (' + Math.round(cob) + '): desde acá rinde cada vez menos',
+      libro:'jtbd' };
+
+    /* hueco del recorrido: la necesidad está en cero y alguien la necesita */
+    if (cob < 12) {
+      for (i = 0; i < SEGMENTOS.length; i++) {
+        if (SEGMENTOS[i].requiere.indexOf(nec) >= 0 && (e.usuarios[SEGMENTOS[i].id] || 0) > 0) {
+          return { txt:'Hueco del recorrido: ' + SEGMENTOS[i].nombre + ' lo necesita y no está',
+            libro:'storymap' };
+        }
+      }
+    }
+
+    /* Escala. Antes esta rama interceptaba TODA apuesta de escala y dejaba
+       muerto a challenger, que es el que habla de lo que el cliente grande
+       exige antes de firmar. Ahora solo habla cuando la carga es lo que
+       aprieta; si no, la tarjeta la explica su propio vector. */
+    if (nec === 'escala' && carga(e) > 0.55) return {
+      txt:'La carga está al ' + Math.round(carga(e) * 100) + '%: esto decide cuántos usuarios aguantás',
+      libro:carga(e) > 0.8 ? 'ddia' : 'everything' };
+
+    /* contraposicionamiento: profundizás donde él no mira */
+    if (e.competidor.atencion < 0.3 && cob >= 40) return { txt:'Profundiza donde el competidor no mira — todavía',
+      libro:'helmer' };
+    if (e.competidor.atencion >= 0.6) return { txt:'Paridad con el competidor: su fuerza ya descuenta tu crecimiento',
+      libro:e.competidor.atencion >= 0.75 ? 'paranoid' : 'zero' };
+
+    /* qué métrica domina el vector: la postura sale de lo que la apuesta mueve */
+    var vec = (e.vectores && e.vectores[id]) || {}, mk, mejor = null, mv = 0;
+    for (mk in vec) if (vec.hasOwnProperty(mk) && vec[mk] > mv) { mv = vec[mk]; mejor = mk; }
+    if (mejor === 'ret') return { txt:'Retención: el único bucle que se compone solo',
+      libro:retencionMedia(e) > 0.9 ? 'badass' : 'hooked' };
+    if (mejor === 'adq') return { txt:'Alcance: entra a la conversión que ya tenés, no a la que querés',
+      libro:e.marca >= 55 ? 'purplecow' : e.viral >= 1.6 ? 'coldstart' : 'traction' };
+    if (mejor === 'rev') return { txt:'Ingresos por usuario: mueve la caja este mes',
+      libro:e.precio > (e.precioInicio || e.precio) ? 'innovsol' : 'pricing' };
+    if (mejor === 'rel') return { txt:'Fiabilidad: lo que el mercado grande exige antes de firmar',
+      libro:'challenger' };
+    if (mejor === 'act') return { txt:'Activación: multiplica todo el tráfico que ya pagaste',
+      libro:'olsen' };
+    return null;
+  }
+  /* helper chico para no repetir la cuenta de la compuerta adentro de posturaDe */
+  function Motor_compuertaCerrada(e) { return compuerta(e, 'pragm') < 1; }
+
   /* Con poca evidencia esto es ruido con cara de número. Y si encima
      entrevistaste mal, es ruido optimista. La habilidad de producto ayuda. */
   function costoDe(e, id) {
@@ -1889,7 +1980,7 @@ var Motor = (function () {
     ejeValor:ejeValor, usabilidadIndice:usabilidadIndice, snapshotEjes:snapshotEjes,
     carga:carga, capacidadSistema:capacidadSistema, burnMensual:burnMensual, runwayMeses:runwayMeses,
     nomina:nomina, infra:infra, calcularMrr:calcularMrr,
-    estimacion:estimacion, estimacionDetalle:estimacionDetalle, costoDe:costoDe, comprometido:comprometido, confianza:confianza, requisitosGate:requisitosGate, compuerta:compuerta,
+    estimacion:estimacion, estimacionDetalle:estimacionDetalle, posturaDe:posturaDe, costoDe:costoDe, comprometido:comprometido, confianza:confianza, requisitosGate:requisitosGate, compuerta:compuerta,
     abierto:abierto, fraccionGate:fraccionGate, contratar:contratar, ronda:ronda, pivotar:pivotar,
     progresoMandato:progresoMandato, progresoDe:progresoDe, ritmoMandato:ritmoMandato, alineacion:alineacion, cascada:cascada,
     seg:seg, apuesta:apuesta,
