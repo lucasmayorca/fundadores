@@ -388,6 +388,18 @@ var Motor = (function () {
     var c = e.calib || { ok:0, n:0 };
     return { ok:c.ok, n:c.n, pct:c.n ? c.ok / c.n : null };
   }
+  /* Qué concepto está en juego cuando el jugador hace su llamada. Sin esto, la
+     mecánica enseñaba la lección y no nombraba el libro: la clase `info`
+     quedaba en 2 de 16 conceptos presentes en el momento de decidir. El orden
+     es de causa — primero lo que más está deformando el número que va a
+     juzgar, y solo si no hay nada torcido, el marco general. */
+  function libroDeLlamada(e) {
+    if (e.calidadDesc < 0.6) return 'momtest';
+    if (e.evidencia < 45) return 'lean';
+    if ((e.calib || { n:0 }).n >= 3) return 'thinkingbets';
+    if (e.evidencia < 70) return 'torres';
+    return 'analytics';
+  }
 
   function tickPendientes(e, log) {
     if (!e.pendientes) e.pendientes = [];
@@ -2057,6 +2069,7 @@ var Motor = (function () {
        la segunda vuelta), lo vuelve a llenar sin gastar un mes */
     asegurarBacklog:function (e) { if (e) rellenarBacklog(e); },
     llamarApuesta:llamarApuesta, calibracion:calibracion, juzgarLlamada:juzgarLlamada,
+    libroDeLlamada:libroDeLlamada,
     setearSubmetricasBase:setearSubmetricasBase, updateSubmetricasMonth:updateSubmetricasMonth, submetricasDelEje:submetricasDelEje
   };
 })();

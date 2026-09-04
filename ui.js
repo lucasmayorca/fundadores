@@ -1795,9 +1795,14 @@
             oh += '<span class="llb' + (mia === op[oi][0] ? ' on' : '') +
                   '" data-llamada="' + id + ':' + op[oi][0] + '">' + op[oi][1] + '</span>';
           }
+          /* el concepto que está en juego al llamar: la mecánica enseñaba la
+             lección sin nombrar el libro, y así la clase `info` quedaba casi
+             ausente del momento de la decisión */
+          var lb = Motor.libroDeLlamada(J);
           return '<div class="apll"><span class="ml">Tu llamada</span>' + oh +
             '<span class="llh">' + (mia ? 'se resuelve cuando cierren los datos' :
-              '¿va a rendir más o menos que lo que dice el backlog?') + '</span></div>';
+              '¿va a rendir más o menos que lo que dice el backlog?') + '</span>' +
+            (lb ? chip(lb) : '') + '</div>';
         })() +
         '</div>';
     }
