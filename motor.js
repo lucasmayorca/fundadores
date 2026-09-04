@@ -241,6 +241,11 @@ var Motor = (function () {
     e.contVistas = {};
     e.espera = {};
     e.pendientes = [];
+    /* Integración intrínseca, clase `info`: la llamada que el jugador hace
+       ANTES de que los datos cierren, y su calibración acumulada. Ver
+       llamarApuesta() más abajo. */
+    e.llamadas = {};
+    e.calib = { ok:0, n:0 };
     sincronizarDerivadas(e);
     for (i = 0; i < APUESTAS.length; i++) calibrarApuesta(e, APUESTAS[i]);
     /* la empresa llegó viva hasta acá: su arquitectura sostiene lo que ya
@@ -350,6 +355,52 @@ var Motor = (function () {
     if (vec.rel) { e.arquitectura += vec.rel * 0.5 * frac; e.fiabPercibida = clamp(e.fiabPercibida + vec.rel * 0.4 * frac, 0, 100); if (partes) partes.push('REL ' + (vec.rel > 0 ? '+' : '') + Math.round(vec.rel * frac * 10) / 10); }
   }
 
+  /* ---------------- tu llamada ----------------
+     El jugador puede comprometer, cuando elige la iniciativa, si cree que va a
+     rendir MÁS, IGUAL o MENOS que lo que el backlog le promete. Es opcional a
+     propósito: obligarlo metería un paso en cada mes, y lo que enseña no es el
+     trámite sino el contraste — cuando la llamada existe, el cierre le dice si
+     su criterio era bueno, no si tuvo suerte.
+
+     Es la clase `info` de INTEGRA hecha mecánica. La estimación que ve viene
+     con un error cuyo ancho es (100 − evidencia) y cuyo sesgo es la calidad de
+     su discovery; con evidencia baja va a fallar sus llamadas y lo va a ver en
+     su propio marcador, que es la única forma honesta de aprender que ese
+     número era ruido. Y separa las dos preguntas que se mezclan siempre:
+     ¿decidí bien? y ¿salió bien? */
+  var NOMBRE_LLAMADA = { mas:'MÁS', igual:'IGUAL', menos:'MENOS' };
+  var BANDA_LLAMADA = 0.15;
+
+  function juzgarLlamada(llamada, real, esperado) {
+    var r = real / Math.max(1, esperado);
+    if (llamada === 'mas') return r >= 1 + BANDA_LLAMADA;
+    if (llamada === 'menos') return r <= 1 - BANDA_LLAMADA;
+    return r > 1 - BANDA_LLAMADA && r < 1 + BANDA_LLAMADA;
+  }
+  /* la UI llama acá: null borra la llamada, y solo se puede llamar lo que
+     todavía no cerró sus datos */
+  function llamarApuesta(e, id, llamada) {
+    if (!e.llamadas) e.llamadas = {};
+    if (!llamada) delete e.llamadas[id];
+    else e.llamadas[id] = llamada;
+  }
+  function calibracion(e) {
+    var c = e.calib || { ok:0, n:0 };
+    return { ok:c.ok, n:c.n, pct:c.n ? c.ok / c.n : null };
+  }
+  /* Qué concepto está en juego cuando el jugador hace su llamada. Sin esto, la
+     mecánica enseñaba la lección y no nombraba el libro: la clase `info`
+     quedaba en 2 de 16 conceptos presentes en el momento de decidir. El orden
+     es de causa — primero lo que más está deformando el número que va a
+     juzgar, y solo si no hay nada torcido, el marco general. */
+  function libroDeLlamada(e) {
+    if (e.calidadDesc < 0.6) return 'momtest';
+    if (e.evidencia < 45) return 'lean';
+    if ((e.calib || { n:0 }).n >= 3) return 'thinkingbets';
+    if (e.evidencia < 70) return 'torres';
+    return 'analytics';
+  }
+
   function tickPendientes(e, log) {
     if (!e.pendientes) e.pendientes = [];
     var quedan = [], i, pn;
@@ -365,6 +416,17 @@ var Motor = (function () {
       e.historialImpacto = e.historialImpacto.slice(0, 6);
       var frase = 'Cerraron los datos de "' + pn.n + '": impacto real ' + pn.real +
                   ' (esperabas ' + pn.esperado + ' cuando lo elegiste).';
+      /* La llamada del jugador se resuelve acá, y es lo único del juego que
+         califica su CRITERIO en vez de su resultado: una buena decisión puede
+         salir mal. Por eso la calibración se lleva aparte del mandato. */
+      if (pn.llamada) {
+        var acerto = juzgarLlamada(pn.llamada, pn.real, pn.esperado);
+        if (!e.calib) e.calib = { ok:0, n:0 };
+        e.calib.n++;
+        if (acerto) e.calib.ok++;
+        frase += ' Habías dicho que iba a rendir ' + NOMBRE_LLAMADA[pn.llamada] + ': ' +
+          (acerto ? 'acertaste' : 'te equivocaste') + '. Tu calibración va ' + e.calib.ok + ' de ' + e.calib.n + '.';
+      }
       if (pn.real < pn.esperado * 0.55) {
         log.push({ tipo:'malo', libro:pn.evidencia < 45 ? 'lean' : 'trap',
           texto:frase + (pn.evidencia < 45 ?
@@ -1155,7 +1217,12 @@ var Motor = (function () {
   function estimacion(e, id) {
     var real = e.impactos[id] * factorBase(e, id);
     var incert = ((100 - e.evidencia) / 100) * (1 - e.hab.producto / 220);
-    var sesgo = (e.sesgo || 0) * 20 * incert;
+    /* El ruido se cierra con evidencia; el sesgo NO. Multiplicarlo por
+       `incert` como antes lo hacía desaparecer justo cuando el jugador se
+       sentía informado, que es exactamente lo contrario de lo que enseña el
+       libro: las malas entrevistas no te dejan sin datos, te dejan con datos
+       optimistas y la confianza intacta. Preguntar bien es lo único que lo baja. */
+    var sesgo = (e.sesgo || 0) * 16;
     return Math.max(1, Math.round(real + (e.ruidos[id] || 0) * 40 * incert + sesgo));
   }
   function confianza(e) {
@@ -1369,6 +1436,14 @@ var Motor = (function () {
       var gan = rinde(p.desc, 4.7) * e.calidadDesc * (1 + e.hab.producto / 200 + e.capacidades.producto / 300) *
                 Math.pow(1 - e.evidencia / 100, 1.9);
       e.evidencia = clamp(e.evidencia + gan, 0, 100);
+      /* El sesgo ES la calidad de tus entrevistas, y estaba en 0.4 fijo desde
+         el día uno sin que nada lo tocara: entrevistar mal solo te hacía
+         aprender más lento, no aprender MAL. Eso dejaba la tesis del Mom Test
+         fuera del modelo, porque su punto no es que te falte información — es
+         que te sobra información equivocada, y encima confiada. Ahora
+         preguntar por opiniones en vez de por hechos del pasado deja un sesgo
+         que infla las estimaciones hacia el lado que te gusta. */
+      e.sesgo = clamp(1 - e.calidadDesc, 0, 1);
       for (id in e.ruidos) if (e.ruidos.hasOwnProperty(id)) e.ruidos[id] *= 0.88;
       e.usabilidad += rinde(p.desc, 0.6);
       if (e.calidadDesc < 0.6) log.push({ tipo:'malo', texto:'Entrevistaste pidiendo opiniones: la gente fue amable y te ' +
@@ -1496,7 +1571,8 @@ var Motor = (function () {
         if (a.nec === 'datos') { e.evidencia = clamp(e.evidencia + 4, 0, 100); partes.push('+4 de evidencia'); }
         if (a.nec === 'soporte' || a.nec === 'segur' || a.nec === 'integra') partes.push('tick de compuerta');
         e.pendientes.push({ id:id, n:a.n, real:real, esperado:esperado, vec:vec3,
-                            tramo:1, evidencia:e.evidencia });
+                            tramo:1, evidencia:e.evidencia,
+                            llamada:(e.llamadas && e.llamadas[id]) || null });
         log.push({ tipo:sinBase ? 'malo' : 'neutro', libro:sinBase ? 'fowler' : 'analytics', dato:'sale',
           sinBase:!!sinBase,
           texto:'Entregaste "' + a.n + '".' +
@@ -1992,6 +2068,8 @@ var Motor = (function () {
        índice de derivadas y, si el backlog quedó vacío (partidas de antes de
        la segunda vuelta), lo vuelve a llenar sin gastar un mes */
     asegurarBacklog:function (e) { if (e) rellenarBacklog(e); },
+    llamarApuesta:llamarApuesta, calibracion:calibracion, juzgarLlamada:juzgarLlamada,
+    libroDeLlamada:libroDeLlamada,
     setearSubmetricasBase:setearSubmetricasBase, updateSubmetricasMonth:updateSubmetricasMonth, submetricasDelEje:submetricasDelEje
   };
 })();
