@@ -1769,7 +1769,8 @@
           /* la base se mide al entregar: mientras esto siga en vuelo, todavía
              estás a tiempo de construirla y cobrar el impacto entero */
           (!espera && !esCont && Motor.depPendiente(J, id) ?
-            '<span class="sinbase">sale sin ' + esc(Motor.depPendiente(J, id).n) + ' — mitad de impacto</span>' : '') +
+            '<span class="sinbase">sale sin ' + esc(Motor.depPendiente(J, id).n) + ' — ' +
+              Math.round(Motor.factorSinBase() * 100) + '% de impacto</span>' : '') +
           '</div></div>' +
         (espera ?
           '<div class="ctrl"><div class="escalar' + (J.politico < Motor.costoEscalar(J) ? ' off' : '') +
@@ -1846,7 +1847,8 @@
            mitad, así que el costo de saltearlo se lee donde el jugador ya está
            mirando. */
         (d.dep ? '<div class="inidep">Va después de <b>' + esc(d.dep.n) + '</b>' +
-                 '<span>sin esa base rinde la mitad y deja 8 de deuda — los números de abajo ya lo cuentan</span></div>' : '') +
+                 '<span>sin esa base rinde el ' + Math.round(Motor.factorSinBase() * 100) +
+                 '% y deja 8 de deuda — los números de abajo ya lo cuentan</span></div>' : '') +
         '<div class="inim">' +
           '<span class="ml tipped" data-tip="prob">Prob</span>' + dots(d.prob) +
           '<span class="ml">Esfuerzo</span><span class="tipped" data-tip="esf"><span class="esf e' + d.esf + '">' + d.esf + '</span></span>' +
@@ -2044,6 +2046,36 @@
     $('panel').innerHTML = h;
   }
 
+  /* ---------------- de dónde salen tus puntos ----------------
+     Integración intrínseca, clase `capacidad`: el total de puntos del mes era
+     un número sin origen — decía "135 de 135" y nada más. `desgloseCapacidad`
+     ya venía emitiendo cada factor con el libro que lo explica, y no la
+     llamaba nadie: los conceptos estaban declarados en el motor y el jugador
+     no veía ninguno.
+
+     Ahora el total se abre y cada línea nombra su concepto sobre el número que
+     le quita puntos, en la pantalla donde está repartiendo — no en un panel al
+     cerrar el mes. Es la diferencia entre leer sobre la deuda técnica y verla
+     cobrarte 58 antes de decidir en qué gastar los que quedan. El chip es la
+     ficha de la biblioteca: se toca y se abre. */
+  var desgloseAbierto = false;
+
+  function desgloseHtml() {
+    var d = Motor.desgloseCapacidad(J), i, h = '';
+    for (i = 0; i < d.length; i++) {
+      var ln = d[i], v = ln.v;
+      if (ln.sep) { h += '<div class="dglsep rot">' + esc(ln.sep) + '</div>'; continue; }
+      var neg = (typeof v === 'number' && v < 0);
+      h += '<div class="dgl">' +
+        '<span class="dglv num' + (neg ? ' rojo' : '') + '">' + esc('' + v) + '</span>' +
+        '<span class="dglk">' + esc(ln.k) +
+          (ln.nota ? '<span class="dgln">' + esc(ln.nota) + '</span>' : '') + '</span>' +
+        (ln.libro ? '<span class="dglb">' + chip(ln.libro) + '</span>' : '') +
+        '</div>';
+    }
+    return '<div class="dglcaja">' + h + '</div>';
+  }
+
   function renderBarra() {
     var ocio = sinUsar(), saliendo = 0, id;
     for (id in plan.asig) if (plan.asig.hasOwnProperty(id)) {
@@ -2052,8 +2084,11 @@
     /* una sola cuenta: cuantos de tus puntos estan colocados. Lo demas
        (proyectos abiertos, cuantos salen) ya se ve en las tarjetas. */
     var total = Motor.capacidadPropia(J), puestos = total - ocio;
-    var h = '<div class="pts"><b class="num' + (ocio > 0 ? ' ambar' : '') + '">' + puestos + ' de ' + total +
-      '</b> puntos asignados' + (saliendo ? ' · <span class="verde">' + saliendo + ' sale' + (saliendo === 1 ? '' : 'n') + ' este mes</span>' : '') + '</div>';
+    var h = '<div class="pts"><b class="num tot' + (ocio > 0 ? ' ambar' : '') + '" data-act="desglose">' +
+      puestos + ' de ' + total + '</b> puntos asignados' +
+      '<span class="dglver" data-act="desglose">' + (desgloseAbierto ? 'ocultar' : 'de dónde salen') + '</span>' +
+      (saliendo ? ' · <span class="verde">' + saliendo + ' sale' + (saliendo === 1 ? '' : 'n') + ' este mes</span>' : '') +
+      (desgloseAbierto ? desgloseHtml() : '') + '</div>';
     if (J.esFundador && !J.levantando) h += '<span class="btn chico" data-act="ronda" style="margin-right:10px">Salir a levantar</span>';
     h += '<span class="btn pri" data-act="ejecutar">Cerrar el mes</span>';
     $('barra').innerHTML = h;
@@ -3075,6 +3110,7 @@
     if (!v) return;
 
     if (v === 'filtro-eje') { soloMandato = !soloMandato; renderBacklog(); return; }
+    if (v === 'desglose') { desgloseAbierto = !desgloseAbierto; renderBarra(); return; }
     if (v === 'teoria') {
       teoriaAbierta = !teoriaAbierta;
       if (ultimoResultado) mostrarResultado.apply(null, ultimoResultado);

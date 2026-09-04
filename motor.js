@@ -52,7 +52,7 @@ var Motor = (function () {
      construir igual, sin la base, y entonces rinde la mitad y deja deuda.
      "Lo hicimos sin la base" es una frase que existe en todos los equipos, y
      el juego tiene que dejar tomarla y después cobrarla. */
-  var FACTOR_SIN_BASE = 0.5;
+  var FACTOR_SIN_BASE = 0.35;
   function depPendiente(e, id) {
     var a = apuesta(id);
     if (!a || !a.dep) return null;
@@ -853,20 +853,134 @@ var Motor = (function () {
      pedirte permiso: eso es tener poco mando. */
   function capacidadPropia(e) { return Math.max(2, Math.round(capacidad(e) * e.mando)); }
 
+  /* Cuánto te cuesta un factor, EN TUS PUNTOS: se recalcula la capacidad con
+     ese campo puesto en su mejor valor posible y se resta. Así cada renglón
+     del desglose está en la misma moneda que el jugador gasta — decir que la
+     deuda le quita 163 cuando reparte 31 puntos no informa, informa decir que
+     le quita 20 de esos 31. Es exacto por construcción: sale del mismo
+     capacidad() que corre el mes. */
+  /* Lo mismo para un multiplicador que no vive en un campo: cuántos puntos
+     tuyos recuperarías si ese factor fuera 1. La atribución es marginal —
+     los factores se componen — y es la misma cuenta que hace costoFactor. */
+  function costoMult(e, f) {
+    if (!f || f >= 1) return 0;
+    return Math.round(capacidadPropia(e) * (1 / f - 1));
+  }
+  function costoFactor(e, campo, ideal) {
+    var antes = e[campo], real = capacidadPropia(e);
+    e[campo] = ideal;
+    var techo = capacidadPropia(e);
+    e[campo] = antes;
+    return techo - real;
+  }
+
+  /* ---------------- de dónde salen tus puntos del mes ----------------
+     Integración intrínseca, clase `capacidad` (ver INTEGRA en libros.js): el
+     concepto no se explica en un panel al cerrar el mes — se nombra sobre el
+     número que te quita puntos, en la pantalla donde estás repartiendo. Esa
+     es la diferencia entre leer sobre la deuda técnica y verla cobrarte 19
+     puntos antes de decidir en qué gastar los que quedan.
+
+     Esta función existía y NO la llamaba nadie: los libros estaban declarados
+     acá y el jugador no veía ninguno. Ahora la consume la pantalla del mes.
+
+     Cada línea es un factor REAL de capacidad(), con el mismo signo y el mismo
+     tamaño — si acá dice −19, en el total faltan 19. Las líneas se emiten solo
+     cuando están activas, así el desglose son tres o seis renglones y no
+     veinte. Cuando varias fichas comparten la variable, la que se nombra es la
+     que habla del estado de HOY: con deuda alta manda Fowler, con deuda baja
+     manda el Pragmatic Programmer, que es el que habla de no dejarla crecer. */
   function desgloseCapacidad(e) {
     asegurarCapacidades(e);
     var base = e.ing * 20 + e.prod * 14, d = [];
-    d.push({ k:'Capacidad de la org', v:base });
-    d.push({ k:'Bajo tu mando (' + Math.round(e.mando * 100) + '%)', v:capacidadPropia(e) });
-    if (e.deuda > 0) d.push({ k:'Deuda técnica', v:-Math.round(base * (e.deuda/100) * 0.55), libro:'fowler' });
-    if (e.rampa.length) d.push({ k:'Mentoría a los nuevos', v:-e.rampa.length * 6, libro:'brooks' });
-    if (e.ing + e.prod > (e.teamTopo ? 12 : 8) + Math.round(e.hab.liderazgo/12) + Math.round(e.capacidades.gente/20)) d.push({ k:'Carga cognitiva', v:'-', libro:'topologies' });
-    if (e.moral < 60) d.push({ k:'Moral baja', v:'-', libro:'grove' });
-    if (e.foco < 45) d.push({ k:'Falta de foco', v:'-', libro:'grove' });
-    if (e.cd) d.push({ k:'Despliegue continuo', v:'+12%', libro:'accelerate' });
-    if (e.penalCap - (e.penalCont || 0) > 0) d.push({ k:'Resaca del incidente', v:-(e.penalCap - (e.penalCont || 0)), libro:'sre' });
-    if (e.penalCont) d.push({ k:'Contingencia sin cerrar', v:-e.penalCont, libro:'shapeup' });
-    if (e.capacidadReservada > 0) d.push({ k:'Compromiso de trabajo a medida', v:-8, libro:'trap' });
+    var tam = e.ing + e.prod;
+    var umbral = (e.teamTopo ? 12 : 8) + Math.round(e.hab.liderazgo/12) + Math.round(e.capacidades.gente/20);
+
+    d.push({ k:'Capacidad de la org', v:base, nota:e.ing + ' ing × 20 + ' + e.prod + ' prod × 14' });
+    /* de acá abajo todo está en TUS puntos, no en los de la org: es la moneda
+       que el jugador está repartiendo ahora mismo */
+
+    /* deuda: el único factor que empeora solo si lo ignorás */
+    if (e.deuda > 0) d.push({ k:'Deuda técnica (' + Math.round(e.deuda) + ')',
+      v:-costoFactor(e, 'deuda', 0), libro:e.deuda > 25 ? 'fowler' : 'pragmatic',
+      nota:'le cobra ' + Math.round((e.deuda/100) * 55) + '% a TODO, todos los meses' });
+
+    /* moral y foco son multiplicadores, no restas: se muestran como tales */
+    if (e.moral < 100) d.push({ k:'Moral ' + Math.round(e.moral),
+      v:-costoFactor(e, 'moral', 100),
+      libro:e.moral < 38 ? 'lencioni' : (e.moralMin || 100) <= 48 && e.moral >= 70 ? 'radical' :
+            e.eventosVistos && e.eventosVistos.caza ? 'norules' : 'grove',
+      nota:'multiplica todo: lo que dejás en la mesa contra moral 100' });
+    if (e.foco < 100) d.push({ k:'Foco ' + Math.round(e.foco),
+      v:-costoFactor(e, 'foco', 100),
+      libro:e.foco >= 80 ? 'deepwork' : e.foco < 40 ? 'pgmakers' :
+            e.eventosVistos && e.eventosVistos.okr ? 'okrdoerr' : 'rumelt',
+      nota:'multiplica todo: lo que dejás en la mesa contra foco 100' });
+
+    /* carga cognitiva: el rendimiento marginal decae pasado el umbral */
+    if (tam > umbral) {
+      var fCarga = Math.max(0.55, 1 - 0.05 * (tam - umbral));
+      var piso = fCarga <= 0.55;
+      d.push({ k:'Carga cognitiva (' + tam + ' sobre ' + umbral + ')',
+        v:-costoMult(e, fCarga),
+        libro:e.teamTopo ? 'staffeng' : tam + e.gtm >= 18 ? 'masters' : tam >= 13 ? 'elegant' : 'topologies',
+        nota:piso ? 'tocaste el piso: el equipo está tan arriba del techo que reorganizar ya no alcanza' :
+          e.teamTopo ? 'ya reorganizado, y el equipo sigue arriba del techo' :
+          'lo que recuperarías reorganizando en equipos con fronteras' });
+    }
+    else if (e.teamTopo) d.push({ k:'Equipos con fronteras claras', v:'umbral ' + umbral, libro:'topologies',
+      nota:'reorganizar subió el techo desde el que se decae' });
+
+    if (e.cd) d.push({ k:'Despliegue continuo', v:'+' + (-costoFactor(e, 'cd', false)),
+      /* con incidentes encima, la ficha que habla es la del dato contraintuitivo
+         (sos más rápido Y más estable); sin incidentes, la del mecanismo */
+      libro:(e.incidentesPuesto || 0) > 0 ? 'accelerate' : 'contdel',
+      nota:'lotes chicos: más rápido Y más estable' });
+
+    if (e.rampa.length) d.push({ k:'Mentoría a los nuevos (' + e.rampa.length + ' en rampa)',
+      v:-costoFactor(e, 'rampa', []), libro:e.rampa.length >= 3 ? 'blitz' : 'brooks',
+      nota:'dos meses sin producir, y mientras tanto cuestan' });
+
+    if (e.congelado) d.push({ k:'Congelamiento', v:'sólo 25% construye', libro:'phoenix',
+      nota:'el presupuesto de error se acabó y las prioridades se invirtieron solas' });
+    else if (e.presupuestoError < 40) d.push({ k:'Presupuesto de error en ' + Math.round(e.presupuestoError),
+      v:'un incidente del congelamiento', libro:'sre', nota:'gastarlo es para lo que está — quedarse sin, no' });
+
+    if (e.penalCap - (e.penalCont || 0) > 0) d.push({ k:'Resaca del incidente',
+      v:-(e.penalCap - (e.penalCont || 0)), libro:'releaseit',
+      nota:(e.incidentesPuesto || 0) + ' incidente(s) en el puesto' });
+    if (e.penalCont) d.push({ k:'Contingencia sin cerrar', v:-e.penalCont, libro:'shapeup',
+      nota:'ocupa slot y no mueve tu mandato' });
+    if (e.capacidadReservada > 0) d.push({ k:'Compromiso de trabajo a medida', v:-8, libro:'trap',
+      nota:'entregas que no mueven la métrica que firmaste' });
+
+    d.push({ k:'Bajo tu mando (' + Math.round(e.mando * 100) + '%)', v:capacidadPropia(e), libro:'managerpath',
+      nota:'el resto de la org se mueve sin pedirte permiso' });
+
+    /* Segundo bloque: esto no cambia CUÁNTOS puntos tenés, cambia CUÁNTO
+       RINDEN los que gastes. Va aparte porque sumarlo a la columna de arriba
+       haría una cuenta que no cierra — y la cuenta que no cierra es la forma
+       más rápida de que el jugador deje de creerle al desglose. */
+    d.push({ sep:'Y cuánto rinden' });
+    if (e.usabilidad < 100) d.push({ k:'Usabilidad ' + Math.round(e.usabilidad),
+      v:'activación al ' + Math.round(35 + e.usabilidad * 0.65) + '%',
+      libro:e.usabilidad < 55 ? 'krug' : e.usabilidad >= 70 ? 'norman' : 'leanux',
+      nota:'multiplica la conversión de todo lo que traigas' });
+    if (carga(e) > 0.6) d.push({ k:'Carga del sistema al ' + Math.round(carga(e) * 100) + '%',
+      v:'arquitectura ' + Math.round(e.arquitectura),
+      libro:carga(e) > 0.85 ? 'ddia' : 'ousterhout',
+      nota:'pasado el 85% la probabilidad de caída crece no lineal' });
+
+    if (e.empoderado) d.push({ k:'Equipo empoderado', v:'decide el cómo', libro:e.moral >= 75 ? 'drive' : 'empowered',
+      nota:'ya no sos el techo de la organización' });
+    if (e.politico < 45) d.push({ k:'Capital político en ' + Math.round(e.politico),
+      v:'lo que podés pedir',
+      libro:e.eventosVistos && (e.eventosVistos.creditos || e.eventosVistos.kompromat) ? '48laws' :
+            e.politico < 25 ? 'elprincipe' : 'crucial',
+      nota:'es lo que te deja defender lo que no rinde este mes' });
+    if (e.gtm >= 3) d.push({ k:'Go-to-market (' + e.gtm + ')', v:'convierte mejor que tu gasto', libro:'hackingg',
+      nota:'multiplica sobre la conversión que ya tenés' });
+
     return d;
   }
 
@@ -1293,8 +1407,10 @@ var Motor = (function () {
         e.pendientes.push({ id:id, n:a.n, real:real, esperado:esperado, vec:vec3,
                             tramo:1, evidencia:e.evidencia });
         log.push({ tipo:sinBase ? 'malo' : 'neutro', libro:sinBase ? 'fowler' : 'analytics', dato:'sale',
+          sinBase:!!sinBase,
           texto:'Entregaste "' + a.n + '".' +
-                (sinBase ? ' Salió sin "' + sinBase.n + '" abajo: rinde la mitad de lo que habría rendido y ' +
+                (sinBase ? ' Salió sin "' + sinBase.n + '" abajo: rinde el ' + Math.round(FACTOR_SIN_BASE * 100) +
+                           '% de lo que habría rendido y ' +
                            'te dejó 8 de deuda encima. Nadie lo va a ver desde afuera; lo vas a ver vos, cada ' +
                            'mes, en la capacidad que ya no tenés.' : '') +
                 (partes.length ? ' Primer movimiento: ' + partes.join(' · ') + '.' : '') +
@@ -1778,7 +1894,7 @@ var Motor = (function () {
     progresoMandato:progresoMandato, progresoDe:progresoDe, ritmoMandato:ritmoMandato, alineacion:alineacion, cascada:cascada,
     seg:seg, apuesta:apuesta,
     esContingencia:esContingencia, contActiva:contActiva, hayContingencia:hayContingencia,
-    depPendiente:depPendiente,
+    depPendiente:depPendiente, factorSinBase:function () { return FACTOR_SIN_BASE; },
     enEspera:enEspera, escalar:escalar, costoEscalar:costoEscalar,
     lastreContingencia:lastreContingencia,
     /* asegurarBacklog() corre al cargar una partida guardada: resincroniza el

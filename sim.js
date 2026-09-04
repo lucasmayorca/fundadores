@@ -118,7 +118,7 @@ vm.runInContext(function () {
 
   jugar = function (modo) {
     var mundo = Mundo.nuevo(), c = Carrera.nueva('bot', 0, 'product');
-    var out = { puestos:[], llegaron:0, cerradas:0, vencidas:0, trabas:0, runwayMin:[] };
+    var out = { puestos:[], llegaron:0, cerradas:0, vencidas:0, trabas:0, entregas:0, sinBase:0, runwayMin:[] };
     while (c.puestos.length < Carrera.MAX_PUESTOS) {
       var of = Carrera.ofertas(c, mundo)[0];
       var e = Carrera.aceptar(c, of, mundo);
@@ -130,6 +130,7 @@ vm.runInContext(function () {
           else if (log[li].cont === 'cierra') out.cerradas++;
           else if (log[li].cont === 'vence') out.vencidas++;
           else if (log[li].visto === 'traba') out.trabas++;
+          if (log[li].dato === 'sale') { out.entregas++; if (log[li].sinBase) out.sinBase++; }
         }
         var rw = Motor.runwayMeses(e); if (rw < runMin) runMin = rw;
         Mundo.tick(mundo, 1);
@@ -152,12 +153,16 @@ var MODOS = SOLO ? [SOLO] : ['pasivo', 'ignora', 'ciego', 'atiende', 'escala'];
 function pct(a, b) { return b ? (100 * a / b).toFixed(0) + '%' : '—'; }
 
 MODOS.forEach(function (modo) {
-  var n = 0, ok = 0, fin = {}, pat = 0, hechas = 0, lleg = 0, cer = 0, ven = 0, tra = 0, promo = 0;
+  var n = 0, ok = 0, fin = {}, pat = 0, hechas = 0, lleg = 0, cer = 0, ven = 0, tra = 0, promo = 0, ent = 0, sb = 0;
+  var porCarrera = [];
   var porMandato = {}, runway = [];
   for (var i = 0; i < CARRERAS; i++) {
     var r = vm.runInContext('jugar("' + modo + '")', ctx);
-    pat += r.boletin.patrimonio; lleg += r.llegaron; cer += r.cerradas; ven += r.vencidas; tra += r.trabas;
+    pat += r.boletin.patrimonio; lleg += r.llegaron; cer += r.cerradas; ven += r.vencidas; tra += r.trabas; ent += r.entregas; sb += r.sinBase;
     runway = runway.concat(r.runwayMin);
+    var okC = 0;
+    for (var q = 0; q < r.puestos.length; q++) if (r.puestos[q].cumplido) okC++;
+    porCarrera.push(r.puestos.length ? okC / r.puestos.length : 0);
     for (var j = 0; j < r.puestos.length; j++) {
       var p = r.puestos[j];
       n++; if (p.cumplido) ok++; if (p.promocion) promo++;
@@ -169,7 +174,18 @@ MODOS.forEach(function (modo) {
   }
   runway.sort(function (a, b) { return a - b; });
   console.log('\n' + modo.toUpperCase() + '  (' + CARRERAS + ' carreras, ' + n + ' puestos)');
-  console.log('  mandato cumplido  ' + pct(ok, n));
+  /* La incertidumbre se calcula sobre CARRERAS, no sobre puestos: los ocho
+     puestos de una carrera comparten habilidades, nivel y reputación, así que
+     están correlacionados y contarlos como muestras independientes infla la
+     precisión ~3x. Sin esta banda es fácil leer una diferencia de 5 puntos
+     entre dos corridas como si fuera una señal, y no lo es. */
+  var med = 0, k2;
+  for (k2 = 0; k2 < porCarrera.length; k2++) med += porCarrera[k2];
+  med = med / porCarrera.length;
+  var va = 0;
+  for (k2 = 0; k2 < porCarrera.length; k2++) va += Math.pow(porCarrera[k2] - med, 2);
+  var sigma = Math.sqrt(va / Math.max(1, porCarrera.length - 1)) / Math.sqrt(porCarrera.length);
+  console.log('  mandato cumplido  ' + pct(ok, n) + '  ±' + (196 * sigma).toFixed(1) + ' (95%)');
   console.log('  quiebra ' + pct(fin.quiebra || 0, n) + '   despido ' + pct(fin.despido || 0, n) +
               '   venta ' + pct(fin.venta || 0, n));
   console.log('  apuestas entregadas/puesto ' + (hechas / n).toFixed(1) +
@@ -177,6 +193,7 @@ MODOS.forEach(function (modo) {
   if (lleg) console.log('  contingencias/puesto ' + (lleg / n).toFixed(2) +
               '   cerradas ' + pct(cer, lleg) + '   vencidas ' + pct(ven, lleg));
   console.log('  firmas trabadas/puesto ' + (tra / n).toFixed(2) + '   ascensos ' + pct(promo, n));
+  console.log('  entregas sin su base ' + pct(sb, ent) + ' (' + sb + ' de ' + ent + ')');
   console.log('  patrimonio medio $' + Math.round(pat / CARRERAS / 1000) + 'k');
   var linea = [];
   for (var k in porMandato) linea.push(k + ' ' + pct(porMandato[k].ok, porMandato[k].n));

@@ -377,7 +377,32 @@ h2, h3 { font-weight:500; }
 
 .barra { height:64px; border-top:1px solid var(--color-divider); padding:0 22px; background:var(--color-surface);
   display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; }
-.barra .pts { font-size:14px; color:var(--color-neutral-300); margin-right:auto; }
+.barra .pts { font-size:14px; color:var(--color-neutral-300); margin-right:auto; position:relative; }
+
+/* ---------- de dónde salen tus puntos ----------
+   El desglose se abre HACIA ARRIBA desde la barra: es una respuesta a un
+   número que está abajo, y bajar la vista para leer por qué el de arriba dice
+   135 rompe la lectura. Cada renglón pone el número primero, el nombre
+   después y la ficha al final — se escanea la columna de números y se para
+   solo en el que duele. */
+.barra .pts .tot { cursor:pointer; border-bottom:1px dotted var(--color-neutral-600); }
+.barra .pts .dglver { font-size:11px; color:var(--color-neutral-600); margin-left:8px; cursor:pointer;
+  text-transform:uppercase; letter-spacing:0.04em; }
+.barra .pts .dglver:hover { color:var(--color-accent-300); }
+.dglcaja { position:absolute; left:0; bottom:26px; width:520px; max-height:340px; overflow-y:auto;
+  background:var(--color-surface); border:1px solid var(--color-divider);
+  border-radius:var(--radius-md); box-shadow:var(--shadow-md); padding:8px 4px; z-index:6; }
+.dgl { display:-webkit-flex; display:flex; -webkit-align-items:baseline; align-items:baseline;
+  padding:5px 12px; }
+.dgl + .dgl { border-top:1px solid var(--color-divider); }
+.dglv { min-width:74px; text-align:right; margin-right:12px; font-size:13px;
+  color:var(--color-neutral-200); -webkit-flex-shrink:0; flex-shrink:0; }
+.dglk { -webkit-flex:1; flex:1; font-size:12.5px; color:var(--color-neutral-300); }
+.dgln { display:block; font-size:10.5px; color:var(--color-neutral-600); margin-top:1px; }
+.dglb { margin-left:10px; -webkit-flex-shrink:0; flex-shrink:0; }
+.dglsep { padding:8px 12px 3px 12px; font-size:10px; color:var(--color-neutral-600);
+  border-top:1px solid var(--color-divider); margin-top:2px; }
+body.movil .dglcaja { width:auto; right:0; }
 
 /* ---------- overlays ---------- */
 .ov { display:none; position:absolute; left:0; top:0; width:1024px; height:768px;
