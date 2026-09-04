@@ -1423,11 +1423,14 @@
        comprometas. Sin controles: es información, no una palanca. La decisión
        real quedó donde importa, que es cuánto del mes te llevás en features y
        cuánto dejás para que la empresa se sostenga. */
-    var libre = Math.max(0, Motor.capacidad(J) - enProyectos());
-    var h = '<div class="equipo"><span class="eqk">Operación</span>' +
-      '<span class="eqop"><b class="num">' + libre + '</b> pts sostienen descubrimiento, ' +
-      'plataforma, fiabilidad y crecimiento' +
-      (ocio > 0 ? ' — incluidos los <b class="num">' + ocio + '</b> que no repartiste' : '') +
+    /* Se muestran TUS puntos sin repartir, no la capacidad de toda la empresa:
+       el jugador reparte 23 y ver un 252 al lado no le dice nada accionable. */
+    var h = '<div class="equipo"><span class="eqk">Operación</span><span class="eqop">' +
+      (ocio > 0
+        ? 'los <b class="num">' + ocio + '</b> que no repartas sostienen descubrimiento, ' +
+          'plataforma, fiabilidad y crecimiento'
+        : 'te llevaste el mes entero en iniciativas: descubrimiento, plataforma, ' +
+          'fiabilidad y crecimiento quedan con lo que hace el resto de la empresa') +
       '</span></div>';
     $('capa').innerHTML = h;
   }
