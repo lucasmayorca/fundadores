@@ -269,6 +269,14 @@
     return '<span class="tipped" data-tip="' + clave + '">' + txt + '</span>';
   }
 
+  /* la teoría de una pieza viene en párrafos separados por \n\n: es texto
+     largo a propósito, y un solo bloque de doce renglones no se lee */
+  function parrafos(txt) {
+    var ps = String(txt).split('\n\n'), out = '', i;
+    for (i = 0; i < ps.length; i++) out += '<p>' + esc(ps[i]) + '</p>';
+    return out;
+  }
+
   function chip(libroId) {
     var l = libroPorId(libroId);
     if (!l) return '';
@@ -452,7 +460,7 @@
   /* el elenco del juego tiene cinco papeles; el retrato de cada uno vive en
      img/. Los otros retratos generados quedan listos para cuando Contenido
      sume papeles nuevos a EVENTOS. */
-  var RETRATO = { ceo:'ceo', cto:'cto', ventas:'ventas', estrella:'eng', board:'inversor' };
+  var RETRATO = { ceo:'ceo', cto:'cto', ventas:'ventas', estrella:'eng', board:'inversor', soporte:'soporte' };
   function imgCast(rol) {
     return RETRATO[rol] ? 'img/cast-' + RETRATO[rol] + '.png' : '';
   }
@@ -1257,7 +1265,7 @@
       /* una contingencia no proyecta nada sobre el mandato: ese es el trato.
          Y lo que espera una firma no va a salir este mes, por muchos puntos
          que le pongas. */
-      if (Motor.esContingencia(id) || Motor.enEspera(J, id)) continue;
+      if (Motor.esContingencia(id) || Motor.esCompromiso(id) || Motor.enEspera(J, id)) continue;
       if ((J.enVuelo[id] || 0) + (plan.asig[id] || 0) < Motor.costoDe(J, id)) continue;
       d = Motor.estimacionDetalle(J, id);
       var alineada = J.prima.indexOf(Motor.apuesta(id).nec) >= 0;
@@ -1767,17 +1775,23 @@
       var esCont = Motor.esContingencia(id);
       var cx = esCont ? Motor.contActiva(J, id) : null;
       var vence = cx ? cx.restante : 0;
-      /* Esperando una firma no avanza ni con todos los puntos del mundo, así
-         que la tarjeta cambia de controles: en vez de sumar y restar puntos,
-         la única jugada es gastar capital político para que alguien conteste
-         hoy — o esperar. Es la primera vez que el político se gasta en algo. */
+      /* El compromiso comparte tarjeta con proyectos y contingencias por la
+         misma razón: ocupa slot, se paga con los mismos puntos. Lo distinto
+         es el tono — no es trabajo ajeno que te cae encima, es tu propia
+         palabra — y que no carga el lastre creciente de una contingencia:
+         acá el reloj no te penaliza por esperar, solo por llegar tarde. */
+      var esComp = Motor.esCompromiso(id);
+      var cp = esComp ? Motor.compromisoActivo(J, id) : null;
+      var venceComp = cp ? cp.restante : 0;
       var espera = J.espera && J.espera[id] ? J.espera[id] : null;
-      h += '<div class="ap tuyo' + (sale && !espera ? ' sale' : '') + (esCont ? ' cont' : '') +
-        (esCont && vence <= 1 ? ' urge' : '') + (espera ? ' trabada' : '') + '">' +
+      h += '<div class="ap tuyo' + (sale && !espera ? ' sale' : '') + (esCont ? ' cont' : '') + (esComp ? ' comp' : '') +
+        ((esCont && vence <= 1) || (esComp && venceComp <= 1) ? ' urge' : '') + (espera ? ' trabada' : '') + '">' +
         '<div class="t"><div class="n2">' + esc(a.n) +
         (espera ? '<span class="esperatag">EN ESPERA</span>' :
-         sale ? '<span class="shiptag">' + (esCont ? 'SE CIERRA ESTE MES' : 'SALE ESTE MES') + '</span>' :
+         sale ? '<span class="shiptag">' + (esCont || esComp ? 'SE CIERRA ESTE MES' : 'SALE ESTE MES') + '</span>' :
           (esCont ? '<span class="conttag">VENCE EN ' + vence + (vence === 1 ? ' MES' : ' MESES') + '</span>' :
+           esComp ? '<span class="comptag">' + (cp && cp.heredado ? 'HEREDADO · ' : '') +
+                    'VENCE EN ' + venceComp + (venceComp === 1 ? ' MES' : ' MESES') + '</span>' :
           (pts === 0 ? '<span class="pill">en pausa</span>' : ''))) + '</div>' +
         '<div class="prog"><i class="pdone" style="width:' + pDone + '%"></i>' +
           (espera ? '' : '<i class="pprev" style="width:' + pPrev + '%"></i>') + '</div>' +
@@ -1785,10 +1799,11 @@
           (espera ? esc(espera.quien) + (espera.cargo ? ' · ' + esc(espera.cargo) : '') + ' ' + esc(espera.txt) :
             'faltan ' + falta + ' de ' + cst + ' pts' +
             (esCont ? ' · no mueve tu mandato · abierta se come el ' +
-                      Motor.lastreContingencia(J, id) + '% del equipo' : '')) +
+                      Motor.lastreContingencia(J, id) + '% del equipo' :
+             esComp ? ' · no mueve tu mandato · es tu palabra, no tu prioridad' : '')) +
           /* la base se mide al entregar: mientras esto siga en vuelo, todavía
              estás a tiempo de construirla y cobrar el impacto entero */
-          (!espera && !esCont && Motor.depPendiente(J, id) ?
+          (!espera && !esCont && !esComp && Motor.depPendiente(J, id) ?
             '<span class="sinbase">sale sin ' + esc(Motor.depPendiente(J, id).n) + ' — ' +
               Math.round(Motor.factorSinBase() * 100) + '% de impacto</span>' : '') +
           '</div></div>' +
@@ -1808,7 +1823,7 @@
            contraste que llega dos meses después, cuando cierran los datos. Es
            lo único del juego que califica tu criterio y no tu resultado. */
         (function () {
-          if (espera || esCont) return '';
+          if (espera || esCont || esComp) return '';
           var mia = (J.llamadas || {})[id] || null;
           var op = [['menos', 'menos'], ['igual', 'igual'], ['mas', 'más']], oh = '', oi;
           for (oi = 0; oi < op.length; oi++) {
@@ -2435,54 +2450,40 @@
     /* La teoria del mes ocupaba un bloque de cinco renglones al pie de cada
        cierre. Queda el titular — el libro y su autor — y el cuerpo se abre
        tocandolo. En una decision arranca abierto: ahi el porque ES el premio. */
-    /* El cierre de mes traía teoría SIEMPRE, y siempre la misma: el bloque
-       pedía el libro del día, que devolvía el primer gatillo pegajoso del
-       array. Resultado: cinco cierres seguidos explicando 'Launch Now' — y en
-       el mismo cierre en que se habían abierto dos tarjetas nuevas, que eran
-       exactamente lo que había para contar. Ahora el orden de preferencia es
-       el correcto: primero una tarjeta que se abrió ESTE mes; si no hubo,
-       un libro disparado que no se haya mostrado antes en esta carrera; y si
-       tampoco, el mes cierra sin teoría. Repetirse cuesta más que callarse. */
-    /* El bloque respira: un concepto cada dos meses, no uno por cierre. La
-       biblioteca abre tarjetas casi todos los meses, así que preferir siempre
-       la recién abierta devolvía un ensayo largo en los diez cierres del
-       puesto — que se saltea igual que el mismo libro repetido. El renglón
-       "tarjetas nuevas" de arriba ya avisa que se abrieron; esto es la lectura
-       larga, y llega más lento a propósito. */
-    if (!esDecision && !libroTeoria && J &&
-        (J.mesUltTeoria === undefined || J.mesPuesto - J.mesUltTeoria >= 2)) {
-      var usados = (C && C.libroUsado) || {};
-      /* si hay tarjeta abierta este mes, gana: es el momento en que el juego le
-         puso nombre a lo que estaba pasando. Salvo que ese libro ya se haya
-         explicado antes — la última fuente de repetidos que quedaba, porque
-         libroDelDia no marca el codex y el mismo título podía salir primero
-         como disparado y después como recién abierto. */
-      var nuevaFicha = null;
-      for (i = 0; i < notas.length; i++) {
-        if (notas[i].libro && !usados[notas[i].libro]) { nuevaFicha = notas[i].libro; break; }
-      }
-      if (nuevaFicha) libroTeoria = nuevaFicha;
-      else {
-        var lm = libroDelDia(J, C, true);
-        if (lm) libroTeoria = lm.id;
-      }
-    }
-    if (libroTeoria && C) {
-      if (!C.libroUsado) C.libroUsado = {};
-      C.libroUsado[libroTeoria] = true;
-      if (!esDecision && J) J.mesUltTeoria = J.mesPuesto;
-    }
-    if (libroTeoria) {
-      var lt = libroPorId(libroTeoria);
-      var ap2 = J ? aplicarLibro(libroTeoria, J, C) : null;
-      if (lt) {
-        var abierto = esDecision || teoriaAbierta;
-        h += '<div class="teoria-caso' + (abierto ? ' on' : '') + '" style="margin-top:12px">' +
-          (decisionTxt ? '<div class="pq mut" style="margin-bottom:6px">Elegiste: “' + esc(decisionTxt) + '”</div>' : '') +
-          '<div class="rot teoriat" data-act="teoria">La teoría · ' + esc(lt.titulo) + ' — ' + esc(lt.autor) +
-            (esDecision ? '' : '<span class="verplus">' + (abierto ? 'ocultar' : 'leer') + '</span>') + '</div>' +
-          (abierto ? '<div class="pq" style="line-height:1.5;margin-top:6px">' + esc(lt.idea) + '</div>' +
-            (ap2 ? '<div class="pq caso-linea">' + esc(ap2) + '</div>' : '') : '') +
+    /* ---------------- la pieza del mes ----------------
+       Antes acá había un bloque con el encabezado "LA TEORÍA · TÍTULO —
+       AUTOR": un cambio de registro anunciado en mayúsculas, o sea la costura
+       más visible que tenía el juego. Y salía todos los meses.
+
+       Lo reemplaza una PIEZA (ver libros.js): sale pocas veces por puesto, una
+       vez por concepto y por carrera, y cuando sale se toma el espacio para
+       las cuatro partes — la situación con tus números, la teoría en serio, la
+       jugada con tus palancas, y el mecanismo dibujado con tus datos. Menos
+       citas y más profundas: es el mismo criterio, al revés del anterior.
+
+       Si no hay pieza que corresponda, el mes cierra sin teoría, y eso es lo
+       normal — no lo excepcional. */
+    if (!esDecision && J && C) {
+      var pieza = piezaDelMes(J, C);
+      if (pieza) {
+        if (!C.piezasVistas) C.piezasVistas = {};
+        C.piezasVistas[pieza.id] = true;
+        C.codex[pieza.libro] = true;
+        /* se guarda acá: sin esto la pieza vuelve a salir al recargar, porque
+           el registro vivía sólo en memoria */
+        guardar();
+        var lp = libroPorId(pieza.libro);
+        var dat = null;
+        try { dat = pieza.dato(J); } catch (e5) { dat = null; }
+        h += '<div class="pieza">' +
+          '<div class="pz-cab"><span class="pz-rot">' + esc(pieza.titulo) + '</span></div>' +
+          '<div class="pz-sit">' + esc(pieza.situacion(J)) + '</div>' +
+          (dat ? '<div class="pz-graf">' + Arte.diagrama(pieza.diag, dat) + '</div>' : '') +
+          '<div class="pz-teo">' + parrafos(pieza.teoria(J)) + '</div>' +
+          '<div class="pz-apl"><span class="pz-rot2">Qué hacer con esto</span>' +
+            '<p>' + esc(pieza.aplicar(J)) + '</p></div>' +
+          (lp ? '<div class="pz-fte">' + esc(lp.titulo) + ' · ' + esc(lp.autor) +
+                ' <span class="linklike" data-lib="' + esc(pieza.libro) + '">ver la ficha</span></div>' : '') +
           '</div>';
       }
     }

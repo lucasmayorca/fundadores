@@ -456,6 +456,47 @@ h2, h3 { font-weight:500; }
   color:var(--color-neutral-400); }
 .pa .libro { -webkit-flex-shrink:0; flex-shrink:0; margin-left:8px; }
 .rondalib { margin-right:10px; }
+
+/* ---------- la pieza de concepto ----------
+   Se toma el ancho y respira, porque sale pocas veces: es lo contrario de la
+   pastilla que aparecía sesenta veces por puesto. El orden vertical es el del
+   argumento — el hecho, el dibujo, la teoría, la jugada — y la fuente va al
+   pie, chica, como una nota y no como un premio. */
+.pieza { margin-top:16px; border:1px solid var(--color-divider);
+  border-radius:var(--radius-md); background:var(--color-surface); overflow:hidden; }
+.pz-cab { padding:11px 16px 9px; border-bottom:1px solid var(--color-divider);
+  background:var(--color-accent-900, transparent); }
+.pz-rot { font-size:14.5px; font-weight:500; color:var(--color-accent-300); }
+.pz-sit { padding:13px 16px 0; font-size:13.5px; line-height:1.55;
+  color:var(--color-neutral-200); }
+.pz-graf { padding:14px 16px 4px; }
+.pz-graf .dgc { width:100%; max-width:340px; height:auto; display:block; }
+.pz-teo { padding:6px 16px 0; }
+.pz-teo p { margin:0 0 9px 0; font-size:12.8px; line-height:1.6;
+  color:var(--color-neutral-400); max-width:none; }
+.pz-apl { padding:4px 16px 14px; }
+.pz-rot2 { display:block; font-size:10px; text-transform:uppercase;
+  letter-spacing:0.05em; color:var(--color-neutral-600); margin-bottom:4px; }
+.pz-apl p { margin:0; font-size:13px; line-height:1.55; color:var(--color-neutral-200);
+  max-width:none; }
+.pz-fte { padding:9px 16px; border-top:1px solid var(--color-divider);
+  font-size:11px; color:var(--color-neutral-600); }
+.pz-fte .linklike { margin-left:6px; }
+
+/* los diagramas: la convención de color de la casa, y el dato en el trazo */
+.dgc text { font-family:inherit; }
+.dgct { font-size:8px; letter-spacing:0.08em; fill:var(--color-neutral-600); }
+.dgcl { font-size:8.5px; fill:var(--color-neutral-400); }
+.dgcl.mal { fill:var(--color-rojo, #C0562F); }
+.dgcm { font-size:9px; fill:var(--color-bg); }
+.dgcm.mal { fill:var(--color-neutral-600); }
+.dgcn { font-size:8px; fill:var(--color-neutral-700); font-style:italic; }
+.dgc-ok { fill:var(--color-accent); }
+.dgc-off { fill:var(--color-neutral-800, #2a2d38); }
+.dgc-mal { fill:var(--color-rojo, #C0562F); opacity:0.55; }
+.dgc-flow { fill:var(--color-accent); opacity:0.35; }
+.dgc-rango { fill:var(--color-accent); opacity:0.25; }
+.dgc-pt { fill:var(--color-neutral-200); }
 body.movil .palarg { display:none; }
 body.movil .llh { display:none; }
 body.movil .dglcaja { width:auto; right:0; }
@@ -739,6 +780,17 @@ body.movil .dglcaja { width:auto; right:0; }
   font-size:9.5px; font-weight:500; letter-spacing:0.08em; background:var(--color-neutral-800);
   color:#e8a33d; border:none; }
 .ap.tuyo.cont.urge .conttag { color:#e2564a; }
+
+/* El compromiso usa el color lila del acento en vez del ámbar de contingencia:
+   no es trabajo ajeno que te cae encima, es tu propia palabra empeñada. Mismo
+   patrón — borde suave, rojo el mes que vence, verde cuando se cierra. */
+.ap.tuyo.comp { box-shadow:0 0 0 1px color-mix(in srgb, var(--color-accent) 45%, var(--color-neutral-900)); }
+.ap.tuyo.comp.urge { box-shadow:0 0 0 1px #7a3129; }
+.ap.tuyo.comp.sale { box-shadow:0 0 0 1px #2f6b3f; }
+.comptag { display:inline-block; margin-left:10px; padding:2px 8px; border-radius:9px;
+  font-size:9.5px; font-weight:500; letter-spacing:0.08em; background:var(--color-neutral-800);
+  color:var(--color-accent); border:none; }
+.ap.tuyo.comp.urge .comptag { color:#e2564a; }
 
 /* Esperando un visto bueno: la tarjeta se apaga porque no avanza, y los
    controles de puntos se reemplazan por la única jugada que queda. */

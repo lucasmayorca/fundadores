@@ -411,7 +411,110 @@ var Arte = (function () {
     return svg('0 0 64 64', 'marca', h);
   }
 
+  /* ---------------- diagramas de concepto ----------------
+     El brief: muchas menos citas y cada una mucho más profunda, con recursos
+     gráficos. Estos son los gráficos. Uno por concepto, dibujado con TUS
+     números — no una ilustración genérica del libro, sino el mecanismo del
+     concepto instanciado en tu partida.
+
+     Comparten la convención de la casa: viewBox propio, sin tamaños en
+     píxeles, colores por token. Y todos tienen que leerse en dos segundos:
+     si hace falta estudiarlos, el gráfico no está aportando nada que el
+     texto no diga mejor.
+
+     `d` es el paquete de datos que le arma ui.js — arte.js no conoce a Motor. */
+
+  /* Deuda técnica: la capacidad del mes partida en lo que construye y lo que
+     paga intereses del pasado. El punto visual es que la franja del interés
+     sale del MISMO ancho — no es un costo aparte, es tu mes. */
+  function diagDeuda(d) {
+    var W = 320, H = 96, x0 = 4, w = W - 8, yBar = 30, hBar = 26;
+    var wInt = Math.max(2, Math.round(w * d.fraccion));
+    var h = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="dgc" preserveAspectRatio="xMidYMid meet">';
+    h += '<text class="dgct" x="' + x0 + '" y="14">TU CAPACIDAD DEL MES · ' + d.total + ' PTS</text>';
+    /* lo que construye */
+    h += '<rect x="' + x0 + '" y="' + yBar + '" width="' + w + '" height="' + hBar +
+         '" fill="none" stroke="' + LN + '"/>';
+    h += '<rect x="' + x0 + '" y="' + yBar + '" width="' + (w - wInt) + '" height="' + hBar +
+         '" class="dgc-ok"/>';
+    /* la franja del interés, rayada: se paga y no se ve */
+    h += '<rect x="' + (x0 + w - wInt) + '" y="' + yBar + '" width="' + wInt + '" height="' + hBar +
+         '" class="dgc-mal"/>';
+    h += '<line x1="' + (x0 + w - wInt) + '" y1="' + yBar + '" x2="' + (x0 + w - wInt) +
+         '" y2="' + (yBar + hBar) + '" stroke="' + BR + '" stroke-width="1"/>';
+    /* etiquetas */
+    h += '<text class="dgcl" x="' + x0 + '" y="' + (yBar + hBar + 15) + '">' +
+         (d.total - d.interes) + ' construyen</text>';
+    h += '<text class="dgcl mal" x="' + (x0 + w) + '" y="' + (yBar + hBar + 15) +
+         '" text-anchor="end">' + d.interes + ' pagan el pasado</text>';
+    h += '<text class="dgcn" x="' + x0 + '" y="' + (H - 4) + '">' + d.pie + '</text>';
+    return h + '</svg>';
+  }
+
+  /* La compuerta: los requisitos como una fila de compuertas, y el caudal que
+     pasa. Lo que tiene que quedar claro de un vistazo es que NO es gradual —
+     falta uno y el caudal es un hilo. */
+  function diagCompuerta(d) {
+    var W = 320, H = 112, x0 = 4, i;
+    var n = d.reqs.length, cw = (W - 8) / n;
+    var h = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="dgc" preserveAspectRatio="xMidYMid meet">';
+    h += '<text class="dgct" x="' + x0 + '" y="14">' + d.titulo + '</text>';
+    for (i = 0; i < n; i++) {
+      var cx = x0 + cw * i + cw / 2;
+      var ok = d.reqs[i].ok;
+      h += '<rect x="' + (x0 + cw * i + 2) + '" y="26" width="' + (cw - 4) + '" height="16" ' +
+           'class="' + (ok ? 'dgc-ok' : 'dgc-off') + '"/>';
+      h += '<text class="dgcm ' + (ok ? '' : 'mal') + '" x="' + cx.toFixed(1) +
+           '" y="38" text-anchor="middle">' + (ok ? '✓' : '·') + '</text>';
+    }
+    /* el caudal: ancho proporcional a la conversión que deja pasar */
+    var yF = 58, hF = 30;
+    var wIn = W - 8, wOut = Math.max(2, Math.round(wIn * d.pasa));
+    h += '<path d="M' + x0 + ' ' + yF + ' L' + (x0 + wIn) + ' ' + yF +
+         ' L' + (x0 + (wIn + wOut) / 2) + ' ' + (yF + hF) +
+         ' L' + (x0 + (wIn - wOut) / 2) + ' ' + (yF + hF) + ' Z" class="dgc-flow"/>';
+    h += '<text class="dgcl" x="' + x0 + '" y="' + (yF - 4) + '">100 que pagás por traer</text>';
+    h += '<text class="dgcl ' + (d.pasa >= 1 ? '' : 'mal') + '" x="' + (x0 + wIn / 2) +
+         '" y="' + (yF + hF + 14) + '" text-anchor="middle">' + d.entran + ' entran</text>';
+    h += '<text class="dgcn" x="' + x0 + '" y="' + (H - 4) + '">' + d.pie + '</text>';
+    return h + '</svg>';
+  }
+
+  /* Evidencia y sesgo: la estimación como un rango, no un número. El ancho es
+     la evidencia que te falta; el corrimiento del centro es el sesgo de tus
+     entrevistas. Los puntos son tus entregas reales. */
+  function diagEstimacion(d) {
+    var W = 320, H = 118, x0 = 34, w = W - x0 - 8, yE = 40, i;
+    var h = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="dgc" preserveAspectRatio="xMidYMid meet">';
+    h += '<text class="dgct" x="4" y="14">LO QUE EL BACKLOG TE PROMETE</text>';
+    /* el rango */
+    var cx = x0 + w * d.centro, semi = Math.max(3, w * d.ancho / 2);
+    h += '<line x1="' + x0 + '" y1="' + yE + '" x2="' + (x0 + w) + '" y2="' + yE +
+         '" stroke="' + LN + '"/>';
+    h += '<rect x="' + (cx - semi).toFixed(1) + '" y="' + (yE - 9) + '" width="' + (semi * 2).toFixed(1) +
+         '" height="18" class="dgc-rango"/>';
+    h += '<line x1="' + cx.toFixed(1) + '" y1="' + (yE - 13) + '" x2="' + cx.toFixed(1) +
+         '" y2="' + (yE + 13) + '" stroke="' + BR + '" stroke-width="1.5"/>';
+    h += '<text class="dgcl" x="4" y="' + (yE + 4) + '" text-anchor="start">rango</text>';
+    /* la verdad, como referencia fija */
+    var xv = x0 + w * 0.5;
+    h += '<line x1="' + xv + '" y1="' + (yE + 20) + '" x2="' + xv + '" y2="' + (H - 22) +
+         '" stroke="' + MD + '" stroke-dasharray="2 3"/>';
+    h += '<text class="dgcl" x="' + xv + '" y="' + (H - 12) + '" text-anchor="middle">lo real</text>';
+    /* tus entregas */
+    for (i = 0; i < d.puntos.length; i++) {
+      var px = x0 + w * Math.max(0, Math.min(1, d.puntos[i]));
+      h += '<circle cx="' + px.toFixed(1) + '" cy="' + (yE + 30) + '" r="3" class="dgc-pt"/>';
+    }
+    h += '<text class="dgcn" x="4" y="' + (H - 2) + '">' + d.pie + '</text>';
+    return h + '</svg>';
+  }
+
+  var DIAG = { deuda:diagDeuda, compuerta:diagCompuerta, estimacion:diagEstimacion };
+  function diagrama(id, d) { return DIAG[id] ? DIAG[id](d) : ''; }
+
   return {
+    diagrama:diagrama,
     escalon: escalon, paso: paso, pilar: pilar,
     final: final, vacio: vacio, marca: marca
   };
