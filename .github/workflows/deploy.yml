@@ -1,0 +1,77 @@
+# Despliega produccion desde main, y solo desde main.
+#
+# Antes de esto el deploy era `railway up` a mano desde el directorio de
+# trabajo, y eso sube lo que haya en disco en ese segundo: si alguien esta
+# editando, produccion nace desactualizada o con codigo a medio escribir. Aca
+# lo que se sube es el arbol de un commit que ya paso por CI.
+#
+# El disparador es el CI, no el push: GitHub corre "CI" en cada push a main, y
+# este workflow arranca cuando ese run TERMINA EN VERDE. Si el test de humo
+# falla, no hay deploy. Por eso no se dispara con `push:` — haria las dos cosas
+# en paralelo y desplegaria sin esperar el resultado.
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  # para volver a una version anterior sin tener que revertir un commit
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Commit o tag a desplegar (por defecto, la punta de main)'
+        required: false
+        default: 'main'
+
+# Un deploy por vez. `cancel-in-progress: false` a proposito: cancelar un
+# deploy a mitad de camino deja produccion en un estado que nadie eligio.
+concurrency:
+  group: deploy-produccion
+  cancel-in-progress: false
+
+jobs:
+  desplegar:
+    name: Subir a produccion
+    runs-on: ubuntu-latest
+    # En workflow_run esto corre igual con CI en rojo; el `if` es lo unico que
+    # lo frena. Sin el, un test de humo fallado llegaria a la gente.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # workflow_run corre sobre el workflow de la rama por defecto, no
+          # sobre el commit que lo disparo: sin este ref se desplegaria la
+          # punta de main, que puede no ser el commit que paso CI.
+          ref: ${{ github.event.workflow_run.head_sha || inputs.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar la CLI de Railway
+        run: npm install -g @railway/cli
+
+      - name: Desplegar
+        # El token de proyecto ya trae proyecto y entorno, asi que no hace
+        # falta `railway link`. Se crea en Railway → el proyecto → Settings →
+        # Tokens, y se guarda como secret RAILWAY_TOKEN del repo.
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "Falta el secret RAILWAY_TOKEN. Sin el no hay deploy."
+            exit 1
+          fi
+          # --ci transmite el log del build y sale con error si el build falla,
+          # que es lo que hace que un deploy roto pinte el workflow de rojo en
+          # vez de pasar en silencio como haria --detach.
+          railway up --service fundadores --ci \
+            --message "${{ github.event.workflow_run.head_sha || inputs.ref }}"
+
+      - name: Que quedo arriba
+        run: |
+          echo "Commit desplegado: ${{ github.event.workflow_run.head_sha || inputs.ref }}"
+          echo "https://fundadores-production.up.railway.app"
