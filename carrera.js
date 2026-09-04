@@ -54,6 +54,10 @@ var Carrera = (function () {
          "la teoría" en algún cierre o briefing — un concepto se cuenta una vez
          por carrera, después vive en la biblioteca. */
       trabajadas:{}, codex:{}, libroUsado:{}, dilemasVistos:{},
+      /* calibración acumulada de la carrera: cuántas de las llamadas que el
+         jugador se animó a hacer resultaron ciertas. Es lo único que califica
+         su criterio en vez de su resultado, así que sobrevive al puesto. */
+      calibracion:{ ok:0, n:0 },
       ofertas:null, ofertaActual:null,
       retirado:false, final:null
     };
@@ -245,6 +249,16 @@ var Carrera = (function () {
     if (r.promocion) c.nivel = Math.min(7, Math.max(c.nivel, e.rolN) + 1);
     else if (e.final === 'plazo' && prog >= 0.7) c.nivel = Math.max(c.nivel, e.rolN);
     else if (r.despido && e.final !== 'imputado') c.nivel = Math.max(0, c.nivel - (Math.random() < 0.4 ? 1 : 0));
+
+    /* la calibración del puesto se suma a la de la carrera: el mandato se
+       cumple o no y se olvida, el criterio te sigue */
+    var cal = Motor.calibracion(e);
+    if (cal.n) {
+      if (!c.calibracion) c.calibracion = { ok:0, n:0 };
+      c.calibracion.ok += cal.ok;
+      c.calibracion.n += cal.n;
+      r.calib = { ok:cal.ok, n:cal.n };
+    }
 
     c.mes += e.mesPuesto;
     c.puestos.push(r);
