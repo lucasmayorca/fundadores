@@ -152,7 +152,8 @@ var Motor = (function () {
       tipoIncidente:sec.incidente, retMod:sec.retMod,
 
       /* estado de la empresa */
-      caja:oferta.cajaPropia || et.caja, mrr:0, valoracion:et.valoracion,
+      caja:oferta.cajaPropia || Math.round(et.caja * (sec.cajaMult || 1)), mrr:0,
+      valoracion:Math.round(et.valoracion * (sec.valMult || 1)),
       ing:et.ing, prod:et.prod, gtm:et.gtm, rampa:[],
       deuda:et.deuda, arquitectura:et.arq, usabilidad:et.usab, marca:22 + et.arq * 0.2,
       fiabPercibida:78, presupuestoError:100,
