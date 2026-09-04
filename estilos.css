@@ -675,6 +675,16 @@ h2, h3 { font-weight:500; }
 .escalar.off { opacity:0.4; cursor:default; }
 .escalar.off:hover { border-color:var(--color-neutral-700); color:var(--color-neutral-300); }
 
+/* Lo que va antes. Avisa sin bloquear: la decisión de saltearlo sigue siendo
+   tuya, y el precio ya está contado en los números de la tarjeta. */
+.inidep { margin:10px 0 0 0; padding:7px 10px; border-radius:var(--radius-sm);
+  background:var(--color-neutral-900); border-left:2px solid #6b5320;
+  font-size:11.5px; color:var(--color-neutral-400); }
+.inidep b { color:var(--color-neutral-200); font-weight:500; }
+.inidep span { display:block; font-size:10.5px; color:var(--color-neutral-600); margin-top:2px; }
+.sinbase { display:inline-block; margin-left:8px; padding:1px 7px; border-radius:8px;
+  font-size:10px; background:var(--color-neutral-800); color:#e8a33d; }
+
 /* Lo entregado que todavía no dijo si sirvió. */
 .esperandodatos { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
   gap:8px; margin:10px 0 2px 0; padding:8px 12px; border-radius:var(--radius-sm);

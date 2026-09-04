@@ -1765,7 +1765,12 @@
           (espera ? esc(espera.quien) + (espera.cargo ? ' · ' + esc(espera.cargo) : '') + ' ' + esc(espera.txt) :
             'faltan ' + falta + ' de ' + cst + ' pts' +
             (esCont ? ' · no mueve tu mandato · abierta se come el ' +
-                      Motor.lastreContingencia(J, id) + '% del equipo' : '')) + '</div></div>' +
+                      Motor.lastreContingencia(J, id) + '% del equipo' : '')) +
+          /* la base se mide al entregar: mientras esto siga en vuelo, todavía
+             estás a tiempo de construirla y cobrar el impacto entero */
+          (!espera && !esCont && Motor.depPendiente(J, id) ?
+            '<span class="sinbase">sale sin ' + esc(Motor.depPendiente(J, id).n) + ' — mitad de impacto</span>' : '') +
+          '</div></div>' +
         (espera ?
           '<div class="ctrl"><div class="escalar' + (J.politico < Motor.costoEscalar(J) ? ' off' : '') +
             '" data-escalar="' + id + '">Escalar<span>−' + Motor.costoEscalar(J) + ' político</span></div></div>' :
@@ -1836,6 +1841,12 @@
           (nec ? '<span class="pill">' + esc(nec.corto) + (alineada ? ' ▲' : '') + '</span>' : '') + '</div>' +
         '<div class="inid">' + esc(a.d) +
           (a.d2 ? '<span class="inid2">' + esc(a.d2) + '</span>' : '') + '</div>' +
+        /* Lo que va antes. No bloquea la tarjeta — bloquear sería quitarte la
+           decisión. Avisa, y los números de acá abajo ya vienen partidos a la
+           mitad, así que el costo de saltearlo se lee donde el jugador ya está
+           mirando. */
+        (d.dep ? '<div class="inidep">Va después de <b>' + esc(d.dep.n) + '</b>' +
+                 '<span>sin esa base rinde la mitad y deja 8 de deuda — los números de abajo ya lo cuentan</span></div>' : '') +
         '<div class="inim">' +
           '<span class="ml tipped" data-tip="prob">Prob</span>' + dots(d.prob) +
           '<span class="ml">Esfuerzo</span><span class="tipped" data-tip="esf"><span class="esf e' + d.esf + '">' + d.esf + '</span></span>' +

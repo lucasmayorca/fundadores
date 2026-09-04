@@ -44,6 +44,23 @@ var Motor = (function () {
      solo evita el castigo. */
   function esContingencia(id) { return !!contingenciaPorId(id); }
 
+  /* ---------------- lo que va antes ----------------
+     Casi la mitad del backlog necesita que otra cosa exista primero: no se le
+     pone una alerta a lo que todavía no medís, no se hace una app nativa sin
+     una API, no se audita quién hizo qué sin identidades. La dependencia NO
+     bloquea la tarjeta — bloquear sería quitarte la decisión. Cobra: se puede
+     construir igual, sin la base, y entonces rinde la mitad y deja deuda.
+     "Lo hicimos sin la base" es una frase que existe en todos los equipos, y
+     el juego tiene que dejar tomarla y después cobrarla. */
+  var FACTOR_SIN_BASE = 0.5;
+  function depPendiente(e, id) {
+    var a = apuesta(id);
+    if (!a || !a.dep) return null;
+    if (e.hechas && e.hechas[a.dep]) return null;
+    return apuesta(a.dep);
+  }
+  function factorBase(e, id) { return depPendiente(e, id) ? FACTOR_SIN_BASE : 1; }
+
   /* Calibra UNA apuesta contra ESTA empresa: el impacto oculto que el jugador
      no ve, el ruido de la estimación, el talle, el costo en puntos y el vector
      de métricas. Vive aparte porque corre en tres momentos — al abrir el
@@ -917,17 +934,21 @@ var Motor = (function () {
       if (vx === 0) { vecEsp[mk] = 0; continue; }
       vecEsp[mk] = Math.round((vx + (nv[mk] || 0) * 4 * incert) * 10) / 10;
     }
+    var fb = factorBase(e, id);
+    if (fb !== 1) for (mk in vecEsp) if (vecEsp.hasOwnProperty(mk)) vecEsp[mk] = Math.round(vecEsp[mk] * fb * 10) / 10;
     var dx = dimsExtra(e, id, est), dk;
     for (dk in dx) if (dx.hasOwnProperty(dk)) vecEsp[dk] = dx[dk];
     /* el desglose de submétricas viaja con la estimación: son el "por qué" del
        vector de arriba, no una segunda predicción — van nominales, sin ruido */
     var ap = apuesta(id);
+    var dp = depPendiente(e, id);
     return { est:est, prob:prob, mag:mag, esf:esf, tiempo:TIEMPO[esf] || '', costo:cst, vec:vecEsp,
+             dep:dp ? { id:dp.id, n:dp.n } : null,
              subs:(ap && ap.impactoSubmetricas) || null };
   }
 
   function estimacion(e, id) {
-    var real = e.impactos[id];
+    var real = e.impactos[id] * factorBase(e, id);
     var incert = ((100 - e.evidencia) / 100) * (1 - e.hab.producto / 220);
     var sesgo = (e.sesgo || 0) * 20 * incert;
     return Math.max(1, Math.round(real + (e.ruidos[id] || 0) * 40 * incert + sesgo));
@@ -1231,13 +1252,17 @@ var Motor = (function () {
           continue;
         }
         var esperado = estimacion(e, id);
+        /* la base se mide al ENTREGAR, no al empezar: si la construiste
+           mientras esto estaba en vuelo, llegaste a tiempo y no se cobra nada.
+           Eso premia secuenciar sin castigar haber empezado en paralelo. */
+        var sinBase = depPendiente(e, id);
         delete e.enVuelo[id];
         e.hechas[id] = true;
         e.apuestasCompletadas++;
         /* por cada iniciativa que se ejecuta, una nueva: lo entregado abre su
            propia continuación y entra al backlog ahora, no el mes que viene */
         var hija = abrirSiguiente(e, id, e.mesPuesto + 1);
-        var real = e.impactos[id];
+        var real = Math.max(1, Math.round(e.impactos[id] * (sinBase ? FACTOR_SIN_BASE : 1)));
         /* las dimensiones extra se miden ANTES de mover la cobertura: cuánto
            de este impacto se come lo que falta para la compuerta */
         var dxr = dimsExtra(e, id, real), dxk;
@@ -1253,14 +1278,26 @@ var Motor = (function () {
            entenderlo y volver. El primer tramo entra ahora y el resto en los
            dos meses siguientes — el número real recién se sabe al final, y
            para entonces ya comprometiste el plan del mes que viene. */
+        if (sinBase) {
+          /* el vector real tambien se parte: no es una multa aparte, es que la
+             cosa de verdad rinde menos cuando le falta el piso */
+          for (vk3 in vec3) if (vec3.hasOwnProperty(vk3) && typeof vec3[vk3] === 'number' && vk3 !== 'deuda') {
+            vec3[vk3] = Math.round(vec3[vk3] * FACTOR_SIN_BASE * 10) / 10;
+          }
+          e.deuda = clamp(e.deuda + 8, 0, 100);
+        }
         var partes = [];
         aplicarVector(e, vec3, TRAMOS[0], partes);
         if (a.nec === 'datos') { e.evidencia = clamp(e.evidencia + 4, 0, 100); partes.push('+4 de evidencia'); }
         if (a.nec === 'soporte' || a.nec === 'segur' || a.nec === 'integra') partes.push('tick de compuerta');
         e.pendientes.push({ id:id, n:a.n, real:real, esperado:esperado, vec:vec3,
                             tramo:1, evidencia:e.evidencia });
-        log.push({ tipo:'neutro', libro:'analytics', dato:'sale',
-          texto:'Entregaste "' + a.n + '".' + (partes.length ? ' Primer movimiento: ' + partes.join(' · ') + '.' : '') +
+        log.push({ tipo:sinBase ? 'malo' : 'neutro', libro:sinBase ? 'fowler' : 'analytics', dato:'sale',
+          texto:'Entregaste "' + a.n + '".' +
+                (sinBase ? ' Salió sin "' + sinBase.n + '" abajo: rinde la mitad de lo que habría rendido y ' +
+                           'te dejó 8 de deuda encima. Nadie lo va a ver desde afuera; lo vas a ver vos, cada ' +
+                           'mes, en la capacidad que ya no tenés.' : '') +
+                (partes.length ? ' Primer movimiento: ' + partes.join(' · ') + '.' : '') +
                 ' Los datos completos llegan en dos meses: hasta entonces no vas a saber si acertaste, y el plan del ' +
                 'mes que viene lo tenés que cerrar igual.' });
         if (hija) {
@@ -1741,6 +1778,7 @@ var Motor = (function () {
     progresoMandato:progresoMandato, progresoDe:progresoDe, ritmoMandato:ritmoMandato, alineacion:alineacion, cascada:cascada,
     seg:seg, apuesta:apuesta,
     esContingencia:esContingencia, contActiva:contActiva, hayContingencia:hayContingencia,
+    depPendiente:depPendiente,
     enEspera:enEspera, escalar:escalar, costoEscalar:costoEscalar,
     lastreContingencia:lastreContingencia,
     /* asegurarBacklog() corre al cargar una partida guardada: resincroniza el

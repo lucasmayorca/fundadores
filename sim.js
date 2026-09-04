@@ -15,7 +15,8 @@
      pasivo   no asigna un solo punto — el piso absoluto
      ignora   juega el mandato y no mira las contingencias
      atiende  igual, pero paga la contingencia antes que nada
-     escala   como atiende, y además gasta político para destrabar firmas  */
+     escala   como atiende, y además gasta político para destrabar firmas
+     ciego    como atiende, pero no mira qué va antes de qué                */
 
 var fs = require('fs'), vm = require('vm'), path = require('path');
 var D = __dirname + '/';
@@ -87,14 +88,20 @@ vm.runInContext(function () {
        mandato pide. El bot hace lo mismo, o mide un juego más tonto que el que
        se juega: sin esto, "abre el gran mercado" salía 6% sólo porque el bot
        tomaba las primeras del backlog sin mirar qué necesidad cubrían. */
-    var orden = e.backlog.slice(), gr = e.gateReqs || [];
-    if (m.id === 'abismo' && gr.length) {
-      var pide = {}; for (i = 0; i < gr.length; i++) pide[gr[i][0]] = 1;
-      orden.sort(function (a, b) {
-        var aa = Motor.apuesta(a), bb = Motor.apuesta(b);
-        return (pide[bb && bb.nec] ? 1 : 0) - (pide[aa && aa.nec] ? 1 : 0);
-      });
+    /* Un solo criterio de orden, no dos sorts encadenados: el segundo pisaba
+       al primero por completo y el bot dejaba de mirar la compuerta.
+       Pesa lo que pesaría un jugador competente: primero lo que empuja tu
+       mandato, y a igualdad de eso, lo que ya tiene su base construida —
+       porque sin base rinde la mitad y deja 8 de deuda. */
+    var gr = e.gateReqs || [], pide = {};
+    if (m.id === 'abismo') for (i = 0; i < gr.length; i++) pide[gr[i][0]] = 1;
+    function puntaje(id) {
+      var ap = Motor.apuesta(id);
+      return (ap && pide[ap.nec] ? 2 : 0) +
+             (modo === 'ciego' || Motor.depPendiente(e, id) ? 0 : 1);
     }
+    var orden = e.backlog.slice();
+    orden.sort(function (a, b) { return puntaje(b) - puntaje(a); });
     for (i = 0; i < orden.length && queda > 0 && abiertos < e.slots; i++) {
       id = orden[i];
       if (plan.asig[id] !== undefined) continue;
@@ -140,7 +147,7 @@ vm.runInContext(function () {
 
 var CARRERAS = parseInt(process.argv[2], 10) || 200;
 var SOLO = process.argv[3];
-var MODOS = SOLO ? [SOLO] : ['pasivo', 'ignora', 'atiende', 'escala'];
+var MODOS = SOLO ? [SOLO] : ['pasivo', 'ignora', 'ciego', 'atiende', 'escala'];
 
 function pct(a, b) { return b ? (100 * a / b).toFixed(0) + '%' : '—'; }
 
