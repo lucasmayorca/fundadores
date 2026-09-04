@@ -1446,6 +1446,26 @@
         '<span class="b' + (ocio <= 0 ? ' off' : '') + '" data-mas="' + st.k + '">+</span>' +
         (vv > 0 ? '<span class="eqr">' + st.rinde(vv) + '</span>' : '') + '</span>';
     }
+    /* Integración intrínseca sobre las palancas: qué concepto discute gastar en
+       cada una, HOY. Cada estación traía un `lib` fijo en ESTACIONES que no se
+       renderizaba nunca — y fijo habría sido el mismo título nueve meses, que
+       es el error que ya se cometió con chip('pgdefault') en la barra de ritmo.
+       `Motor.libroDeEstacion` depende del estado, así que rota. Da el
+       argumento, no la orden: a veces lo que dice es que hoy acá rinde poco. */
+    var arg = [];
+    for (i = 0; i < abiertas.length; i++) {
+      var a2 = Motor.libroDeEstacion(J, abiertas[i].k);
+      if (a2) arg.push({ n:abiertas[i].n, svg:abiertas[i].svg, x:a2 });
+    }
+    if (arg.length) {
+      h += '<div class="palarg">';
+      for (i = 0; i < arg.length; i++) {
+        h += '<div class="pa"><span class="pan">' + svgIc(arg[i].svg) + esc(arg[i].n) + '</span>' +
+             '<span class="pax">' + esc(arg[i].x.txt) + '</span>' +
+             (arg[i].x.libro ? chip(arg[i].x.libro) : '') + '</div>';
+      }
+      h += '</div>';
+    }
     if (cerradas.length) {
       var partes = [];
       for (i = 0; i < cerradas.length; i++) {
@@ -2125,7 +2145,12 @@
       '<span class="dglver" data-act="desglose">' + (desgloseAbierto ? 'ocultar' : 'de dónde salen') + '</span>' +
       (saliendo ? ' · <span class="verde">' + saliendo + ' sale' + (saliendo === 1 ? '' : 'n') + ' este mes</span>' : '') +
       (desgloseAbierto ? desgloseHtml() : '') + '</div>';
-    if (J.esFundador && !J.levantando) h += '<span class="btn chico" data-act="ronda" style="margin-right:10px">Salir a levantar</span>';
+    if (J.esFundador && !J.levantando) {
+      /* levantar es una decisión con costo, no un botón de recursos: lleva su
+         concepto al lado, y cuál habla depende de si ya pasaste por la mesa */
+      h += '<span class="btn chico" data-act="ronda" style="margin-right:10px">Salir a levantar</span>' +
+           '<span class="rondalib">' + chip(J.rondas.length ? 'pitchanything' : 'pgfund') + '</span>';
+    }
     h += '<span class="btn pri" data-act="ejecutar">Cerrar el mes</span>';
     $('barra').innerHTML = h;
   }

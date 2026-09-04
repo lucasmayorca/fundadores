@@ -3397,6 +3397,17 @@ function aplicarLibro(id, e, c) {
                  las historias de guerra: su valor es de calibración — saber
                  que la etapa fea es la etapa normal — no de decisión. Se leen
                  en la biblioteca y no pretenden ser mecánica.
+       diagnostico  el motor YA lo entrega, y ponerle etiqueta sería empapelar.
+                 No son una palanca ni una elección: son la lectura del régimen
+                 en el que estás jugando, y el juego la calcula solo. La barra
+                 de ritmo computa literalmente la pregunta de "vivo o muerto
+                 por defecto" — runway contra ritmo — y el runway deforma cada
+                 evento y cada opción que te ofrece el mes. El concepto está
+                 integrado; lo que falta es el título, y la razón de que falte
+                 es empírica: se probó clavarle `chip('pgdefault')` a esa barra
+                 y era el mismo libro fijo en la superficie más visible del
+                 juego durante los nueve meses del puesto. Se quitó. Estas
+                 fichas se leen en la biblioteca y se VIVEN en el tablero.
 
      var      la variable del puesto (o derivada de Motor) donde se lee
      palanca  la partida del plan que la mueve, o null si no se mueve
@@ -3483,13 +3494,14 @@ var INTEGRA = {
   coldstart:   { clase:'postura', v:'viral',          palanca:'crec' },
   contagious:  { clase:'postura', v:'viral',          palanca:'crec' },
   traction:    { clase:'postura', v:'cac',            palanca:'crec' },
-  ycgrowth:    { clase:'postura', v:'usuarios',       palanca:'crec' },
+  ycgrowth:    { clase:'diagnostico', v:'usuarios',   palanca:null   },
   predictable: { clase:'postura', v:'mrr',            palanca:'crec' },
-  pgramen:     { clase:'postura', v:'mrr',            palanca:'crec' },
-  antifragile: { clase:'postura', v:'mrr',            palanca:null   },
-  pgdefault:   { clase:'postura', v:'runwayMeses',    palanca:'crec' },
+  pgramen:     { clase:'diagnostico', v:'mrr',        palanca:null   },
+  antifragile: { clase:'diagnostico', v:'mrr',        palanca:null   },
+  /* la barra de ritmo ES esta pregunta: runway contra ritmo del mandato */
+  pgdefault:   { clase:'diagnostico', v:'runwayMeses', palanca:null  },
   challenger:  { clase:'postura', v:'fiabPercibida',  palanca:'fiab' },
-  paranoid:    { clase:'postura', v:'atencion',       palanca:null   },
+  paranoid:    { clase:'diagnostico', v:'atencion',   palanca:null   },
   artofwar:    { clase:'postura', v:'atencion',       palanca:null   },
   pgmean:      { clase:'postura', v:'lupa',           palanca:null   },
   whatyoudo:   { clase:'postura', v:'lupa',           palanca:null   },

@@ -394,6 +394,9 @@ var Motor = (function () {
      es de causa — primero lo que más está deformando el número que va a
      juzgar, y solo si no hay nada torcido, el marco general. */
   function libroDeLlamada(e) {
+    /* sin nada entregado todavía no hay delta que juzgar, y eso ES la ficha:
+       hasta que algo sale, la estimación es una hipótesis bien escrita */
+    if (!(e.apuestasCompletadas > 0)) return 'yclaunch';
     if (e.calidadDesc < 0.6) return 'momtest';
     if (e.evidencia < 45) return 'lean';
     if ((e.calib || { n:0 }).n >= 3) return 'thinkingbets';
@@ -1045,6 +1048,112 @@ var Motor = (function () {
 
     return d;
   }
+
+  /* ---------------- qué concepto discute esta palanca ----------------
+     Integración intrínseca sobre las ESTACIONES: descubrir, plataforma,
+     fiabilidad y crecimiento son las cuatro palancas donde el jugador reparte
+     el mes, y `INTEGRA` ya declaraba, para cada ficha, cuál de las cuatro la
+     mueve. Faltaba la superficie.
+
+     Cada estación tenía un `lib` FIJO en ui.js (torres, fowler, sre, chasm) que
+     no se renderizaba nunca — y fijo habría sido el mismo título clavado nueve
+     meses, que es el error que ya se cometió con `chip('pgdefault')` en la
+     barra de ritmo y hubo que deshacer. Este selector depende del estado: la
+     ficha que habla es la que tiene algo que decir HOY sobre gastar acá, y
+     cambia cuando cambia la partida.
+
+     Devuelve el argumento, no la orden: dice qué se juega al poner puntos en
+     esta palanca, y a veces lo que dice es que hoy rinde poco. */
+  function libroDeEstacion(e, palanca) {
+    var seg;
+    if (palanca === 'desc') {
+      if (e.calidadDesc < 0.6) return { txt:'Con entrevistas así, cada punto acá compra confianza y no datos',
+        libro:'momtest' };
+      if (e.etapa === 'semilla' && e.mesPuesto <= 4) return { txt:'A esta escala, uno por uno enseña más que cualquier campaña',
+        libro:'pgscale' };
+      if (e.pivoteHecho && e.evidencia < 60) return { txt:'Después de pivotar, lo primero es la parte más riesgosa del plan nuevo',
+        libro:'runninglean' };
+      if (e.evidencia >= 70) return { txt:'Evidencia ' + Math.round(e.evidencia) + ': ya salió del edificio — validar no es escalar',
+        libro:'blank' };
+      if (e.gastoPropio && e.gastoPropio.desc >= Math.max(8, capacidadPropia(e) * 0.4))
+        return { txt:'Medio mes acá no entrega nada y cambia QUÉ vas a construir', libro:'sprintk' };
+      if (e.gastoPropio && e.gastoPropio.desc > 0 && e.gastoPropio.cons > 0)
+        return { txt:'Código y usuarios en el mismo mes: ese es el circuito completo', libro:'yctalk' };
+      if (e.evidencia >= 45) return { txt:'Suficiente sí es la meta: la pregunta es qué decisión espera este dato',
+        libro:'justenough' };
+      return { txt:'Decae sola todos los meses: un punto sostenido gana a cuatro de golpe', libro:'torres' };
+    }
+    if (palanca === 'plat') {
+      if (carga(e) > 0.75) return { txt:'Carga al ' + Math.round(carga(e) * 100) + '%: el próximo mes bueno es el que te tumba',
+        libro:'ddia' };
+      if (e.reescritura > 0) return { txt:'Reescribir es la forma más cara de pagar la misma deuda',
+        libro:'fowler' };
+      var umb = (e.teamTopo ? 12 : 8) + Math.round(e.hab.liderazgo/12) + Math.round(e.capacidades.gente/20);
+      if (!e.teamTopo && (e.ing + e.prod) > umb + 4) return { txt:'Fronteras que un equipo pueda ser dueño de punta a punta',
+        libro:'topologies' };
+      if (!e.cd) return { txt:'Lotes chicos: más rápido Y más estable, no una cosa a cambio de la otra',
+        libro:e.incidentesPuesto > 0 ? 'accelerate' : 'contdel' };
+      if (e.deuda > 55) return { txt:'Deuda ' + Math.round(e.deuda) + ': el interés se come el mandato antes que el roadmap',
+        libro:'fowler' };
+      if (e.arquitectura < 55) return { txt:'Interfaz chica, implementación poderosa: diseñalo dos veces, escribilo una',
+        libro:'ousterhout' };
+      return { txt:'Sin ventanas rotas no hay bono visible: hay capacidad completa todos los meses',
+        libro:'pragmatic' };
+    }
+    if (palanca === 'fiab') {
+      if (e.congelado) return { txt:'La fábrica se atascó: hacer visible el flujo es el primer arreglo',
+        libro:'phoenix' };
+      if ((e.incidentesPuesto || 0) >= 2) return { txt:'Mamparos, no parches: el arreglo de después sólo paga el incidente que ya pasó',
+        libro:'releaseit' };
+      if (e.presupuestoError < 45) return { txt:'Presupuesto de error en ' + Math.round(e.presupuestoError) +
+        ': un incidente más y el congelamiento invierte las prioridades solo', libro:'sre' };
+      if (e.fiabPercibida < 78) return { txt:'El cliente grande pide esto antes de firmar, y no se negocia con precio',
+        libro:'challenger' };
+      if (compuerta(e, 'pragm') < 1 && e.fiabPercibida < 75) return {
+        txt:'"Servicio confiable" es el requisito de "' + e.gateNombre + '" que te falta', libro:'chasm' };
+      if (carga(e) > 0.6) return { txt:'Carga al ' + Math.round(carga(e) * 100) + '%: acá se decide cuántos usuarios aguantás',
+        libro:'everything' };
+      /* con todo sano, el argumento honesto ya no es "invertí acá": es que
+         estás pagando confiabilidad que nadie te está pidiendo, y eso no mueve
+         el mandato. Sin esta rama, `sre` era el 86% de lo que decía la palanca. */
+      if (e.presupuestoError >= 80 && e.fiabPercibida >= 82) return {
+        txt:'Uptime ' + Math.round(e.fiabPercibida) + ' y presupuesto casi intacto: esto ya no mueve tu mandato',
+        libro:'trap' };
+      if (e.cd) return { txt:'Con despliegue continuo esto ya rinde doble: más rápido Y más estable',
+        libro:'accelerate' };
+      return { txt:'Presupuesto de error en ' + Math.round(e.presupuestoError) + ': guardarlo sin usar es dejar plata en la mesa',
+        libro:'sre' };
+    }
+    if (palanca === 'crec') {
+      if (e.etapa === 'semilla' && Motor_fitBajo(e)) return { txt:'A esta escala el embudo no tiene nada que amplificar todavía',
+        libro:'pgscale' };
+      if (Motor_fitBajo(e)) return e.evidencia >= 60 ?
+        { txt:'Fit ' + Math.round(fitMax(e) * 100) + '% sabiendo lo que sabés: falta una capa de abajo, no alcance',
+          libro:'olsen' } :
+        { txt:'Fit ' + Math.round(fitMax(e) * 100) + '%: esto compra usuarios que se van', libro:'seibel' };
+      if (compuerta(e, 'pragm') < 0.5) return { txt:'La compuerta "' + e.gateNombre + '" está cerrada: el alcance se fuga ahí',
+        libro:'positioning' };
+      if (retencionMedia(e) < 0.86) return { txt:'Retención ' + Math.round(retencionMedia(e) * 100) +
+        '%: lo que traigas se fuga por abajo', libro:'hooked' };
+      if (e.usabilidad < 60) return { txt:'Usabilidad ' + Math.round(e.usabilidad) +
+        ': el tráfico entra a una cañería agujereada', libro:'krug' };
+      if (e.esFundador && e.mrr > 0) return { txt:'Las primeras cien conversaciones de venta SON el discovery',
+        libro:'foundingsales' };
+      if (e.mrr > burnMensual(e)) return { txt:'Ya te pagás el burn: que los ingresos dejen de depender de milagros',
+        libro:'predictable' };
+      if (e.viral >= 1.6 && usuarios(e) > 600) return { txt:'Viral ' + e.viral + ': lo que se comparte dice algo de quien lo comparte',
+        libro:'contagious' };
+      if (e.marca >= 70) return { txt:'Marca ' + Math.round(e.marca) + ': ya no compran el producto, compran su historia',
+        libro:'alchemy' };
+      if (e.marca >= 50) return { txt:'Marca ' + Math.round(e.marca) + ': algo que hacés ya cuenta su propia historia',
+        libro:'purplecow' };
+      if (e.hechas && e.hechas.casos) return { txt:'Prueba social: el que firma evalúa el riesgo de equivocarse, no tu producto',
+        libro:'influence' };
+      return { txt:'El canal que funciona no es el que te gusta: se busca con pruebas baratas', libro:'traction' };
+    }
+    return null;
+  }
+  function Motor_fitBajo(e) { return fitMax(e) < 0.55; }
 
   /* ---------------- la postura que estás tomando ----------------
      Integración intrínseca, clase `postura` (ver INTEGRA en libros.js). Era la
@@ -2056,7 +2165,8 @@ var Motor = (function () {
     ejeValor:ejeValor, usabilidadIndice:usabilidadIndice, snapshotEjes:snapshotEjes,
     carga:carga, capacidadSistema:capacidadSistema, burnMensual:burnMensual, runwayMeses:runwayMeses,
     nomina:nomina, infra:infra, calcularMrr:calcularMrr,
-    estimacion:estimacion, estimacionDetalle:estimacionDetalle, posturaDe:posturaDe, costoDe:costoDe, comprometido:comprometido, confianza:confianza, requisitosGate:requisitosGate, compuerta:compuerta,
+    estimacion:estimacion, estimacionDetalle:estimacionDetalle, posturaDe:posturaDe,
+    libroDeEstacion:libroDeEstacion, costoDe:costoDe, comprometido:comprometido, confianza:confianza, requisitosGate:requisitosGate, compuerta:compuerta,
     abierto:abierto, fraccionGate:fraccionGate, contratar:contratar, ronda:ronda, pivotar:pivotar,
     progresoMandato:progresoMandato, progresoDe:progresoDe, ritmoMandato:ritmoMandato, alineacion:alineacion, cascada:cascada,
     seg:seg, apuesta:apuesta,

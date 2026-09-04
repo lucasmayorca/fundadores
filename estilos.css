@@ -441,6 +441,22 @@ h2, h3 { font-weight:500; }
 .optn .onx { -webkit-flex:1; flex:1; font-size:11.5px; line-height:1.4;
   color:var(--color-neutral-500); }
 .optn .libro { -webkit-flex-shrink:0; flex-shrink:0; margin-left:8px; }
+
+/* ---------- qué discute cada palanca ----------
+   Debajo de la tira de estaciones, una línea por palanca abierta. Es el
+   argumento de gastar ahí, no la orden — y cambia con el estado, así que no
+   se vuelve mobiliario como sí pasaría con un título fijo. */
+.palarg { margin-top:8px; padding-top:7px; border-top:1px solid var(--color-divider); }
+.pa { display:-webkit-flex; display:flex; -webkit-align-items:baseline; align-items:baseline;
+  padding:2px 0; }
+.pa .pan { -webkit-flex-shrink:0; flex-shrink:0; width:104px; font-size:10px;
+  text-transform:uppercase; letter-spacing:0.04em; color:var(--color-neutral-600); }
+.pa .pan .ic { width:10px; height:10px; opacity:0.5; margin-right:4px; }
+.pa .pax { -webkit-flex:1; flex:1; font-size:11.5px; line-height:1.35;
+  color:var(--color-neutral-400); }
+.pa .libro { -webkit-flex-shrink:0; flex-shrink:0; margin-left:8px; }
+.rondalib { margin-right:10px; }
+body.movil .palarg { display:none; }
 body.movil .llh { display:none; }
 body.movil .dglcaja { width:auto; right:0; }
 
