@@ -60,16 +60,16 @@ var APUESTAS = [
   { id:'motor',    nec:'core',   costo:14, imp:30, n:'Motor de reglas v1',         d:'Automatiza el caso de uso central.',
     d2:'Codificás la lógica que hoy hace un humano a mano, para que el producto la resuelva solo, siempre igual, sin turnos.',
     impactoSubmetricas: { 'act:time_value':12, 'act:task_success':14, 'ret:stickiness':8, 'adq:conv_rate':2 } },
-  { id:'plantillas',nec:'core',  costo:8,  imp:18, n:'Plantillas por industria',   d:'Los usuarios arrancan con algo ya construido.',
+  { id:'plantillas', dep:'motor',nec:'core',  costo:8,  imp:18, n:'Plantillas por industria',   d:'Los usuarios arrancan con algo ya construido.',
     d2:'Un punto de partida armado por vertical: menos pantalla en blanco, menos abandono en el primer día.',
     impactoSubmetricas: { 'act:onboard':16, 'act:task_success':12, 'adq:conv_rate':4, 'act:time_value':8, 'ret:stickiness':10, 'ret:dau_mau':6 } },
-  { id:'batch',    nec:'core',   costo:12, imp:22, n:'Operaciones masivas',        d:'Hacer de a miles lo que se hacía de a uno.',
+  { id:'batch', dep:'motor',    nec:'core',   costo:12, imp:22, n:'Operaciones masivas',        d:'Hacer de a miles lo que se hacía de a uno.',
     d2:'Seleccionar, editar o borrar en lote — la diferencia entre un usuario power y uno que se cansa al décimo clic.',
     impactoSubmetricas: { 'ret:stickiness':18, 'act:task_success':10, 'adq:conv_rate':2, 'deuda:refactor_backlog':3 } },
-  { id:'movil',    nec:'core',   costo:16, imp:16, n:'App móvil nativa',           d:'Todos la piden. Nadie sabe para qué.',
+  { id:'movil', dep:'api',    nec:'core',   costo:16, imp:16, n:'App móvil nativa',           d:'Todos la piden. Nadie sabe para qué.',
     d2:'Cámara, notificaciones push, uso sin conexión — capacidades que el navegador no te da, si de verdad las necesitás.',
     impactoSubmetricas: { 'adq:mix_canal':8, 'ret:stickiness':6, 'act:feature_adopt':4, 'deuda:deprecations':2 } },
-  { id:'ia',       nec:'core',   costo:18, imp:34, n:'Asistente de IA',            d:'Al directorio le va a encantar.', senuelo:true,
+  { id:'ia', dep:'motor',       nec:'core',   costo:18, imp:34, n:'Asistente de IA',            d:'Al directorio le va a encantar.', senuelo:true,
     d2:'Suena a la demo perfecta para la próxima junta de directorio. En producción, resuelve un problema que casi nadie tenía.',
     impactoSubmetricas: { 'adq:conv_rate':14, 'evid:press':8, 'act:feature_adopt':6, 'deuda:test_cov':-4, 'ret:stickiness':19, 'ret:dau_mau':11 } },
 
@@ -89,49 +89,49 @@ var APUESTAS = [
   { id:'tablero',  nec:'datos',  costo:10, imp:24, n:'Tablero de control',         d:'El número que el jefe pide el lunes.',
     d2:'Los indicadores clave en una sola pantalla, sin tener que pedirle el reporte a nadie.',
     impactoSubmetricas: { 'act:feature_adopt':14, 'ret:stickiness':12, 'adq:conv_rate':8, 'rev:arpu':4 } },
-  { id:'alertas',  nec:'datos',  costo:8,  imp:20, n:'Alertas configurables',      d:'El producto avisa en vez de esperar.',
+  { id:'alertas', dep:'tablero',  nec:'datos',  costo:8,  imp:20, n:'Alertas configurables',      d:'El producto avisa en vez de esperar.',
     d2:'Umbrales que el usuario define: si algo se sale de rango, se entera por notificación, no revisando a mano.',
     impactoSubmetricas: { 'ret:dau_mau':10, 'ret:stickiness':8, 'act:feature_adopt':8, 'adq:mix_canal':3, 'rev:arpu':10, 'rev:expansion':6 } },
-  { id:'export',   nec:'datos',  costo:5,  imp:12, n:'Exportar a planilla',        d:'Sí, igual todos exportan a una planilla.',
+  { id:'export', dep:'tablero',   nec:'datos',  costo:5,  imp:12, n:'Exportar a planilla',        d:'Sí, igual todos exportan a una planilla.',
     d2:'Poco glamoroso, pero es la puerta de salida que todo cliente corporativo pregunta antes de firmar.',
     impactoSubmetricas: { 'adq:conv_rate':6, 'ret:stickiness':4, 'act:task_success':4, 'rev:arpu':6, 'rev:expansion':3 } },
 
   { id:'api',      nec:'integra',costo:13, imp:26, n:'API pública',                d:'Que otros construyan encima.',
     d2:'Documentada y estable, para que un tercero pueda automatizar contra tu producto sin llamarte por teléfono.',
     impactoSubmetricas: { 'ref:viral_k':12, 'adq:mix_canal':8, 'ret:stickiness':6, 'deuda:test_cov':-3, 'deuda:security_p1':-2 } },
-  { id:'conectores',nec:'integra',costo:16,imp:32, n:'Conectores a los 5 grandes', d:'Los sistemas que ya usan y no van a soltar.',
+  { id:'conectores', dep:'api',nec:'integra',costo:16,imp:32, n:'Conectores a los 5 grandes', d:'Los sistemas que ya usan y no van a soltar.',
     d2:'Integración directa con las herramientas que ya tienen instaladas: menos fricción para decir que sí.',
     impactoSubmetricas: { 'adq:conv_rate':14, 'act:task_success':12, 'rev:arpu':8, 'ret:stickiness':4 } },
-  { id:'webhooks', nec:'integra',costo:7,  imp:16, n:'Webhooks',                   d:'Pegamento barato para automatizar.',
+  { id:'webhooks', dep:'api', nec:'integra',costo:7,  imp:16, n:'Webhooks',                   d:'Pegamento barato para automatizar.',
     d2:'Un evento de tu lado dispara una acción del otro, sin que nadie tenga que revisar nada manualmente.',
     impactoSubmetricas: { 'ret:stickiness':10, 'ref:viral_k':6, 'adq:mix_canal':4 } },
 
-  { id:'sla',      nec:'soporte',costo:12, imp:28, n:'Soporte con SLA',            d:'Alguien contesta, y está por escrito.',
+  { id:'sla', dep:'observa',      nec:'soporte',costo:12, imp:28, n:'Soporte con SLA',            d:'Alguien contesta, y está por escrito.',
     d2:'Un tiempo de respuesta garantizado por contrato — lo que un comprador corporativo necesita para dormir tranquilo.',
     impactoSubmetricas: { 'adq:conv_rate':16, 'ret:churn':-3, 'rev:arpu':10 } },
   { id:'docs',     nec:'soporte',costo:7,  imp:18, n:'Docs y centro de ayuda',     d:'Para que no todo termine en un chat.',
     d2:'Respuestas escritas una vez, buscables para siempre — cada pregunta resuelta ahí es una que tu equipo no contesta dos veces.',
     impactoSubmetricas: { 'act:onboard':12, 'ret:churn':-2, 'act:task_success':8, 'adq:conv_rate':6, 'adq:visit_signup':3 } },
-  { id:'casos',    nec:'soporte',costo:9,  imp:22, n:'Casos de éxito publicados',  d:'La referencia que el pragmático necesita.',
+  { id:'casos', dep:'sla',    nec:'soporte',costo:9,  imp:22, n:'Casos de éxito publicados',  d:'La referencia que el pragmático necesita.',
     d2:'Prueba social con nombre y apellido: alguien parecido a tu próximo cliente ya lo usa y le funcionó.',
     impactoSubmetricas: { 'evid:cases':10, 'adq:conv_rate':8, 'ref:referral_rate':4, 'ret:churn':-18, 'ret:reactivation':11 } },
 
   { id:'sso',      nec:'segur',  costo:11, imp:24, n:'SSO y roles',                d:'Sin esto, TI te frena en la puerta.',
     d2:'Inicio de sesión centralizado y permisos por rol — el primer casillero que marca cualquier área de sistemas.',
     impactoSubmetricas: { 'adq:conv_rate':12, 'rev:arpu':10, 'gate:gate_fit':8, 'deuda:security_p1':-2, 'rel:error_rate':-10, 'rel:uptime':6 } },
-  { id:'auditoria',nec:'segur',  costo:14, imp:26, n:'Auditoría y trazabilidad',   d:'Quién tocó qué, y cuándo.',
+  { id:'auditoria', dep:'sso',nec:'segur',  costo:14, imp:26, n:'Auditoría y trazabilidad',   d:'Quién tocó qué, y cuándo.',
     d2:'Un registro inmutable de cada acción — imprescindible el día que algo sale mal y hay que reconstruir qué pasó.',
     impactoSubmetricas: { 'adq:conv_rate':14, 'rev:arpu':12, 'gate:gate_fit':10, 'deuda:refactor_backlog':2, 'rel:error_rate':-10, 'rel:uptime':6 } },
   { id:'cifrado',  nec:'segur',  costo:10, imp:20, n:'Cifrado y retención de datos', d:'La pregunta 3 de todo cuestionario de seguridad.',
     d2:'Datos protegidos en reposo y en tránsito, con reglas claras de cuánto tiempo se guardan.',
     impactoSubmetricas: { 'gate:gate_fit':12, 'adq:conv_rate':10, 'rev:arpu':8, 'deuda:security_p1':-3, 'rel:error_rate':-8, 'rel:uptime':5 } },
 
-  { id:'cache',    nec:'escala', costo:12, imp:26, n:'Caché y colas',              d:'Para que el pico no sea un incidente.',
+  { id:'cache', dep:'observa',    nec:'escala', costo:12, imp:26, n:'Caché y colas',              d:'Para que el pico no sea un incidente.',
     d2:'Absorbe ráfagas de tráfico sin que el sistema se caiga ni el usuario note que hubo un pico.',
     impactoSubmetricas: { 'rel:latency_p95':-40, 'rel:uptime':4, 'ret:stickiness':8 } },
-  { id:'multi',    nec:'escala', costo:17, imp:30, n:'Multirregión',               d:'Latencia real y aguante real.',
+  { id:'multi', dep:'observa',    nec:'escala', costo:17, imp:30, n:'Multirregión',               d:'Latencia real y aguante real.',
     d2:'Servidores más cerca del usuario y redundancia si una región entera se cae — velocidad y continuidad, a la vez.',
-    impactoSubmetricas: { 'rel:latency_p95':-60, 'rel:uptime':8, 'adq:conv_rate':6, 'deuda:infra':8 } },
+    impactoSubmetricas: { 'rel:latency_p95':-60, 'rel:uptime':8, 'adq:conv_rate':6, 'deuda:refactor_backlog':6 } },
   { id:'observa',  nec:'escala', costo:9,  imp:22, n:'Observabilidad',             d:'Ver el problema antes que el cliente.',
     d2:'Métricas y logs que avisan de una degradación antes de que se convierta en un ticket de soporte.',
     impactoSubmetricas: { 'rel:mttr':-20, 'rel:uptime':6, 'ret:stickiness':4 } }
@@ -149,16 +149,16 @@ var APUESTAS = [
    de la empresa, no solo el copy. */
 var APUESTAS_SECTOR = [
   /* --- datos y opinión pública (gate: segur/datos/soporte) --- */
-  { id:'microseg',  nec:'core', etapa:'semilla', costo:14, imp:26, n:'Segmentación fina de audiencias', d:'El mensaje correcto al bloque correcto, desde el día uno.',
+  { id:'microseg', dep:'padron',  nec:'core', etapa:'semilla', costo:14, imp:26, n:'Segmentación fina de audiencias', d:'El mensaje correcto al bloque correcto, desde el día uno.',
     d2:'Cortar el electorado o la audiencia en grupos accionables por comportamiento, no solo por edad y zona — sin esto no hay producto, solo una base de datos.',
     impactoSubmetricas: { 'act:task_success':20, 'ret:stickiness':10, 'rev:arpu':8, 'adq:conv_rate':4 } },
-  { id:'simulador', nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Simulador de escenarios', d:'Qué pasa si los indecisos se parten 60/40.',
+  { id:'simulador', dep:'tablero', nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Simulador de escenarios', d:'Qué pasa si los indecisos se parten 60/40.',
     d2:'Corridas de "qué pasaría si" sobre los datos que ya tenés — el motivo por el que un cliente vuelve a pagar cada mes en vez de comprar un informe una sola vez.',
     impactoSubmetricas: { 'ret:dau_mau':14, 'ret:stickiness':16, 'rev:arpu':12, 'ref:viral_k':4, 'adq:conv_rate':3 } },
   { id:'padron',    nec:'integra', etapa:'serieB', costo:22, imp:34, n:'Integración de datos públicos', d:'Padrones, boletines, presupuestos: todo cruzado, en cada ciudad nueva.',
     d2:'Cruzar fuentes oficiales dispersas en un solo modelo de datos — el trabajo sucio que hay que repetir en cada mercado nuevo que abrís.',
     impactoSubmetricas: { 'act:task_success':18, 'ret:stickiness':12, 'rev:arpu':16, 'adq:conv_rate':8, 'ref:viral_k':4, 'deuda:refactor_backlog':5 } },
-  { id:'transparencia', nec:'segur', etapa:'serieC', costo:26, imp:38, n:'Tablero público de transparencia', d:'Mostrar qué datos usás antes de que un comité te lo pregunte.',
+  { id:'transparencia', dep:'auditoria', nec:'segur', etapa:'serieC', costo:26, imp:38, n:'Tablero público de transparencia', d:'Mostrar qué datos usás antes de que un comité te lo pregunte.',
     d2:'Un panel abierto con qué información se recolecta y cómo se usa — lo que un directorio pre-salida a bolsa exige antes de que exista el escándalo, no después.',
     impactoSubmetricas: { 'gate:gate_fit':20, 'adq:conv_rate':16, 'rev:arpu':14, 'evid:press':12, 'evid:reviews':8, 'rel:error_rate':-15, 'rel:uptime':9 } },
 
@@ -166,7 +166,7 @@ var APUESTAS_SECTOR = [
   { id:'plegado',  nec:'core', etapa:'semilla', costo:16, imp:28, n:'Modelo propio de plegado', d:'Tu ventaja o tu ruina. Meses de cómputo, con la caja que tenés hoy.',
     d2:'Un modelo propio de predicción de estructura de proteínas — si funciona, es tu foso; si no, es la ronda semilla entera quemada.',
     impactoSubmetricas: { 'act:task_success':20, 'ret:stickiness':10, 'rev:arpu':8, 'adq:conv_rate':4 } },
-  { id:'sintesis', nec:'flujo', etapa:'serieA', costo:18, imp:32, n:'Pipeline de síntesis', d:'Del diseño in silico al tubo de ensayo, sin fila y sin frenar.',
+  { id:'sintesis', dep:'plegado', nec:'flujo', etapa:'serieA', costo:18, imp:32, n:'Pipeline de síntesis', d:'Del diseño in silico al tubo de ensayo, sin fila y sin frenar.',
     d2:'Automatizar el paso de la simulación al laboratorio real — la diferencia entre un hallazgo cada seis meses y uno cada seis semanas.',
     impactoSubmetricas: { 'ret:dau_mau':14, 'ret:stickiness':16, 'rev:arpu':12, 'ref:viral_k':4, 'act:onboard':22, 'act:time_value':22, 'adq:conv_rate':10, 'adq:visit_signup':6 } },
   { id:'bioseg',   nec:'segur', etapa:'serieB', costo:24, imp:38, n:'Protocolos de bioseguridad', d:'La pregunta uno de todo auditor, multiplicada por cada línea nueva de investigación.',
@@ -177,7 +177,7 @@ var APUESTAS_SECTOR = [
     impactoSubmetricas: { 'gate:gate_fit':20, 'adq:conv_rate':16, 'rev:arpu':14, 'evid:press':12, 'ret:churn':-22, 'ret:reactivation':20 } },
 
   /* --- banco digital (gate: segur/soporte/datos) --- */
-  { id:'adelanto',   nec:'core', etapa:'semilla', costo:14, imp:26, n:'Crédito y adelantos', d:'Lo que de verdad los trae, más allá de la tarjeta bonita.',
+  { id:'adelanto', dep:'antifraude',   nec:'core', etapa:'semilla', costo:14, imp:26, n:'Crédito y adelantos', d:'Lo que de verdad los trae, más allá de la tarjeta bonita.',
     d2:'Adelantos de dinero contra ingresos futuros — el producto que la gente realmente busca detrás de la app, desde la primera versión.',
     impactoSubmetricas: { 'act:task_success':20, 'ret:stickiness':10, 'rev:arpu':8, 'adq:conv_rate':4 } },
   { id:'conciliar',  nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Conciliación automática', d:'La tarea que odian todos los meses, ahora sin un humano a mano.',
@@ -186,7 +186,7 @@ var APUESTAS_SECTOR = [
   { id:'antifraude', nec:'segur', etapa:'serieB', costo:24, imp:36, n:'Motor antifraude', d:'Cada punto de fraude sale de tu margen, y el margen se nota más con volumen.',
     d2:'Detección automática de transacciones sospechosas antes de que se conviertan en pérdida contable — indispensable en cuanto el volumen deja de ser chico.',
     impactoSubmetricas: { 'gate:gate_fit':12, 'rev:arpu':16, 'ret:churn':-4, 'rel:uptime':4, 'adq:conv_rate':20, 'adq:visit_signup':12 } },
-  { id:'licencia',   nec:'segur', etapa:'serieC', costo:30, imp:42, n:'Licencia bancaria plena', d:'Sin esto no hay mercado grande, ni salida a bolsa que lo firme.',
+  { id:'licencia', dep:'auditoria',   nec:'segur', etapa:'serieC', costo:30, imp:42, n:'Licencia bancaria plena', d:'Sin esto no hay mercado grande, ni salida a bolsa que lo firme.',
     d2:'El permiso regulatorio para operar como entidad financiera completa — lento y carísimo, pero sin él el prospecto de la oferta pública ni se imprime.',
     impactoSubmetricas: { 'gate:gate_fit':24, 'adq:conv_rate':18, 'rev:arpu':16, 'rel:error_rate':-17, 'rel:uptime':10 } },
 
@@ -194,7 +194,7 @@ var APUESTAS_SECTOR = [
   { id:'sensor',       nec:'core', etapa:'semilla', costo:14, imp:26, n:'Medidor de bajo costo', d:'Si el hardware sale caro, no hay negocio que levantar.',
     d2:'Hardware de medición barato de fabricar — el margen de todo lo que sigue depende de bajar este costo unitario desde el primer lote.',
     impactoSubmetricas: { 'act:task_success':18, 'ret:stickiness':12, 'rev:arpu':8, 'adq:conv_rate':6 } },
-  { id:'verificacion', nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Verificación de ahorro', d:'La prueba que convierte una lectura en factura que alguien paga otra vez.',
+  { id:'verificacion', dep:'sensor', nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Verificación de ahorro', d:'La prueba que convierte una lectura en factura que alguien paga otra vez.',
     d2:'Confirmar de forma auditable cuánta energía se ahorró de verdad — sin esa prueba, nadie renueva el contrato el segundo año.',
     impactoSubmetricas: { 'ret:dau_mau':12, 'ret:stickiness':14, 'rev:arpu':10, 'adq:conv_rate':4 } },
   { id:'tarifas',      nec:'integra', etapa:'serieB', costo:22, imp:34, n:'Motor de tarifas', d:'Cada distribuidora nueva factura distinto, y ya no entrás a una sola ciudad.',
@@ -208,13 +208,13 @@ var APUESTAS_SECTOR = [
   { id:'plantillas2', nec:'core', etapa:'semilla', costo:10, imp:22, n:'Recetas listas para usar', d:'Del clone a corriendo en un minuto, antes de tener nada más.',
     d2:'Proyectos de arranque ya armados para los casos de uso más comunes — copiar, pegar y correr, cuando lo único que tenés es la idea.',
     impactoSubmetricas: { 'act:onboard':14, 'act:task_success':10, 'adq:conv_rate':6, 'ret:stickiness':12, 'ret:dau_mau':7 } },
-  { id:'cli',         nec:'flujo', etapa:'serieA', costo:14, imp:26, n:'CLI de primera clase', d:'Donde tu usuario ya vive, ahora que hay usuarios de verdad que volver a traer.',
+  { id:'cli', dep:'api',         nec:'flujo', etapa:'serieA', costo:14, imp:26, n:'CLI de primera clase', d:'Donde tu usuario ya vive, ahora que hay usuarios de verdad que volver a traer.',
     d2:'Una herramienta de línea de comandos pulida — para el desarrollador que ya probó la v1, vivir fuera de la terminal es la razón por la que no vuelve.',
     impactoSubmetricas: { 'ret:stickiness':12, 'act:feature_adopt':10, 'ref:viral_k':4, 'adq:conv_rate':8, 'adq:visit_signup':5 } },
-  { id:'openq',       nec:'soporte', etapa:'serieB', costo:18, imp:30, n:'Edición abierta de comunidad', d:'Adopción sí, ingresos quizás — y ahora tenés equipo para sostenerlo.', senuelo:true,
+  { id:'openq', dep:'plantillas2',       nec:'soporte', etapa:'serieB', costo:18, imp:30, n:'Edición abierta de comunidad', d:'Adopción sí, ingresos quizás — y ahora tenés equipo para sostenerlo.', senuelo:true,
     d2:'Dejar que la comunidad edite y aporte libremente suma usuarios rápido a escala. Convertirlos en clientes que pagan sigue siendo otro problema, uno que esto no resuelve solo.',
     impactoSubmetricas: { 'ref:viral_k':12, 'adq:mix_canal':10, 'ret:stickiness':6 } },
-  { id:'gobernanza',  nec:'integra', etapa:'serieC', costo:22, imp:34, n:'Gobierno y permisos a nivel organización', d:'El admin de IT necesita controlar todo, no solo cada desarrollador suelto.',
+  { id:'gobernanza', dep:'sso',  nec:'integra', etapa:'serieC', costo:22, imp:34, n:'Gobierno y permisos a nivel organización', d:'El admin de IT necesita controlar todo, no solo cada desarrollador suelto.',
     d2:'SSO, roles y auditoría a nivel de toda la cuenta — lo que convierte mil desarrolladores usándote gratis en un solo contrato enterprise que alguien firma.',
     impactoSubmetricas: { 'gate:gate_fit':16, 'adq:conv_rate':12, 'rev:arpu':10, 'ret:stickiness':4 } },
 
@@ -222,7 +222,7 @@ var APUESTAS_SECTOR = [
   { id:'cuotas',       nec:'core', etapa:'semilla', costo:16, imp:28, n:'Motor de cuotas en vivo', d:'Cuotas que se mueven con el partido. Sin esto no hay producto, solo una promesa.',
     d2:'Recalcular probabilidades en tiempo real durante el evento — el corazón matemático de todo el negocio, construido antes que cualquier otra cosa.',
     impactoSubmetricas: { 'act:task_success':18, 'ret:stickiness':12, 'rev:arpu':10 } },
-  { id:'pagos',        nec:'flujo', etapa:'serieA', costo:18, imp:30, n:'Depósito y retiro instantáneos', d:'El que no puede retirar rápido no vuelve a depositar.',
+  { id:'pagos', dep:'auditoria',        nec:'flujo', etapa:'serieA', costo:18, imp:30, n:'Depósito y retiro instantáneos', d:'El que no puede retirar rápido no vuelve a depositar.',
     d2:'Que el dinero entre y salga sin demoras — cada hora de espera en un retiro es un usuario que no vuelve, justo cuando necesitás que vuelvan.',
     impactoSubmetricas: { 'ret:dau_mau':12, 'ret:churn':-3, 'act:task_success':8, 'adq:conv_rate':4 } },
   { id:'autoexclusion',nec:'segur', etapa:'serieB', costo:22, imp:34, n:'Controles de adicción', d:'Lo primero que revisa el regulador en cuanto el volumen te hace visible.',
@@ -242,21 +242,21 @@ var APUESTAS_SECTOR = [
   { id:'redmedica',  nec:'integra', etapa:'serieB', costo:22, imp:36, n:'Red de especialistas', d:'El mejor cardiólogo de la ciudad, con cita mañana, en cada ciudad nueva.',
     d2:'Acceso curado a especialistas de primer nivel con turnos rápidos — la razón real por la que alguien paga la membresía, ahora hay que sostenerla en cada mercado que abrís.',
     impactoSubmetricas: { 'ret:stickiness':16, 'rev:arpu':14, 'adq:conv_rate':8, 'ref:viral_k':4 } },
-  { id:'concierge',  nec:'soporte', etapa:'serieC', costo:26, imp:40, n:'Equipo médico concierge', d:'Una persona que contesta el teléfono a las 3 AM, para cada socio, a esta escala.',
+  { id:'concierge', dep:'redmedica',  nec:'soporte', etapa:'serieC', costo:26, imp:40, n:'Equipo médico concierge', d:'Una persona que contesta el teléfono a las 3 AM, para cada socio, a esta escala.',
     d2:'Atención humana disponible a cualquier hora — el nivel de servicio que justifica el precio premium, sostenido con la operación de una empresa grande, no de una clínica boutique.',
     impactoSubmetricas: { 'rev:arpu':20, 'ret:churn':-4, 'adq:conv_rate':10, 'gate:gate_fit':6 } },
 
   /* --- inteligencia artificial aplicada (gate: datos/segur/integra) --- */
-  { id:'finetune',   nec:'core', etapa:'semilla', costo:18, imp:28, n:'Modelo afinado con datos propios', d:'La ventaja que no se copia con una llave de API, desde la primera versión.',
+  { id:'finetune', dep:'evals',   nec:'core', etapa:'semilla', costo:18, imp:28, n:'Modelo afinado con datos propios', d:'La ventaja que no se copia con una llave de API, desde la primera versión.',
     d2:'Especializar el modelo con datos que solo vos tenés — lo único que un competidor no consigue comprando la misma API que vos.',
     impactoSubmetricas: { 'act:task_success':14, 'ret:stickiness':12, 'rev:arpu':8, 'adq:conv_rate':6 } },
   { id:'evals',      nec:'datos', etapa:'serieA', costo:16, imp:30, n:'Suite de evaluaciones', d:'Saber si el modelo mejoró o solo cambió, versión tras versión.',
     d2:'Un banco de pruebas fijo contra el que medís cada release. Sin esto, "está mejor" es una opinión con dos ejemplos — y ya no alcanza con opiniones.',
     impactoSubmetricas: { 'ret:dau_mau':10, 'act:feature_adopt':8, 'deuda:test_cov':6, 'rev:arpu':14, 'rev:expansion':9 } },
-  { id:'guardrails', nec:'segur', etapa:'serieB', costo:22, imp:36, n:'Barandas y trazabilidad', d:'Para que la respuesta inventada no llegue al cliente, ahora que hay miles por hora.',
+  { id:'guardrails', dep:'evals', nec:'segur', etapa:'serieB', costo:22, imp:36, n:'Barandas y trazabilidad', d:'Para que la respuesta inventada no llegue al cliente, ahora que hay miles por hora.',
     d2:'Filtros de salida, citas verificables y registro de cada respuesta — lo que te permite explicar qué dijo el modelo y por qué, a un volumen que ya no podés revisar a mano.',
     impactoSubmetricas: { 'gate:gate_fit':12, 'rev:arpu':10, 'deuda:security_p1':-4, 'adq:conv_rate':20, 'adq:visit_signup':12, 'rel:error_rate':-14, 'rel:uptime':9 } },
-  { id:'inferencia', nec:'escala', etapa:'serieC', costo:26, imp:40, n:'Inferencia barata', d:'Cada respuesta cuesta plata. A este volumen, ahí vive todo tu margen.',
+  { id:'inferencia', dep:'observa', nec:'escala', etapa:'serieC', costo:26, imp:40, n:'Inferencia barata', d:'Cada respuesta cuesta plata. A este volumen, ahí vive todo tu margen.',
     d2:'Caché, modelos chicos para lo fácil y lotes para lo pesado — la diferencia entre un negocio que un directorio puede defender y una demo subsidiada que nunca lo fue.',
     impactoSubmetricas: { 'rev:arpu':18, 'gate:gate_fit':10, 'rel:latency_p95':-20 } },
 
@@ -264,13 +264,13 @@ var APUESTAS_SECTOR = [
   { id:'tapeout',   nec:'core', etapa:'semilla', costo:18, imp:30, n:'Tape-out del primer silicio', d:'Un solo tiro. Si sale mal, seis meses y la ronda semilla entera.',
     d2:'Congelar el diseño y mandarlo a fabricar. A partir de acá no hay parche: hay respin, y el respin se mide en semestres que no tenés.',
     impactoSubmetricas: { 'act:task_success':16, 'ret:stickiness':10, 'rev:arpu':8 } },
-  { id:'sdk',       nec:'flujo', etapa:'serieA', costo:22, imp:34, n:'SDK y compilador propios', d:'El chip sin software es un pisapapeles caro que nadie adopta.',
+  { id:'sdk', dep:'tapeout',       nec:'flujo', etapa:'serieA', costo:22, imp:34, n:'SDK y compilador propios', d:'El chip sin software es un pisapapeles caro que nadie adopta.',
     d2:'Las herramientas con las que el cliente programa tu chip. El hardware gana la evaluación técnica; el software decide si ese diseñador vuelve al segundo proyecto.',
     impactoSubmetricas: { 'act:feature_adopt':12, 'ret:stickiness':14, 'adq:conv_rate':6 } },
-  { id:'yield',     nec:'escala', etapa:'serieB', costo:26, imp:38, n:'Rendimiento de obleas', d:'Cada punto de yield es margen puro, multiplicado por cada lote que sale.',
+  { id:'yield', dep:'tapeout',     nec:'escala', etapa:'serieB', costo:26, imp:38, n:'Rendimiento de obleas', d:'Cada punto de yield es margen puro, multiplicado por cada lote que sale.',
     d2:'Cuántos chips buenos salen de cada oblea. No se ve en ninguna demo y decide si el negocio existe en cuanto empezás a fabricar en volumen.',
     impactoSubmetricas: { 'rev:arpu':16, 'gate:gate_fit':8, 'deuda:refactor_backlog':4, 'rel:uptime':22, 'rel:latency_p95':-22 } },
-  { id:'fundicion', nec:'soporte', etapa:'serieC', costo:30, imp:42, n:'Cupo en la fundición', d:'No fabricás: te dan turno, y a esta escala el turno es la mitad del negocio.',
+  { id:'fundicion', dep:'tapeout', nec:'soporte', etapa:'serieC', costo:30, imp:42, n:'Cupo en la fundición', d:'No fabricás: te dan turno, y a esta escala el turno es la mitad del negocio.',
     d2:'Asegurar capacidad de fabricación con años de anticipación y contratos de por medio — sin cupo garantizado, tu mejor diseño espera en la fila de otro que sí lo aseguró.',
     impactoSubmetricas: { 'gate:gate_fit':16, 'rev:arpu':14, 'rel:uptime':4, 'ret:churn':-22, 'ret:reactivation':20, 'adq:conv_rate':13, 'adq:visit_signup':8 } },
 
@@ -278,13 +278,13 @@ var APUESTAS_SECTOR = [
   { id:'edr',       nec:'core', etapa:'semilla', costo:16, imp:30, n:'Agente en el endpoint', d:'Vive dentro de la máquina del cliente desde el primer pilot. Si se cuelga, se cuelga todo.',
     d2:'Detección en el propio equipo, con permisos de núcleo — máxima visibilidad y máximo poder de romperle el lunes a alguien, antes de tener ningún otro producto.',
     impactoSubmetricas: { 'rel:uptime':8, 'gate:gate_fit':10, 'act:task_success':6, 'ret:stickiness':17, 'ret:dau_mau':10 } },
-  { id:'cazador',   nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Caza proactiva de amenazas', d:'Buscar al que ya está adentro, y tener los datos para probarlo.',
+  { id:'cazador', dep:'edr',   nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Caza proactiva de amenazas', d:'Buscar al que ya está adentro, y tener los datos para probarlo.',
     d2:'Salir a buscar señales de intrusión en vez de esperar la alerta — lo que convierte el pilot en la razón por la que el segundo cliente te llama a voz primero.',
     impactoSubmetricas: { 'ret:dau_mau':10, 'rel:mttr':-15, 'gate:gate_fit':8, 'rev:arpu':14, 'rev:expansion':9 } },
-  { id:'soc',       nec:'soporte', etapa:'serieB', costo:22, imp:36, n:'Centro de operaciones 24/7', d:'Alguien mira las alertas a las 4 AM, en cada cuenta nueva que sumás.',
+  { id:'soc', dep:'edr',       nec:'soporte', etapa:'serieB', costo:22, imp:36, n:'Centro de operaciones 24/7', d:'Alguien mira las alertas a las 4 AM, en cada cuenta nueva que sumás.',
     d2:'Analistas de guardia todo el año. Es el servicio que el cliente cree que compra cuando compra el software, y a esta escala tiene que ser real.',
     impactoSubmetricas: { 'gate:gate_fit':14, 'ret:churn':-4, 'adq:conv_rate':8 } },
-  { id:'certifica', nec:'segur', etapa:'serieC', costo:28, imp:42, n:'Certificaciones y cumplimiento', d:'Papel caro que abre las puertas caras, justo antes de la puerta más cara de todas.',
+  { id:'certifica', dep:'auditoria', nec:'segur', etapa:'serieC', costo:28, imp:42, n:'Certificaciones y cumplimiento', d:'Papel caro que abre las puertas caras, justo antes de la puerta más cara de todas.',
     d2:'SOC 2, ISO, el pliego del sector público. Meses de auditoría que no agregan una función y desbloquean el contrato — y la ronda — que necesitás para llegar a bolsa.',
     impactoSubmetricas: { 'gate:gate_fit':18, 'adq:conv_rate':14, 'rev:arpu':12, 'rel:error_rate':-17, 'rel:uptime':10 } },
 
@@ -306,10 +306,10 @@ var APUESTAS_SECTOR = [
   { id:'creadores',    nec:'flujo', etapa:'semilla', costo:14, imp:26, n:'Programa de creadores', d:'Que el catálogo lo haga otro, antes de tener presupuesto para producir nada.',
     d2:'Herramientas y reparto de ingresos para que la gente produzca lo que vos vendés — el catálogo más barato que existe cuando todavía no tenés caja.',
     impactoSubmetricas: { 'act:feature_adopt':14, 'ret:stickiness':12, 'ref:viral_k':6, 'adq:conv_rate':8, 'adq:visit_signup':5 } },
-  { id:'recomendador', nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Motor de recomendación', d:'El menú importa más que la comida, en cuanto hay suficiente comida para elegir mal.',
+  { id:'recomendador', dep:'tablero', nec:'datos', etapa:'serieA', costo:18, imp:30, n:'Motor de recomendación', d:'El menú importa más que la comida, en cuanto hay suficiente comida para elegir mal.',
     d2:'Qué se muestra primero decide qué se consume. Con el catálogo creciendo, la portada empieza a valer más que la mitad de lo que hay atrás.',
     impactoSubmetricas: { 'ret:dau_mau':16, 'ret:stickiness':14, 'act:feature_adopt':8, 'rev:arpu':14, 'rev:expansion':9 } },
-  { id:'offline',      nec:'escala', etapa:'serieB', costo:22, imp:34, n:'Descargas y modo sin conexión', d:'Para el subte, el avión y el pueblo sin señal, ahora que ahí también hay mercado.',
+  { id:'offline', dep:'movil',      nec:'escala', etapa:'serieB', costo:22, imp:34, n:'Descargas y modo sin conexión', d:'Para el subte, el avión y el pueblo sin señal, ahora que ahí también hay mercado.',
     d2:'Reproducir sin red. Invisible en la demo de la oficina, decisivo en la mitad de los mercados nuevos donde estás intentando crecer.',
     impactoSubmetricas: { 'ret:dau_mau':12, 'adq:mix_canal':8, 'ret:stickiness':8, 'rel:uptime':22, 'rel:latency_p95':-22 } },
   { id:'original',     nec:'core', etapa:'serieC', costo:28, imp:40, n:'Producción original', d:'Carísimo, y es lo único que no te pueden quitar cuando vence una licencia.',
@@ -318,6 +318,119 @@ var APUESTAS_SECTOR = [
 ];
 
 for (var _i = 0; _i < APUESTAS_SECTOR.length; _i++) APUESTAS.push(APUESTAS_SECTOR[_i]);
+
+/* Segunda vuelta. Un backlog real no se vacía: entregar la v1 no cierra el
+   tema, lo abre. Acá vive, para cada apuesta genérica, el trabajo que solo
+   existe porque la anterior salió — la versión que el cliente configura solo,
+   el modo sin conexión, las evaluaciones del asistente que hasta ayer era una
+   demo. El motor la mete en el backlog en el mismo mes en que la madre se
+   entrega (ver `derivarSiguiente` en motor.js). Las apuestas de sector y las
+   vueltas siguientes se generan como iteración, con el impacto decayendo:
+   volver a invertir en lo mismo rinde cada vez menos, pero rinde. */
+var APUESTAS_SIGUE = {
+  motor: { id:'motor_v2', nec:'core', costo:16, imp:26, n:'Reglas que el cliente edita',
+    d:'Que cambien la lógica sin abrirte un ticket.',
+    d2:'Un editor donde el propio cliente ajusta la regla que le sirve: deja de pedirte cada cambio, y deja de irse cuando no llegás a tiempo.',
+    impactoSubmetricas: { 'act:task_success':14, 'ret:stickiness':16, 'rev:arpu':8, 'deuda:refactor_backlog':4 } },
+  plantillas: { id:'plantillas_v2', nec:'core', costo:9, imp:16, n:'Plantillas que se comparten',
+    d:'Lo que armó un cliente le sirve al siguiente.',
+    d2:'Publicar la configuración propia para que otro la use tal cual: la biblioteca crece sin que ustedes escriban una línea más.',
+    impactoSubmetricas: { 'ref:viral_k':10, 'act:onboard':12, 'ret:stickiness':8, 'adq:conv_rate':5 } },
+  batch: { id:'batch_v2', nec:'core', costo:11, imp:18, n:'Deshacer y programar en lote',
+    d:'La red de seguridad de las operaciones masivas.',
+    d2:'Revertir un lote entero y dejar el próximo agendado. Sin esto, nadie con datos que importan se anima a apretar el botón.',
+    impactoSubmetricas: { 'ret:stickiness':12, 'act:task_success':10, 'rel:error_rate':-8, 'deuda:test_cov':4 } },
+  movil: { id:'movil_v2', nec:'core', costo:12, imp:14, n:'Descargas y modo sin conexión',
+    d:'Que sirva en el ascensor y en el campo.',
+    d2:'Trabajo local que se sincroniza cuando vuelve la señal: la única razón real por la que alguien quería la app.',
+    impactoSubmetricas: { 'ret:dau_mau':10, 'ret:stickiness':8, 'act:task_success':6, 'deuda:test_cov':-4 } },
+  ia: { id:'ia_v2', nec:'core', costo:12, imp:20, n:'Evaluaciones del asistente',
+    d:'Medir cuándo se equivoca, antes que el cliente.',
+    d2:'Un set de casos con respuesta correcta que corre en cada cambio: la diferencia entre una demo de directorio y algo que puede tocar datos de un cliente.',
+    impactoSubmetricas: { 'rel:error_rate':-14, 'act:feature_adopt':10, 'ret:stickiness':6, 'deuda:test_cov':10 } },
+
+  onboard: { id:'onboard_v2', nec:'flujo', costo:10, imp:20, n:'Onboarding por segmento',
+    d:'Cada tipo de usuario llega por su propio camino.',
+    d2:'El camino guiado, pero distinto según para qué vino: el que evalúa, el que va a usarlo todos los días y el que solo firma no necesitan lo mismo.',
+    impactoSubmetricas: { 'act:onboard':16, 'act:time_value':12, 'adq:conv_rate':8, 'ret:churn':-4 } },
+  importar: { id:'importar_v2', nec:'flujo', costo:10, imp:18, n:'Sincronización continua',
+    d:'Traerlo una vez no alcanza: cambia todos los días.',
+    d2:'La fuente original sigue viva del otro lado. O se sincroniza sola, o en tres semanas tu producto muestra números viejos y pierde la discusión.',
+    impactoSubmetricas: { 'ret:churn':-6, 'ret:stickiness':14, 'act:task_success':8, 'deuda:refactor_backlog':5 } },
+  rediseno: { id:'rediseno_v2', nec:'flujo', costo:9, imp:16, n:'Sistema de diseño y componentes',
+    d:'Que el próximo cambio no sea otro rediseño.',
+    d2:'Convertir el rediseño en piezas reutilizables. Es lo que hace que la pantalla número cuarenta salga en un día y no en un trimestre.',
+    impactoSubmetricas: { 'act:feature_adopt':8, 'deuda:refactor_backlog':-12, 'deuda:test_cov':6, 'adq:conv_rate':4 } },
+  atajos: { id:'atajos_v2', nec:'flujo', costo:7, imp:14, n:'Paleta de comandos y búsqueda global',
+    d:'Una sola tecla para llegar a cualquier lado.',
+    d2:'Buscar y ejecutar desde el teclado, sin recorrer menús. El usuario que vive adentro deja de pensar dónde estaba cada cosa.',
+    impactoSubmetricas: { 'ret:stickiness':14, 'ret:dau_mau':8, 'act:task_success':8, 'adq:visit_signup':2 } },
+
+  tablero: { id:'tablero_v2', nec:'datos', costo:11, imp:20, n:'Tableros que el usuario arma',
+    d:'El número que pide el jefe cambia cada trimestre.',
+    d2:'Que elija sus propias métricas y las guarde. Si cada corte nuevo pasa por tu equipo, el tablero envejece más rápido de lo que lo actualizás.',
+    impactoSubmetricas: { 'act:feature_adopt':14, 'ret:stickiness':12, 'rev:arpu':8, 'rev:expansion':6 } },
+  alertas: { id:'alertas_v2', nec:'datos', costo:9, imp:18, n:'Detección de anomalías',
+    d:'El umbral que nadie sabía que había que poner.',
+    d2:'El producto aprende qué es normal y avisa cuando algo se sale, sin que el usuario tenga que adivinar el número de corte.',
+    impactoSubmetricas: { 'ret:dau_mau':12, 'act:feature_adopt':10, 'rev:arpu':8, 'ret:stickiness':6 } },
+  export: { id:'export_v2', nec:'datos', costo:7, imp:14, n:'Reportes programados',
+    d:'Que la planilla llegue sola el lunes a las 8.',
+    d2:'El mismo export, pero automático y por correo. Deja de ser una tarea del usuario y pasa a ser un hábito de su equipo entero.',
+    impactoSubmetricas: { 'ret:dau_mau':10, 'ret:stickiness':8, 'rev:arpu':6, 'ref:referral_rate':4 } },
+
+  api: { id:'api_v2', nec:'integra', costo:10, imp:20, n:'SDKs y entorno de pruebas',
+    d:'Una API sin SDK solo la integra el que ya te quería.',
+    d2:'Librerías en los lenguajes que usan tus clientes y datos falsos para probar: el tiempo hasta la primera llamada baja de una semana a una tarde.',
+    impactoSubmetricas: { 'ref:viral_k':12, 'adq:mix_canal':10, 'act:time_value':10, 'evid:community':6 } },
+  conectores: { id:'conectores_v2', nec:'integra', costo:14, imp:24, n:'Marketplace de integraciones',
+    d:'Que las siguientes cincuenta las construya otro.',
+    d2:'Un lugar donde terceros publican su propia integración y la mantienen ellos. Dejás de ser el cuello de botella de tu propia lista de conectores.',
+    impactoSubmetricas: { 'ref:viral_k':14, 'adq:mix_canal':12, 'adq:conv_rate':8, 'ret:stickiness':6, 'deuda:security_p1':3 } },
+  webhooks: { id:'webhooks_v2', nec:'integra', costo:8, imp:14, n:'Reintentos y cola de eventos',
+    d:'El webhook que se pierde no lo nota nadie hasta que es tarde.',
+    d2:'Reintentos con espera creciente, historial de entregas y reenvío manual: lo que convierte el pegamento barato en algo sobre lo que un cliente monta su operación.',
+    impactoSubmetricas: { 'rel:error_rate':-12, 'rel:uptime':5, 'ret:stickiness':10, 'ref:viral_k':4 } },
+
+  sla: { id:'sla_v2', nec:'soporte', costo:10, imp:22, n:'Soporte dentro del producto',
+    d:'Contestar donde está el problema, no en otra pestaña.',
+    d2:'Chat y contexto técnico en la misma pantalla donde se trabó. El ticket llega con lo que hacía falta para resolverlo, y el SLA deja de ser una promesa cara.',
+    impactoSubmetricas: { 'ret:churn':-5, 'act:task_success':10, 'adq:conv_rate':8, 'rev:arpu':6 } },
+  docs: { id:'docs_v2', nec:'soporte', costo:8, imp:16, n:'Ayuda en contexto',
+    d:'La respuesta antes de que sepan que tienen la pregunta.',
+    d2:'La documentación deja de ser un sitio aparte y aparece en la pantalla donde hace falta. Nadie busca lo que no sabe que existe.',
+    impactoSubmetricas: { 'act:onboard':14, 'act:feature_adopt':12, 'ret:churn':-3, 'act:task_success':8 } },
+  casos: { id:'casos_v2', nec:'soporte', costo:10, imp:20, n:'Programa de referencias de clientes',
+    d:'Que tu cliente atienda la llamada del próximo cliente.',
+    d2:'Un caso publicado se lee; un cliente que da la cara en una llamada de treinta minutos cierra. Hay que armarlo, y hay que compensarlo.',
+    impactoSubmetricas: { 'evid:cases':12, 'ref:referral_rate':12, 'adq:conv_rate':10, 'evid:community':6 } },
+
+  sso: { id:'sso_v2', nec:'segur', costo:12, imp:22, n:'Alta y baja automática de usuarios',
+    d:'Que las cuentas las maneje el directorio de ellos.',
+    d2:'Cuando alguien entra o sale de la empresa del cliente, su cuenta acá se crea o se apaga sola. Sin esto, TI te vuelve a frenar en la renovación.',
+    impactoSubmetricas: { 'adq:conv_rate':12, 'rev:arpu':10, 'gate:gate_fit':8, 'deuda:security_p1':-3, 'ret:churn':-3 } },
+  auditoria: { id:'auditoria_v2', nec:'segur', costo:14, imp:24, n:'Certificación externa',
+    d:'Que lo diga un auditor, no tu equipo.',
+    d2:'La trazabilidad ya existe; ahora hay que pagar para que alguien de afuera la revise y firme. Meses de trabajo aburrido que abren una lista de clientes que hoy no te pueden comprar.',
+    impactoSubmetricas: { 'gate:gate_fit':14, 'adq:conv_rate':14, 'rev:arpu':10, 'evid:press':4, 'deuda:security_p1':-4 } },
+  cifrado: { id:'cifrado_v2', nec:'segur', costo:13, imp:22, n:'Residencia de datos por región',
+    d:'Dónde vive el dato importa tanto como quién lo ve.',
+    d2:'Guardar y procesar a cada cliente en su propia jurisdicción. Es la pregunta que aparece justo cuando el contrato ya parecía cerrado.',
+    impactoSubmetricas: { 'gate:gate_fit':14, 'adq:conv_rate':10, 'rev:arpu':10, 'deuda:refactor_backlog':6 } },
+
+  cache: { id:'cache_v2', nec:'escala', costo:11, imp:22, n:'Cuotas y aislamiento por cliente',
+    d:'Que el pico de uno no sea la caída de todos.',
+    d2:'Límites de uso por cliente y recursos separados: el que abusa se frena solo, en vez de tirar abajo la plataforma para los demás.',
+    impactoSubmetricas: { 'rel:uptime':8, 'rel:error_rate':-12, 'rel:latency_p95':-20, 'ret:churn':-3 } },
+  multi: { id:'multi_v2', nec:'escala', costo:15, imp:26, n:'Simulacros de caída',
+    d:'La redundancia que nunca se probó no es redundancia.',
+    d2:'Apagar una región a propósito, en horario laboral, para descubrir hoy lo que ibas a descubrir de madrugada un domingo.',
+    impactoSubmetricas: { 'rel:uptime':10, 'rel:mttr':-25, 'deuda:test_cov':8, 'ret:churn':-2 } },
+  observa: { id:'observa_v2', nec:'escala', costo:10, imp:20, n:'Guardias y post-mortems',
+    d:'Ver el problema no alcanza si nadie tiene el turno.',
+    d2:'Rotación de guardia, escalamiento definido y una revisión escrita después de cada incidente: lo que hace que el mismo error no vuelva tres veces.',
+    impactoSubmetricas: { 'rel:mttr':-25, 'rel:uptime':6, 'rel:error_rate':-8, 'deuda:refactor_backlog':-6 } }
+};
 
 /* ---------------------------------------------------------------
    Dilemas. Cada uno enseña algo y está atado a un libro.
@@ -1776,3 +1889,254 @@ function eventoTexto(ev, e) {
   if (idx === 0) return { titulo:ev.titulo, texto:ev.texto };
   return ev.variantes[idx - 1];
 }
+
+/* ---------------------------------------------------------------
+   CONTINGENCIAS
+   Trabajo que no elegiste y que no mueve tu mandato ni un punto. Llega solo,
+   ocupa un slot desde el día que aparece, y tiene fecha de vencimiento. Es la
+   razón número uno por la que un roadmap real se atrasa: el mes nunca es tuyo
+   entero, y la parte que no es tuya hay que hacerla igual.
+
+   Se construyen con la misma maquinaria que las apuestas — puntos, slots,
+   progreso — y por eso compiten con ellas en la misma moneda y en el mismo
+   lugar de la pantalla. La diferencia es que entregarlas no te paga nada:
+   solo evita el castigo.
+
+   costo:   en la escala de APUESTAS.costo; se normaliza a tu capacidad igual.
+   plazo:   meses hasta que vence, contando el mes en que aparece.
+   cuando:  condición mínima para que tenga sentido en esta empresa.
+   castigo: lo que pasa si el plazo se agota sin entregarla.
+   --------------------------------------------------------------- */
+var CONTINGENCIAS = [
+
+  { id:'c_deprecacion', costo:13, plazo:3, libro:'ddia',
+    n:'Migración forzada: deprecaron la API que usamos',
+    d:'El proveedor apaga la versión vieja. La fecha no la ponemos nosotros.',
+    d2:'Noventa días de aviso, de los cuales sesenta ya pasaron cuando alguien lo leyó. No hay versión de esto en la que negociemos la fecha.',
+    cuando:function(e){ return e.mesPuesto > 1; },
+    castigo:function(e,log){
+      var i; for (i = 0; i < SEGMENTOS.length; i++) e.usuarios[SEGMENTOS[i].id] *= 0.93;
+      e.fiabPercibida = Math.max(0, e.fiabPercibida - 14);
+      nota(log,'malo','Se apagó la API vieja con nosotros todavía encima. La mitad de las integraciones dejó de responder anoche.','ddia');
+    } },
+
+  { id:'c_soc2', costo:16, plazo:4, libro:'trap',
+    n:'La auditoría que pide el cliente grande',
+    d:'Sin el certificado no firman. Y ya lo anunciamos internamente.',
+    d2:'Controles de acceso, registro de cambios, política de retención, evidencia de todo eso durante un trimestre. Nada de esto se le ve al usuario.',
+    cuando:function(e){ return e.etapa === 'serieB' || e.etapa === 'serieC'; },
+    castigo:function(e,log){
+      e.mrr = Math.round(e.mrr * 0.88);
+      e.usuarios.pragm *= 0.9;
+      e.marca = Math.max(0, e.marca - 6);
+      nota(log,'malo','El contrato grande se cayó en la última revisión de seguridad. No fue el precio ni el producto: fue una carpeta que no existía.','trap');
+    } },
+
+  { id:'c_borrado', costo:10, plazo:2, libro:'hard',
+    n:'Legal pide el borrado de datos de un mercado',
+    d:'Cambió la norma. Tenemos datos que ya no podemos tener.',
+    d2:'Hay que encontrarlos en producción, en los respaldos y en el almacén analítico, borrarlos, y poder demostrar que se borraron.',
+    cuando:function(e){ return (e.cobertura.datos || 0) > 25; },
+    castigo:function(e,log){
+      var multa = Math.round(Motor.burnMensual(e) * 1.4);
+      e.caja -= multa;
+      e.lupa = Math.min(100, e.lupa + 14);
+      nota(log,'malo','Venció el plazo del regulador con los datos todavía adentro. Multa de ' + Math.round(multa/1000) + 'k y una carpeta con nuestro nombre que ahora queda abierta.','hard');
+    } },
+
+  { id:'c_regresion', costo:8, plazo:2, libro:'accelerate',
+    n:'Una regresión de rendimiento que nadie ubica',
+    d:'Todo tarda el triple desde hace tres semanas. Nadie sabe desde qué cambio.',
+    d2:'No es una caída, que sería más fácil: es lento. La gente no se queja, se va.',
+    cuando:function(e){ return e.mesPuesto > 2 && e.deuda > 30; },
+    castigo:function(e,log){
+      e.retBonus = (e.retBonus || 0) - 0.02;
+      e.fiabPercibida = Math.max(0, e.fiabPercibida - 10);
+      e.deuda = Math.min(100, e.deuda + 8);
+      nota(log,'malo','La lentitud se volvió el estado normal del producto. Ya nadie la reporta como un problema, que es exactamente el problema.','accelerate');
+    } },
+
+  { id:'c_basedatos', costo:18, plazo:3, libro:'ddia',
+    n:'La base de datos llegó a su techo',
+    d:'Escribe al límite. La próxima campaña la tumba.',
+    d2:'Particionar, mover el histórico, reescribir las tres consultas que nadie quiere tocar. Un mes de trabajo que el usuario jamás va a notar.',
+    cuando:function(e){ return Motor.carga(e) > 0.55; },
+    castigo:function(e,log){
+      e.riesgoExtra = (e.riesgoExtra || 0) + 0.45;
+      e.penalCap = (e.penalCap || 0) + 10;
+      nota(log,'malo','La base se cayó bajo carga, como estaba anunciado. Ahora el mismo trabajo hay que hacerlo, pero de urgencia y con todos mirando.','ddia');
+    } },
+
+  { id:'c_cve', costo:9, plazo:2, libro:'sre',
+    n:'Una vulnerabilidad crítica en una dependencia',
+    d:'Está en todos lados y tiene puntaje 9.8.',
+    d2:'La librería quedó sin mantenedor hace dos años. Actualizar rompe cuatro cosas; no actualizar rompe una sola, pero grande.',
+    cuando:function(e){ return e.mesPuesto > 1; },
+    castigo:function(e,log){
+      e.lupa = Math.min(100, e.lupa + 10);
+      e.riesgoExtra = (e.riesgoExtra || 0) + 0.3;
+      e.marca = Math.max(0, e.marca - 7);
+      nota(log,'malo','Alguien la explotó antes que nosotros la tapáramos. La nota se escribió sola: era pública, tenía parche, y llevaba dos meses ahí.','sre');
+    } },
+
+  { id:'c_pagos', costo:11, plazo:2, libro:'hard',
+    n:'El proveedor de pagos nos reclasificó',
+    d:'Nos subieron a categoría de riesgo. Hay que migrar o retener fondos.',
+    d2:'Otro procesador, otra integración, otra certificación. Mientras tanto cobran igual y liquidan a sesenta días.',
+    cuando:function(e){ return e.mrr > 20000; },
+    castigo:function(e,log){
+      e.caja -= Math.round(e.mrr * 1.5);
+      nota(log,'malo','Nos retuvieron la liquidación de dos meses. El dinero existe, está facturado, y no lo tenemos.','hard');
+    } },
+
+  { id:'c_accesibilidad', costo:12, plazo:3, libro:'krug',
+    n:'Una demanda por accesibilidad',
+    d:'Un usuario con lector de pantalla no puede completar el registro.',
+    d2:'Tiene razón, y lo probó con video. La parte cara no es arreglarlo: es que hay que arreglarlo en todas las pantallas, no en esa.',
+    cuando:function(e){ return e.mesPuesto > 2 && Motor.usuarios(e) > 900; },
+    castigo:function(e,log){
+      var multa = Math.round(Motor.burnMensual(e) * 0.9);
+      e.caja -= multa;
+      e.marca = Math.max(0, e.marca - 10);
+      nota(log,'malo','El acuerdo salió ' + Math.round(multa/1000) + 'k y una orden de arreglarlo igual, ahora con fecha impuesta por un juez.','krug');
+    } },
+
+  { id:'c_fuga', costo:14, plazo:3, libro:'trap',
+    n:'La cuenta más grande puso fecha',
+    d:'Renuevan en noventa días. Traen una lista de once puntos.',
+    d2:'Nueve de los once son razonables y ninguno le sirve a nadie más. La alternativa es explicarle al directorio por qué se fue el logo del sitio.',
+    cuando:function(e){ return e.mrr > Motor.burnMensual(e) * 0.25; },
+    castigo:function(e,log){
+      e.mrr = Math.round(e.mrr * 0.82);
+      e.usuarios.pragm *= 0.86;
+      e.politico -= 8;
+      nota(log,'malo','No renovaron. Se llevaron el logo, el caso de éxito y la referencia que usábamos para vender.','trap');
+    } },
+
+  { id:'c_postmortem', costo:7, plazo:2, libro:'sre',
+    n:'El postmortem con acciones que nadie tomó',
+    d:'Mismo incidente, tercera vez. Las tareas siguen abiertas desde febrero.',
+    d2:'El documento está impecable. Es lo único que se hizo.',
+    cuando:function(e){ return e.incidentesPuesto >= 1; },
+    castigo:function(e,log){
+      e.riesgoExtra = (e.riesgoExtra || 0) + 0.5;
+      e.moral = Math.max(0, e.moral - 8);
+      nota(log,'malo','Volvió a pasar, por cuarta vez, por la misma causa. El equipo ya ni escribe el documento.','sre');
+    } },
+
+  { id:'c_impuestos', costo:10, plazo:2, libro:'hard', sectores:['banco','market','apuestas','strea'],
+    n:'Cambió el régimen de facturación',
+    d:'Emitimos mal desde que empezó el trimestre.',
+    d2:'Retenciones nuevas, otro formato, otra periodicidad. Corregir hacia atrás es la mitad del trabajo.',
+    cuando:function(e){ return e.mrr > 8000; },
+    castigo:function(e,log){
+      var multa = Math.round(Motor.burnMensual(e) * 1.1);
+      e.caja -= multa;
+      e.lupa = Math.min(100, e.lupa + 12);
+      nota(log,'malo','La inspección encontró un trimestre entero mal emitido. ' + Math.round(multa/1000) + 'k y la obligación de rehacerlo igual.','hard');
+    } },
+
+  { id:'c_licencia', costo:17, plazo:3, libro:'hard', sectores:['banco','apuestas','saludgold','biogen'],
+    n:'Renovación de la licencia para operar',
+    d:'Vence. Sin ella no hay producto, hay una web bonita.',
+    d2:'Capital mínimo, oficial de cumplimiento, manual de procedimientos y una entrevista donde alguien va a preguntar cosas que deberíamos saber.',
+    cuando:function(e){ return e.mesPuesto > 2; },
+    castigo:function(e,log){
+      e.lupa = Math.min(100, e.lupa + 25);
+      e.caja -= Math.round(Motor.burnMensual(e) * 2);
+      var i; for (i = 0; i < SEGMENTOS.length; i++) e.usuarios[SEGMENTOS[i].id] *= 0.8;
+      e.politico -= 12;
+      nota(log,'malo','Operamos un mes con la licencia vencida antes de que alguien de afuera lo notara. Ese mes ahora es un expediente.','hard');
+    } },
+
+  { id:'c_modelo', costo:12, plazo:2, libro:'zero', sectores:['ia','biogen','datapol'],
+    n:'El proveedor del modelo cambió los términos',
+    d:'Cuadruplicaron el precio y prohibieron nuestro caso de uso.',
+    d2:'O migramos a otro modelo y revalidamos todo, o servimos el nuestro y nos comemos la infraestructura.',
+    cuando:function(e){ return e.mesPuesto > 1; },
+    castigo:function(e,log){
+      e.infraExtra = (e.infraExtra || 0) + Math.round(Motor.burnMensual(e) * 0.22);
+      e.moral = Math.max(0, e.moral - 5);
+      nota(log,'malo','Nos aplicaron la tarifa nueva sin migrar. El costo de infraestructura subió y ya no baja.','zero');
+    } },
+
+  { id:'c_respin', costo:20, plazo:3, libro:'ddia', sectores:['chips','renov'],
+    n:'El lote volvió con fallas',
+    d:'Rinde el sesenta por ciento de lo especificado. El cliente ya lo sabe.',
+    d2:'Hay que aislar la causa, rehacer la máscara y esperar la corrida. El calendario no se comprime con ganas.',
+    cuando:function(e){ return e.mesPuesto > 2; },
+    castigo:function(e,log){
+      e.caja -= Math.round(Motor.burnMensual(e) * 1.8);
+      e.marca = Math.max(0, e.marca - 12);
+      e.usuarios.visio *= 0.85;
+      nota(log,'malo','Salió el lote fallado igual. Volvió entero, y con él la reputación de que acá se entrega lo que sea.','ddia');
+    } },
+
+  { id:'c_derechos', costo:13, plazo:2, libro:'trap', sectores:['strea','market','saludgold'],
+    n:'Vence el contrato con el proveedor clave',
+    d:'Renegocian al doble, o se llevan el catálogo el día 30.',
+    d2:'Todo lo que la gente viene a buscar acá es de ellos. Reemplazarlo lleva más de un mes y se nota desde el primer día.',
+    cuando:function(e){ return Motor.usuarios(e) > 1200; },
+    castigo:function(e,log){
+      var i; for (i = 0; i < SEGMENTOS.length; i++) e.usuarios[SEGMENTOS[i].id] *= 0.85;
+      e.retBonus = (e.retBonus || 0) - 0.025;
+      nota(log,'malo','Se llevaron el catálogo el día 30, como avisaron. La gente entró, no encontró lo que venía a buscar, y aprendió el camino de vuelta.','trap');
+    } },
+
+  { id:'c_ensayo', costo:19, plazo:3, libro:'lean', sectores:['biogen','saludgold'],
+    n:'El regulador pidió más datos',
+    d:'El brazo de control no le alcanza. Sin eso no hay revisión.',
+    d2:'Otro protocolo, otro comité de ética, otro reclutamiento. Todo lo que viene después depende de esto y de nada más.',
+    cuando:function(e){ return e.mesPuesto > 2; },
+    castigo:function(e,log){
+      e.caja -= Math.round(Motor.burnMensual(e) * 1.5);
+      e.politico -= 10;
+      e.marca = Math.max(0, e.marca - 8);
+      nota(log,'malo','La revisión se cayó por expediente incompleto. Volvemos a la fila, doce meses atrás, con la caja de hoy.','lean');
+    } },
+
+  { id:'c_ciberseguro', costo:11, plazo:2, libro:'sre', sectores:['ciber','banco','datapol','saludgold'],
+    n:'La aseguradora exige controles',
+    d:'Sin doble factor en todo, no hay póliza. Y sin póliza no hay contratos.',
+    d2:'Inventario de accesos, rotación de credenciales, segundo factor obligatorio para todos, incluido el que va a odiarlo más.',
+    cuando:function(e){ return e.etapa !== 'semilla'; },
+    castigo:function(e,log){
+      e.lupa = Math.min(100, e.lupa + 8);
+      e.mrr = Math.round(e.mrr * 0.92);
+      e.riesgoExtra = (e.riesgoExtra || 0) + 0.35;
+      nota(log,'malo','Se cayó la póliza. Tres clientes tenían cláusula de seguro vigente y ya lo están revisando con sus abogados.','sre');
+    } }
+];
+
+function contingenciaPorId(id) {
+  for (var i = 0; i < CONTINGENCIAS.length; i++) if (CONTINGENCIAS[i].id === id) return CONTINGENCIAS[i];
+  return null;
+}
+
+
+/* ---------------------------------------------------------------
+   EL VISTO BUENO
+   Tu trabajo no lo frena la ingeniería: lo frena una persona que no contesta.
+   Cada necesidad pasa por un guardián distinto y cada guardián tiene su propia
+   razón, que casi siempre es razonable. Mientras espera, la iniciativa ocupa su
+   slot y no avanza un punto — se destraba sola con el tiempo, o la escalás y lo
+   pagás con capital político.
+   --------------------------------------------------------------- */
+var VISTOS = {
+  core:    { quien:'ceo',
+             txt:'quiere verlo antes de que salga. No confía en la demo grabada.' },
+  flujo:   { quien:'ceo',
+             txt:'vio una versión en una conferencia y ahora tiene opiniones sobre el primer paso.' },
+  datos:   { quien:'legal',
+             txt:'pregunta qué se guarda, por cuánto tiempo y quién puede leerlo. Todavía no hay respuesta escrita.' },
+  segur:   { quien:'legal',
+             txt:'no firma sin una revisión completa. Es su trabajo y tiene razón.' },
+  integra: { quien:'socio',
+             txt:'tiene su propio calendario de releases y no coincide con el tuyo.' },
+  soporte: { quien:'ventas',
+             txt:'ya lo prometió distinto a tres cuentas y quiere que salga como él lo vendió.' },
+  escala:  { quien:'cto',
+             txt:'quiere pasarlo por revisión de arquitectura antes de que toque producción.' }
+};
+
+function vistoDe(nec) { return VISTOS[nec] || VISTOS.core; }
