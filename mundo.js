@@ -106,7 +106,9 @@ var Mundo = (function () {
   var CARGOS = { ceo:'CEO', cto:'CTO', ventas:'VP de Ventas',
                  estrella:'Staff Engineer', board:'Board',
                  /* los que no te traen dilemas pero te firman (o no) lo que sale */
-                 legal:'Directora Legal', socio:'El socio de la integración' };
+                 legal:'Directora Legal', socio:'El socio de la integración',
+                 /* el que ya te comprometió con alguien de afuera antes de que lo supieras */
+                 soporte:'Líder de Soporte' };
 
   function elenco(empresaId) {
     var emp = (typeof empresaPorId === 'function' && empresaId) ? empresaPorId(empresaId) : null;

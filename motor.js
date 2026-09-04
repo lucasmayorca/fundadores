@@ -35,7 +35,7 @@ var Motor = (function () {
   }
   function apuesta(id) {
     for (var i = 0; i < APUESTAS.length; i++) if (APUESTAS[i].id === id) return APUESTAS[i];
-    return _derivadas[id] || contingenciaPorId(id) || null;
+    return _derivadas[id] || contingenciaPorId(id) || compromisoPorId(id) || null;
   }
   /* Una contingencia se construye con la misma maquinaria que una apuesta —
      mismo lookup, mismos slots, mismos puntos, misma barra de progreso — y por
@@ -43,6 +43,7 @@ var Motor = (function () {
      pantalla. Lo único que no comparte es el premio: entregarla no paga nada,
      solo evita el castigo. */
   function esContingencia(id) { return !!contingenciaPorId(id); }
+  function esCompromiso(id) { return !!compromisoPorId(id); }
 
   /* ---------------- lo que va antes ----------------
      Casi la mitad del backlog necesita que otra cosa exista primero: no se le
@@ -239,6 +240,8 @@ var Motor = (function () {
     e.derivadoDe = {};
     e.cont = [];
     e.contVistas = {};
+    e.compromisos = [];
+    e.compromisosVistos = {};
     e.espera = {};
     e.pendientes = [];
     /* Integración intrínseca, clase `info`: la llamada que el jugador hace
@@ -268,7 +271,22 @@ var Motor = (function () {
        progreso se dibuje contra tu propia linea de partida y no contra 0 */
     e.retencionInicio = retencionMedia(e);
     e.deudaInicio = e.deuda;
+    heredarCompromiso(e);
     return e;
+  }
+
+  /* Tu antecesor ya comprometió algo antes de que llegaras: el puesto puede
+     arrancar con un slot ocupado desde el mes 1. No pasa por el dilema —
+     la conversación de "cumplirlo o llamar a decir que no" ya se tuvo, sin
+     vos, y lo único que queda es lo que dejó. Por eso el plazo llega recortado
+     en un mes: ya viene corriendo desde antes. */
+  function heredarCompromiso(e) {
+    if (Math.random() >= 0.38 || !COMPROMISOS.length) return;
+    var p = COMPROMISOS[Math.floor(Math.random() * COMPROMISOS.length)];
+    e.compromisosVistos[p.id] = true;
+    e.compromisos.push({ id:p.id, restante:Math.max(1, p.plazo - 1), heredado:true });
+    e.enVuelo[p.id] = 0;
+    costoCompromiso(e, p);
   }
 
   /* ---------------- el visto bueno ----------------
@@ -313,7 +331,7 @@ var Motor = (function () {
     }
     /* candidatas a bloquearse: lo tuyo en vuelo, sin contar contingencias */
     for (id in e.enVuelo) if (e.enVuelo.hasOwnProperty(id)) {
-      if (esContingencia(id) || enEspera(e, id)) continue;
+      if (esContingencia(id) || esCompromiso(id) || enEspera(e, id)) continue;
       libres.push(id);
     }
     var yaEsperando = 0;
@@ -556,6 +574,91 @@ var Motor = (function () {
     for (k in e.contVistas) if (e.contVistas.hasOwnProperty(k)) ninguna = false;
     var prob = ninguna && e.mesPuesto >= 4 ? 1 : 0.35;
     if (Math.random() < prob) llegarContingencia(e, log);
+  }
+
+  /* ---------------- compromisos del elenco ----------------
+     Alguien de tu propio equipo ya te comprometió con una persona de afuera,
+     antes de que lo supieras. A diferencia de una contingencia, ACÁ SÍ HAY UNA
+     DECISIÓN en el momento en que aparece — el dilema en contenido.js llama a
+     `comprometerse` o a `declinarCompromiso` según lo que elija el jugador.
+     Este archivo no decide cuándo aparecen (lo decide `eventoAplicable` como a
+     cualquier otro dilema): solo sabe qué hacer con cada rama.
+
+     Comparten con las contingencias el slot, los puntos y el vencimiento —
+     misma maquinaria, mismo lugar de la pantalla. Lo que cambia es la entrada
+     (una elección, no una aparición muda) y el desenlace: cumplir a tiempo
+     repara la relación de verdad (sin premio de mandato, que nunca fue el
+     punto); no cumplir cuesta la caída completa Y el crédito político, más
+     caro que haber dicho que no el primer día. */
+
+  function compromisoActivo(e, id) {
+    if (!e.compromisos) return null;
+    for (var i = 0; i < e.compromisos.length; i++) if (e.compromisos[i].id === id) return e.compromisos[i];
+    return null;
+  }
+  /* usado por el `cuando` del dilema: no ofrecer de nuevo un compromiso que
+     ya está en vuelo o que ya se resolvió este mismo puesto */
+  function compromisoPendiente(e, id) {
+    return !!(compromisoActivo(e, id) || (e.compromisosVistos && e.compromisosVistos[id]));
+  }
+
+  function costoCompromiso(e, p) {
+    var R = Math.max(6, Math.round(capacidad(e) * e.mando));
+    var talle = p.costo >= 24 ? 'XL' : p.costo >= 18 ? 'L' : p.costo >= 12 ? 'M' : p.costo >= 7 ? 'S' : 'XS';
+    if (!e.talles) e.talles = {};
+    if (!e.costos) e.costos = {};
+    e.talles[p.id] = talle;
+    e.costos[p.id] = Math.max(1, Math.round(R * FACTOR_TALLE[talle]));
+    return e.costos[p.id];
+  }
+
+  /* Elegiste cumplirlo: entra al backlog como una apuesta más, ocupando un
+     slot, con el reloj corriendo. */
+  function comprometerse(e, log, id) {
+    var p = compromisoPorId(id);
+    if (!p) return;
+    if (!e.compromisos) e.compromisos = [];
+    if (!e.compromisosVistos) e.compromisosVistos = {};
+    e.compromisosVistos[id] = true;
+    e.compromisos.push({ id:id, restante:p.plazo });
+    e.enVuelo[id] = 0;
+    costoCompromiso(e, p);
+  }
+
+  /* Elegiste retractarte ya: el costo político y el `romper` — más chico que
+     el `castigo` de haber fallado tarde — se cobran en el acto, y el
+     compromiso nunca llega a ocupar un slot. */
+  function declinarCompromiso(e, log, id) {
+    var p = compromisoPorId(id);
+    if (!p) return;
+    if (!e.compromisosVistos) e.compromisosVistos = {};
+    e.compromisosVistos[id] = true;
+    e.politico -= p.politicoDeclinar || 8;
+    try { p.romper(e, log); } catch (err) {}
+    if (log && log.length) log[log.length - 1].promo = 'declina';
+  }
+
+  /* Al cierre del mes: descuenta plazos y cobra los vencidos. La entrega a
+     tiempo se resuelve en el bloque de construcción de `simular`, junto a las
+     apuestas y las contingencias — es la misma maquinaria de slots. */
+  function tickCompromisos(e, log) {
+    if (!e.compromisos) e.compromisos = [];
+    var quedan = [], i, cx, p;
+    for (i = 0; i < e.compromisos.length; i++) {
+      cx = e.compromisos[i];
+      p = compromisoPorId(cx.id);
+      if (!p) continue;
+      cx.restante--;
+      if (cx.restante > 0) { quedan.push(cx); continue; }
+      /* venció sin cumplirse: la caída completa, más cara que declinar a tiempo */
+      delete e.enVuelo[cx.id];
+      e.politico -= 8;
+      log.push({ tipo:'malo', libro:p.libro, cont:'vence', promo:'vence',
+        texto:'Se venció "' + p.n + '" sin cumplirse. Es la caída completa — la que evitabas retractándote a tiempo, ' +
+              'más cara porque ahora también quedó la sensación de que prometiste algo que sabías que no ibas a cumplir.' });
+      try { p.castigo(e, log); } catch (err) {}
+    }
+    e.compromisos = quedan;
   }
 
   /* ---------------- la segunda vuelta ---------------- */
@@ -1360,15 +1463,42 @@ var Motor = (function () {
   }
   function progresoMandato(e) { return progresoDe(e, e.mandatoId); }
 
+  /* Cuánto de lo que hiciste este mes apunta a lo que te pidieron. Antes se
+     medía sobre las estaciones — qué fracción de tus puntos caía en los
+     buckets que el mandato premiaba. Sin estaciones queda una sola palanca, y
+     es mejor medida: qué fracción de tus puntos fue a iniciativas que mueven
+     los ejes que el mandato mide. Te miden por en qué trabajaste, no por en
+     qué dial pusiste el número.
+
+     Un mes sin asignar nada devuelve el neutro en vez de cero: no repartir no
+     es desalinearse — es dejar que la operación se ocupe, que con el mandato
+     de deuda encima es exactamente lo que hay que hacer. */
   function alineacion(e, plan) {
-    var m = mandatoPorId(e.mandatoId), total = 0, alin = 0, k;
-    var buckets = ['desc','cons','plat','fiab','crec'];
-    for (k = 0; k < buckets.length; k++) {
-      var v = plan[buckets[k]] || 0;
-      total += v;
-      if (m && m.alinea.indexOf(buckets[k]) >= 0) alin += v;
+    var m = mandatoPorId(e.mandatoId);
+    if (!m || !m.fuentes) return 0.55;
+    var asig = (plan && plan.asig) || {};
+    var total = capacidadPropia(e), usado = 0, alin = 0, id, v, f, vec;
+    for (id in asig) {
+      if (!asig.hasOwnProperty(id)) continue;
+      v = asig[id] || 0;
+      if (v <= 0) continue;
+      usado += v;
+      vec = (e.vectores && e.vectores[id]) || {};
+      for (f = 0; f < m.fuentes.length; f++) {
+        if ((vec[m.fuentes[f][0]] || 0) > 0) { alin += v; break; }
+      }
     }
-    return total > 0 ? alin / total : 0.5;
+    /* Lo que dejaste sin comprometer no es desalineación: se lo lleva la
+       operación, que carga la mano donde el mandato la necesita. Con un
+       mandato de deuda o de cero caídas, NO llenar el mes de features es
+       exactamente lo que te pidieron — y era lo que antes se hacía volcando
+       puntos a una estación. */
+    var sirve = false, kA;
+    for (kA = 0; kA < m.alinea.length; kA++) {
+      if (m.alinea[kA] !== 'cons') { sirve = true; break; }
+    }
+    if (sirve) alin += Math.max(0, total - usado);
+    return total > 0 ? Math.min(1, alin / total) : 0.55;
   }
 
   /* ---------------- acciones puntuales ---------------- */
@@ -1479,45 +1609,78 @@ var Motor = (function () {
        alineación con el mandato, ni para lo que aprendés. */
     var misCons = 0, mck;
     if (plan.asig) for (mck in plan.asig) if (plan.asig.hasOwnProperty(mck)) misCons += plan.asig[mck] || 0;
-    var p = { desc:plan.desc||0, cons:plan.cons||0, plat:plan.plat||0, fiab:plan.fiab||0, crec:plan.crec||0 };
-    var mioUsado = p.desc + p.cons + p.plat + p.fiab + p.crec + misCons;
-    e.gastoPropio = { desc:plan.desc||0, cons:(plan.cons||0) + misCons, plat:plan.plat||0, fiab:plan.fiab||0, crec:plan.crec||0 };
-    e.acum.desc += e.gastoPropio.desc; e.acum.cons += e.gastoPropio.cons;
-    e.acum.plat += e.gastoPropio.plat; e.acum.fiab += e.gastoPropio.fiab;
-    e.acum.crec += e.gastoPropio.crec;
+    /* Las estaciones dejaron de ser una decisión del mes. El jugador reparte
+       su capacidad entre iniciativas y nada más: descubrimiento, plataforma,
+       fiabilidad y crecimiento siguen siendo los cuatro bucles que sostienen a
+       la empresa — sin ellos la evidencia se va a cero, la deuda no baja nunca,
+       no entra un usuario nuevo y no hay defensa ante incidentes — pero ahora
+       los corre la organización sola. Se sacaron del tablero porque pedirle al
+       jugador que reparta puntos entre cuatro diales que casi siempre quiere en
+       el mismo lugar era una decisión sin decisión: costaba atención y no
+       cambiaba la partida. */
+    var p = { desc:0, cons:0, plat:0, fiab:0, crec:0 };
+    e.gastoPropio = { desc:0, cons:misCons, plat:0, fiab:0, crec:0 };
+    e.acum.cons += misCons;
 
-    /* El resto de la organización NO es un piloto automático competente: es
-       inercia. Suelta, una empresa manda casi todo a construir features —
-       nadie pelea por plataforma ni por discovery si no hay alguien haciéndolo.
-       Tu `mando` es el grado en que la org te SIGUE: define la dirección con tu
-       propio reparto y la organización se alinea en proporción a tu autoridad.
-       Lo que no te sigue cae en el default inercial. Por eso subir en el
-       escalafón no te da solo más puntos: hace que tus decisiones pesen. */
-    var INERCIA = { desc:0.02, cons:0.82, plat:0.04, fiab:0.04, crec:0.08 };
-    var resto = Math.max(0, capTotal - mio);
-    /* La construcción inercial se lleva aparte a propósito. La parte de la org
-       que te SIGUE empuja tu tablero; la que no te sigue también construye,
-       pero construye lo suyo — lo que vos no financiaste. Antes las dos caían
-       en la misma bolsa y terminaban empujando exactamente los proyectos que
-       vos habías elegido: un equipo competente y gratis que te hacía el mes.
-       Eso es lo que volvía inofensivo tener poco mando, y lo que hacía que un
-       jugador que no asignaba un solo punto igual entregara. */
-    var consInercia = 0;
-    if (resto > 0) {
-      var sigue = resto * e.mando, suelto = resto - sigue, k;
-      /* la parte que te sigue copia TU proporción de este mes */
-      if (sigue > 0 && mioUsado > 0) {
-        p.desc += Math.round(sigue * (e.gastoPropio.desc / mioUsado));
-        p.cons += Math.round(sigue * (e.gastoPropio.cons / mioUsado));
-        p.plat += Math.round(sigue * (e.gastoPropio.plat / mioUsado));
-        p.fiab += Math.round(sigue * (e.gastoPropio.fiab / mioUsado));
-        p.crec += Math.round(sigue * (e.gastoPropio.crec / mioUsado));
-      } else suelto += sigue; /* si no diste dirección, no hay nada que seguir */
-      for (k in INERCIA) if (INERCIA.hasOwnProperty(k)) {
-        if (k === 'cons') consInercia = Math.round(suelto * INERCIA.cons);
-        else p[k] += Math.round(suelto * INERCIA[k]);
+    /* Todo lo que no comprometiste en iniciativas lo reparte la operación, con
+       una proporción fija que no depende del mando: lo que el escalafón te da
+       sigue siendo cuántos puntos dirigís vos (capacidadPropia = capacidad ×
+       mando), no cuántos diales podés tocar. La construcción de la org se parte
+       igual que antes entre lo que financiaste y lo que dejaste suelto: la
+       segunda rinde peor y deja deuda. */
+    var OPERACION = { desc:0.16, plat:0.17, fiab:0.15, crec:0.19, cons:0.33 };
+    /* La operación no es ciega: la empresa sabe para qué te contrataron y
+       carga la mano donde el mandato la necesita. Eso es lo que devuelve la
+       palanca que se fue con las estaciones — mandatos como bajar la deuda o
+       terminar sin caídas se jugaban volcando puntos a un dial, y sin esto
+       quedaban incumplibles. La decisión sigue siendo una sola y sin diales:
+       cuánto del mes te llevás en features, sabiendo que el resto empuja
+       exactamente lo que te van a medir. */
+    var mOp = mandatoPorId(e.mandatoId), kOp;
+    if (mOp && mOp.alinea) {
+      /* Dos tercios del presupuesto de operación van a lo que el mandato pide;
+         el resto sostiene los otros bucles para que la empresa no se caiga por
+         un lado mientras empuja por el otro. La proporción sale de calibrar
+         contra sim.js: por debajo de esto, "bajá la deuda a un cuarto" se
+         volvia literalmente incumplible — con las estaciones el jugador podia
+         volcarle el mes entero a plataforma, y hay que reponer ese techo. */
+      /* El foco se lleva la mayor parte del mes de la operación, y se la saca
+         a TODO lo demás — construcción incluida. Que `cons` fuera fijo era el
+         error: la deuda que deja construir subía 4 por mes contra una
+         plataforma que a partir de 41 ya no la alcanzaba, así que "bajala a un
+         cuarto" era imposible por aritmética, no por dificultad. Una operación
+         volcada a plataforma construye menos, y ahí el mandato vuelve a
+         cerrar. Calibrado contra sim.js. */
+      /* Cuánto puede enfocarse la operación depende de tu autoridad: sin
+         nadie que la dirija, una empresa reparte parejo y no termina nada.
+         Esto es lo que reemplaza a las palancas que daba el escalafón —
+         subir ya no te abre diales, te deja alinear a la empresa detrás de
+         tu mandato. Y evita que no hacer nada rinda como hacer algo. */
+      var FOCO = 0.34 + 0.42 * e.mando, ali = [], otr = [], pAli = 0, pOtr = 0;
+      for (kOp in OPERACION) {
+        if (!OPERACION.hasOwnProperty(kOp)) continue;
+        if (mOp.alinea.indexOf(kOp) >= 0) { ali.push(kOp); pAli += OPERACION[kOp]; }
+        else { otr.push(kOp); pOtr += OPERACION[kOp]; }
+      }
+      if (ali.length && otr.length) {
+        for (kOp = 0; kOp < ali.length; kOp++) {
+          OPERACION[ali[kOp]] = OPERACION[ali[kOp]] / pAli * FOCO;
+        }
+        for (kOp = 0; kOp < otr.length; kOp++) {
+          OPERACION[otr[kOp]] = OPERACION[otr[kOp]] / pOtr * (1 - FOCO);
+        }
       }
     }
+    var libre = Math.max(0, capTotal - misCons);
+    p.desc = Math.round(libre * OPERACION.desc);
+    p.plat = Math.round(libre * OPERACION.plat);
+    p.fiab = Math.round(libre * OPERACION.fiab);
+    p.crec = Math.round(libre * OPERACION.crec);
+    var consOrg = Math.round(libre * OPERACION.cons);
+    /* la parte de la construcción de la org que te sigue empuja TU tablero; el
+       resto construye lo suyo, y de eso solo queda deuda */
+    p.cons = Math.round(consOrg * e.mando);
+    var consInercia = consOrg - p.cons;
 
     if (e.refactorFijo) { var mv = Math.round(capTotal * 0.2); p.cons = Math.max(0, p.cons - mv); p.plat += mv; }
     if (e.reescritura > 0) {
@@ -1640,6 +1803,23 @@ var Motor = (function () {
                   'el trabajo que no se ve es el que te deja seguir haciendo el que si.' });
           continue;
         }
+        /* Un compromiso cumplido a tiempo repara la relación de verdad — es
+           tu palabra, no una casilla del mandato — y por eso tampoco paga
+           impacto ni abre continuación. La diferencia con una contingencia es
+           el tono: acá alguien confiaba en vos, y cumpliste. */
+        if (esCompromiso(id)) {
+          var pc = compromisoPorId(id), pi;
+          delete e.enVuelo[id];
+          e.hechas[id] = true;
+          if (e.compromisos) for (pi = 0; pi < e.compromisos.length; pi++) {
+            if (e.compromisos[pi].id === id) { e.compromisos.splice(pi, 1); break; }
+          }
+          e.moral = clamp(e.moral + 3, 0, 100);
+          log.push({ tipo:'bueno', libro:pc.libro, cont:'cierra', promo:'cumple',
+            texto:'Cumpliste "' + pc.n + '" a tiempo. No movió tu mandato — nunca fue esa la apuesta — ' +
+                  'pero la relación que estaba en juego se sostiene, que era todo el punto.' });
+          continue;
+        }
         var esperado = estimacion(e, id);
         /* la base se mide al ENTREGAR, no al empezar: si la construiste
            mientras esto estaba en vuelo, llegaste a tiempo y no se cobra nada.
@@ -1706,8 +1886,14 @@ var Motor = (function () {
       /* Lo mismo por abajo: bajar de 60 a 40 es una tarde, bajar de 25 a 15 es
          tocar lo que nadie quiere tocar. Antes la deuda se iba a cero en un mes
          de plataforma y el mandato se cumplia siempre. */
+      /* El exponente castiga bajar la deuda cuando ya está baja: con 2.0 el
+         saneo se apagaba antes de llegar a la meta y "bajala a un cuarto" era
+         inalcanzable por aritmética — el punto de equilibrio contra la entropía
+         quedaba en 22 y la meta típica es 14. Con las estaciones el jugador lo
+         compensaba volcándole el mes entero a plataforma; sin ellas hay que
+         corregirlo acá. Sigue costando más abajo, pero termina. */
       e.deuda -= rinde(p.plat, 2.35) * (1 + e.hab.tecnologia / 150 + e.capacidades.tecnologia / 200) *
-                 Math.pow(clamp(e.deuda, 0, 100) / 60, 2.0);
+                 Math.pow(clamp(e.deuda, 0, 100) / 60, 1.66);
       e.arquitectura += rinde(p.plat, 1.2);
     }
     e.deuda += 2.5;
@@ -1826,12 +2012,12 @@ var Motor = (function () {
     e.caja += e.mrr - burnMensual(e) - gastoCrec;
 
     /* 10. capital político: te miden por el mandato, no por tener razón */
-    var alin = alineacion(e, e.gastoPropio);
+    var alin = alineacion(e, plan);
     var prog = progresoMandato(e);
     var esperado2 = (e.mesPuesto + 1) / e.meses;
-    var dPol = (alin - 0.55) * 10 + (prog >= esperado2 ? 2 : -4) + e.hab.liderazgo / 50 + e.capacidades.gente / 90;
+    var dPol = (alin - 0.45) * 10 + (prog >= esperado2 ? 2 : -4) + e.hab.liderazgo / 50 + e.capacidades.gente / 90;
     if (e.penalCap) dPol -= 5;
-    if (mioUsado < mio * 0.6) dPol -= 3;
+    if (misCons < mio * 0.6) dPol -= 3;
     e.politico = clamp(e.politico + dPol, -20, 100);
 
     /* mecánica de calle: la palanca te salva el cuello exactamente una vez,
@@ -1883,6 +2069,7 @@ var Motor = (function () {
     }
     tickEsperas(e, log);
     tickContingencias(e, log);
+    tickCompromisos(e, log);
     rellenarBacklog(e);
     var refresco = refrescarBacklogPeriodico(e);
     if (refresco) {
@@ -2174,6 +2361,8 @@ var Motor = (function () {
     depPendiente:depPendiente, factorSinBase:function () { return FACTOR_SIN_BASE; },
     enEspera:enEspera, escalar:escalar, costoEscalar:costoEscalar,
     lastreContingencia:lastreContingencia,
+    esCompromiso:esCompromiso, compromisoActivo:compromisoActivo, compromisoPendiente:compromisoPendiente,
+    comprometerse:comprometerse, declinarCompromiso:declinarCompromiso,
     /* asegurarBacklog() corre al cargar una partida guardada: resincroniza el
        índice de derivadas y, si el backlog quedó vacío (partidas de antes de
        la segunda vuelta), lo vuelve a llenar sin gastar un mes */

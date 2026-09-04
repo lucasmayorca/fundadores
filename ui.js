@@ -112,8 +112,7 @@
   var TOUR = [
     { el:'hud', texto:'Este es el pulso de la empresa. <b>Retención</b> es el número que lo decide todo: de 100 usuarios este mes, cuántos siguen aquí el próximo.', accion:null },
     { el:'mandato', texto:'Te contrataron para hacer <b>una sola cosa</b> — esta barra es tu trabajo. El <b>capital político</b> es tu oxígeno: se gasta cuando trabajas fuera del mandato. En cero, estás fuera.', accion:null },
-    { el:'capa', texto:'Tu equipo produce <b>puntos</b> cada mes. Los puntos que pones en estaciones producen evidencia, menos deuda, fiabilidad o alcance. <b>Lo que no estaciones va a los proyectos de abajo.</b>', accion:'estacion',
-      textoAccion:'Pruébalo: toca <b>+</b> en una estación.' },
+    { el:'capa', texto:'Tu equipo produce <b>puntos</b> cada mes. Lo que <b>no</b> pongas en proyectos lo usa la operación: descubrimiento, plataforma, fiabilidad y crecimiento. Llenar el mes de features no sale gratis — esos cuatro son los que sostienen la empresa.', accion:null },
     { el:'backlog', texto:'El corazón del trabajo: <b>toca un proyecto</b> para poner ahí tus puntos restantes. Lee las tarjetas primero — <b>prob</b> (cuánto confiar en la estimación), <b>impacto</b> (lo que paga si es cierta), <b>tamaño</b> (S ~3 días... XL ~un mes).', accion:'proyecto',
       textoAccion:'Toca un proyecto para sumarlo.' },
     { el:'backlog', texto:'Verde es lo construido, <b>ámbar es el empuje de este mes</b>. Cuando un proyecto dice SALE ESTE MES, entrega ahora — y le da a la empresa una capacidad permanente.', accion:null },
@@ -187,16 +186,10 @@
     else tourRender();
   }
 
-  /* un Analista aún no tiene estaciones: el paso 3 se vuelve informativo */
-  function tourAjustarRol() {
-    if (!J) return;
-    var alguna = false, i;
-    for (i = 0; i < ESTACIONES.length; i++) if (J.palancas.indexOf(ESTACIONES[i].req) >= 0) alguna = true;
-    if (!alguna) {
-      TOUR[2].accion = null;
-      TOUR[2].texto = 'Las estaciones producen evidencia, menos deuda, fiabilidad o alcance — <b>se desbloquean con cada ascenso</b>. Por ahora, todo tu mes va a proyectos.';
-    }
-  }
+  /* Quedó sin trabajo cuando salieron las estaciones: el paso de la operación
+     dice lo mismo en todos los puestos, porque ya no hay diales que desbloquear.
+     Se conserva el punto de enganche por si otro paso vuelve a depender del rol. */
+  function tourAjustarRol() { return; }
 
   /* tooltips táctiles: toca una etiqueta punteada y sale una explicación de una línea */
   var TIPS = {
@@ -227,10 +220,6 @@
     cap_gtm:'Qué tan eficiente es la organización convirtiendo gasto de crecimiento en alcance, más allá del empuje de este mes. Tu habilidad de Negocio la acelera.',
     cap_gente:'Cuánto equipo puede cargar la organización antes de que muerdan la carga cognitiva y la política. Tu habilidad de Liderazgo la acelera.',
     cap_cap:'Oficio para levantar capital: solo crece cuando cierras una ronda, y los mejores términos llegan en la siguiente.',
-    st_desc:'Entrevistas y datos. Suma Evidencia: con más evidencia, la probabilidad de que tus iniciativas salgan como planeaste sube. Sin evidencia, construyes a ciegas.',
-    st_plat:'Paga deuda técnica. Con deuda alta, cada punto de esfuerzo rinde menos; bajarla hace que las mismas iniciativas avancen más rápido.',
-    st_fiab:'Sube Confiabilidad (uptime). Protege Retención — los usuarios no se van por caídas — y es requisito de la compuerta al mercado grande.',
-    st_crec:'Amplía alcance: mueve Adquisición directamente. No toca tu mandato de usabilidad, pero alimenta el embudo desde arriba.',
     st_build:'Lo que no estacionas va aquí, a tus apuestas del backlog — esto es lo que de verdad sale este mes.',
     /* textos del handoff de diseño, copiados tal cual */
     mandato:'El objetivo real de tu puesto — recién lo conoces el día uno. Alinear tus apuestas paga ×1.3; ir en contra paga ×0.5.',
@@ -1207,7 +1196,7 @@
   /* ================= JUEGO ================= */
 
   function nuevoMes() {
-    plan = { desc:0, plat:0, fiab:0, crec:0, asig:{}, orden:[] };
+    plan = { asig:{}, orden:[] };
     /* los proyectos ya en vuelo llegan precargados con puntos, en orden */
     var idsVuelo = [], iv;
     for (iv in J.enVuelo) if (J.enVuelo.hasOwnProperty(iv)) idsVuelo.push(iv);
@@ -1278,14 +1267,19 @@
         total += v * w * (alineada ? 1.3 : 1);
       }
     }
-    /* las estaciones tambien mueven el mandato, y eso es justo lo que el
-       jugador no ve si solo mira las tarjetas */
+    /* La operación también mueve el mandato, y eso es justo lo que el jugador
+       no ve si solo mira las tarjetas. Sale de lo que NO comprometiste en
+       iniciativas, con el mismo reparto que aplica el motor: por eso llenar el
+       mes de features baja la proyección de deuda y de fiabilidad. Es el
+       trade-off que reemplazó a repartir puntos entre diales. */
+    var libreOp = Math.max(0, Motor.capacidad(J) - enProyectos());
+    var opDesc = libreOp * 0.16, opPlat = libreOp * 0.17, opFiab = libreOp * 0.15;
     for (f = 0; f < m.fuentes.length; f++) {
       var kk = m.fuentes[f][0], ww = m.fuentes[f][1];
-      if (kk === 'act') total += plan.desc * 0.14 * ww;
-      else if (kk === 'rel') total += plan.fiab * 0.45 * ww;
-      else if (kk === 'evid') total += plan.desc * 1.1 * J.calidadDesc * ww;
-      else if (kk === 'deuda') total += plan.plat * 0.55 * ww;
+      if (kk === 'act') total += opDesc * 0.14 * ww;
+      else if (kk === 'rel') total += opFiab * 0.45 * ww;
+      else if (kk === 'evid') total += opDesc * 1.1 * J.calidadDesc * ww;
+      else if (kk === 'deuda') total += opPlat * 0.55 * ww;
     }
     return Math.round(total * 10) / 10;
   }
@@ -1407,85 +1401,34 @@
   /* El mes como recurso, estilo Age of Empires: tu equipo produce puntos;
      tú los estacionas. Lo que no estaciones va a CONSTRUIR y empuja tus
      proyectos elegidos. Cada punto es visible y está contado. */
-  var ESTACIONES = [
-    { k:'desc', n:'Descubrir', svg:'discover', col:'var(--color-accent-400)', req:'desc', lib:'torres', tipk:'st_desc',
-      rinde:function (v) { return '+' + Math.round(v * 1.1 * J.calidadDesc * (1 + J.hab.producto / 200)) + ' evid'; } },
-    { k:'plat', n:'Plataforma', svg:'platform', col:'var(--color-accent-500)', req:'plat', lib:'fowler', tipk:'st_plat',
-      rinde:function (v) { return '−' + Math.round(v * 0.55 * (1 + J.hab.tecnologia / 150)) + ' deuda'; } },
-    { k:'fiab', n:'Fiabilidad', svg:'reliability', col:'var(--color-accent-600)', req:'fiab', lib:'sre', tipk:'st_fiab',
-      rinde:function (v) { return '+' + Math.round(v * 0.45) + ' uptime'; } },
-    { k:'crec', n:'Crecimiento', svg:'growth', col:'var(--color-accent-700)', req:'crec', lib:'chasm', tipk:'st_crec',
-      rinde:function (v) { return '+alcance · $' + Math.round(v * 0.9) + 'k'; } }
-  ];
-
   function svgIc(id, cls) {
     return '<svg class="ic' + (cls ? ' ' + cls : '') + '"><use xlink:href="#ic-' + id + '"></use></svg>';
   }
 
-  function enEstaciones() { return plan.desc + plan.plat + plan.fiab + plan.crec; }
   function enProyectos() {
     var t = 0, id;
     for (id in plan.asig) if (plan.asig.hasOwnProperty(id)) t += plan.asig[id];
     return t;
   }
-  function sinUsar() { return Math.max(0, Motor.capacidadPropia(J) - enEstaciones() - enProyectos()); }
+  function sinUsar() { return Math.max(0, Motor.capacidadPropia(J) - enProyectos()); }
 
   function renderAsignacion() {
     var mio = Motor.capacidadPropia(J), ocio = sinUsar();
     var i, k;
 
-    /* El equipo pasa a una tira de chips de una línea. Las estaciones son un
-       ajuste, no el protagonista — el protagonista son las iniciativas de
-       abajo. Cada chip lleva su "?" porque lo que hace cada estación no se
-       deduce de su nombre. */
-    var abiertas = [], cerradas = [];
-    for (i = 0; i < ESTACIONES.length; i++) {
-      if (J.palancas.indexOf(ESTACIONES[i].req) >= 0) abiertas.push(ESTACIONES[i]);
-      else cerradas.push(ESTACIONES[i]);
-    }
-
-    var h = '<div class="equipo"><span class="eqk">Equipo</span>';
-    for (i = 0; i < abiertas.length; i++) {
-      var st = abiertas[i], vv = plan[st.k];
-      h += '<span class="eqchip' + (vv > 0 ? ' viva' : '') + '">' + svgIc(st.svg) +
-        '<span class="eqn">' + esc(st.n) + '</span>' + ayuda(st.tipk) +
-        '<span class="b' + (vv <= 0 ? ' off' : '') + '" data-menos="' + st.k + '">−</span>' +
-        '<span class="eqv num">' + vv + '</span>' +
-        '<span class="b' + (ocio <= 0 ? ' off' : '') + '" data-mas="' + st.k + '">+</span>' +
-        (vv > 0 ? '<span class="eqr">' + st.rinde(vv) + '</span>' : '') + '</span>';
-    }
-    /* Integración intrínseca sobre las palancas: qué concepto discute gastar en
-       cada una, HOY. Cada estación traía un `lib` fijo en ESTACIONES que no se
-       renderizaba nunca — y fijo habría sido el mismo título nueve meses, que
-       es el error que ya se cometió con chip('pgdefault') en la barra de ritmo.
-       `Motor.libroDeEstacion` depende del estado, así que rota. Da el
-       argumento, no la orden: a veces lo que dice es que hoy acá rinde poco. */
-    var arg = [];
-    for (i = 0; i < abiertas.length; i++) {
-      var a2 = Motor.libroDeEstacion(J, abiertas[i].k);
-      if (a2) arg.push({ n:abiertas[i].n, svg:abiertas[i].svg, x:a2 });
-    }
-    if (arg.length) {
-      h += '<div class="palarg">';
-      for (i = 0; i < arg.length; i++) {
-        h += '<div class="pa"><span class="pan">' + svgIc(arg[i].svg) + esc(arg[i].n) + '</span>' +
-             '<span class="pax">' + esc(arg[i].x.txt) + '</span>' +
-             (arg[i].x.libro ? chip(arg[i].x.libro) : '') + '</div>';
-      }
-      h += '</div>';
-    }
-    if (cerradas.length) {
-      var partes = [];
-      for (i = 0; i < cerradas.length; i++) {
-        var falta = '';
-        for (k = 0; k < ESCALAFON.length; k++) {
-          if (ESCALAFON[k].palancas.indexOf(cerradas[i].req) >= 0) { falta = ESCALAFON[k].corto; break; }
-        }
-        partes.push(cerradas[i].n + ' (' + falta + ')');
-      }
-      h += '<span class="eqlock">🔒 ' + partes.join(' · ') + '</span>';
-    }
-    h += '</div>';
+    /* Las estaciones salieron del tablero: repartir puntos entre cuatro diales
+       que casi siempre se quieren en el mismo lugar era una decisión sin
+       decisión. Los cuatro bucles siguen corriendo — los mueve la operación
+       sola — así que acá queda una sola línea que dice a dónde se va lo que no
+       comprometas. Sin controles: es información, no una palanca. La decisión
+       real quedó donde importa, que es cuánto del mes te llevás en features y
+       cuánto dejás para que la empresa se sostenga. */
+    var libre = Math.max(0, Motor.capacidad(J) - enProyectos());
+    var h = '<div class="equipo"><span class="eqk">Operación</span>' +
+      '<span class="eqop"><b class="num">' + libre + '</b> pts sostienen descubrimiento, ' +
+      'plataforma, fiabilidad y crecimiento' +
+      (ocio > 0 ? ' — incluidos los <b class="num">' + ocio + '</b> que no repartiste' : '') +
+      '</span></div>';
     $('capa').innerHTML = h;
   }
 
@@ -2296,8 +2239,7 @@
     var valorAntes = m0 ? m0.valor(J) : 0;
     var nuevas = [], ni;
     for (ni = 0; ni < plan.orden.length; ni++) if (J.enVuelo[plan.orden[ni]] === undefined) nuevas.push(plan.orden[ni]);
-    var reparto = { desc:plan.desc, plat:plan.plat, fiab:plan.fiab, crec:plan.crec,
-                    cons:enProyectos() + sinUsar() * 0, asig:plan.asig, apuestas:nuevas };
+    var reparto = { asig:plan.asig, apuestas:nuevas };
     var log = Motor.simular(J, reparto, M);
     if (m0) {
       var valorDespues = m0.valor(J);
@@ -3124,16 +3066,6 @@
     v = attr(t, 'data-op');
     if (v !== null && evActual && J) { elegirOpcion(parseInt(v, 10)); return; }
 
-    v = attr(t, 'data-mas');
-    if (v && J) {
-      if (sinUsar() > 0) { plan[v]++; replanificar(); tourEvento('estacion'); }
-      return;
-    }
-    v = attr(t, 'data-menos');
-    if (v && J) {
-      if (plan[v] > 0) { plan[v]--; replanificar(); }
-      return;
-    }
     v = attr(t, 'data-pmas');
     if (v && J) {
       var falta1 = Math.ceil(Motor.costoDe(J, v) - (J.enVuelo[v] || 0)) - (plan.asig[v] || 0);

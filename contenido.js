@@ -1836,6 +1836,89 @@ var EVENTOS = [
         nota:'Lo llevó. Y dijo que producto "no tenía tiempo". Desde entonces te enterás de las prioridades por Slack.',
         ef:function(e,log){ e.politico -= 9;
           nota(log,'malo','Delegar hacia arriba salió caro: perdiste la silla aunque conservás el título.','hard'); } } }
+  ]},
+
+/* ---------------------------------------------------------------
+   Compromisos del elenco: alguien de tu propio equipo ya te comprometió con
+   una persona de afuera. Cumplirlo mete la promesa al backlog (Motor la
+   trata como una apuesta sin premio de mandato, con plazo); retractarse la
+   resuelve ya mismo, más barato pero seguro. Ver COMPROMISOS más arriba.
+   --------------------------------------------------------------- */
+
+{ id:'prom_integra', libro:'trap', prio:80, quien:'ventas',
+  cuando:function(e){ return e.mesPuesto > 2 && e.mrr > Motor.burnMensual(e) * 0.2 &&
+    !Motor.compromisoPendiente(e,'prom_integra'); },
+  titulo:'La integración que ya prometí',
+  texto:'"Firmaron pensando que esto ya funcionaba. Se los prometí para cerrar el trimestre. ¿La metemos al backlog, o llamo hoy a decir que no va?"',
+  opciones:[
+    { txt:'Cumplirlo: entra al backlog',
+      nota:'Capacidad tuya durante meses, sin sumar nada al mandato. Si no llega a tiempo, la caída es peor que decir que no hoy.',
+      libro:'trap',
+      ef:function(e,log){ Motor.comprometerse(e, log, 'prom_integra'); } },
+    { txt:'Retractarse: llamo hoy mismo',
+      nota:'Cuesta capital político ahora, pero es una cifra que ya conocés — no una que vas a descubrir en dos meses.',
+      libro:'trap',
+      ef:function(e,log){ Motor.declinarCompromiso(e, log, 'prom_integra'); } }
+  ]},
+
+{ id:'prom_demo', libro:'hard', prio:82, quien:'ceo',
+  cuando:function(e){ return e.mesPuesto > 1 && !Motor.compromisoPendiente(e,'prom_demo'); },
+  titulo:'Lo que mostré en el escenario',
+  texto:'"En la conferencia armamos una demo con datos de mentira para la función nueva. Cuarenta personas la vieron funcionar. Hay que decidir qué hacemos con eso."',
+  opciones:[
+    { txt:'La construimos de verdad',
+      nota:'Capacidad tuya durante meses, sin sumar nada al mandato. Si no llega a tiempo, es peor que haberlo aclarado hoy.',
+      libro:'hard',
+      ef:function(e,log){ Motor.comprometerse(e, log, 'prom_demo'); } },
+    { txt:'Aclaramos hoy que era un prototipo',
+      nota:'Cuesta marca ahora, en una cifra conocida. Mejor una corrección pública que un silencio que se descubre solo.',
+      libro:'hard',
+      ef:function(e,log){ Motor.declinarCompromiso(e, log, 'prom_demo'); } }
+  ]},
+
+{ id:'prom_soporte', libro:'trap', prio:78, quien:'soporte',
+  cuando:function(e){ return e.mesPuesto > 2 && Motor.usuarios(e) > 400 && !Motor.compromisoPendiente(e,'prom_soporte'); },
+  titulo:'Lo que le dijimos a la cuenta que se iba',
+  texto:'"Le prometí a la cuenta que esto se arregla, para bajar la temperatura de la llamada. Ahora hay que cumplirlo o van a irse en serio."',
+  opciones:[
+    { txt:'Lo metemos al backlog',
+      nota:'Capacidad tuya durante meses, sin sumar nada al mandato. Si no llega a tiempo, se van igual y peor.',
+      libro:'trap',
+      ef:function(e,log){ Motor.comprometerse(e, log, 'prom_soporte'); } },
+    { txt:'Llamo hoy a bajar la promesa',
+      nota:'Cuesta político ahora, pero es una cifra conocida. Manejar la conversación a tiempo sale más barato que dejarla explotar.',
+      libro:'trap',
+      ef:function(e,log){ Motor.declinarCompromiso(e, log, 'prom_soporte'); } }
+  ]},
+
+{ id:'prom_partner', libro:'ddia', prio:76, quien:'estrella',
+  cuando:function(e){ return e.mesPuesto > 2 && e.arquitectura > 25 && !Motor.compromisoPendiente(e,'prom_partner'); },
+  titulo:'Lo que prometió sin preguntarme',
+  texto:'"Firmé una capacidad con el partner técnico en una llamada. Tenía razón técnica, pero no debí comprometerte sin avisarte antes."',
+  opciones:[
+    { txt:'La construimos: el partner espera',
+      nota:'Capacidad tuya durante meses, sin sumar nada al mandato. Si no llega a tiempo, el golpe a la relación es peor.',
+      libro:'ddia',
+      ef:function(e,log){ Motor.comprometerse(e, log, 'prom_partner'); } },
+    { txt:'Le explico al partner que el plazo no era real',
+      nota:'Cuesta político ahora, en una cifra conocida. Queda frío, pero queda.',
+      libro:'ddia',
+      ef:function(e,log){ Motor.declinarCompromiso(e, log, 'prom_partner'); } }
+  ]},
+
+{ id:'prom_inversor', libro:'analytics', prio:74, quien:'board',
+  cuando:function(e){ return e.mesPuesto > 2 && !Motor.compromisoPendiente(e,'prom_inversor'); },
+  titulo:'El número que ya está en el deck',
+  texto:'"Puse una métrica en el deck del inversor antes de preguntar si el dato existía en algún tablero real. La próxima llamada es en unas semanas."',
+  opciones:[
+    { txt:'Armamos el tablero de verdad',
+      nota:'Capacidad tuya durante meses, sin sumar nada al mandato. Si no llega a tiempo, la llamada sale peor que corregir hoy.',
+      libro:'analytics',
+      ef:function(e,log){ Motor.comprometerse(e, log, 'prom_inversor'); } },
+    { txt:'Corregimos el deck antes de la llamada',
+      nota:'Cuesta político ahora, en una cifra conocida. Molesta menos que un número que no aparece en ningún lado.',
+      libro:'analytics',
+      ef:function(e,log){ Motor.declinarCompromiso(e, log, 'prom_inversor'); } }
   ]}
 ];
 
@@ -1845,7 +1928,15 @@ var EVENTOS = [
 /* topes por carrera: los evergreen conversacionales tienen pocas apariciones;
    los situacionales (incidentes, el fiscal, allanamientos) siguen sin límite */
 var EVERGREEN = { okr:3, roadmap:2, discovery:3, errorbudget:99, escala:99, recruiter:2,
-                  fiscal:99, allanamiento:99, ronda:99, caza:2, despidos:99 };
+                  fiscal:99, allanamiento:99, ronda:99, caza:2, despidos:99,
+                  /* los compromisos son situacionales: pueden volver, pero no todos los meses */
+                  prom_integra:3, prom_demo:3, prom_soporte:3, prom_partner:3, prom_inversor:3,
+                  /* momtest es la lección de una sola vez ("cómo hablamos con los usuarios"):
+                     sus variantes son solo variedad de escena para esa única aparición, no
+                     permiso para repetirla en el próximo puesto. Sin esto, el tope por
+                     defecto para eventos con variantes (2) la hacía volver al mes 1 de la
+                     segunda empresa. */
+                  momtest:1 };
 
 function eventoAplicable(e, c) {
   var cand = [], i;
@@ -2114,6 +2205,110 @@ var CONTINGENCIAS = [
 
 function contingenciaPorId(id) {
   for (var i = 0; i < CONTINGENCIAS.length; i++) if (CONTINGENCIAS[i].id === id) return CONTINGENCIAS[i];
+  return null;
+}
+
+
+/* ---------------------------------------------------------------
+   COMPROMISOS DEL ELENCO
+   Alguien de tu propio equipo ya te comprometió con una persona de afuera,
+   antes de que lo supieras. Ventas le vendió una integración a un cliente
+   que firmó pensando que ya existía; el CEO mostró una función en un
+   escenario que hoy no funciona; Soporte le prometió a una cuenta que se
+   estaba yendo que esto se arregla. Nadie mintió por maldad — cerraron algo,
+   bajaron la temperatura de una llamada difícil, o simplemente no te
+   consultaron porque no era su costumbre hacerlo.
+
+   Viven como una decisión (un dilema, ver EVENTOS más abajo), no como una
+   tarjeta que aparece sola: hay un momento en que tenés que elegir, y las dos
+   ramas cuestan algo distinto.
+     - Cumplirlo: ocupa un slot y tus puntos durante `plazo` meses, no suma
+       nada al mandato — es tu palabra, no tu prioridad — y si no llega a
+       tiempo, la caída es la peor de las dos (política Y el `castigo`
+       completo).
+     - Retractarse ahora: cuesta capital político de una vez, pero es una
+       cifra conocida — `politicoDeclinar` — y un `romper` más chico que el
+       `castigo` de haber fallado tarde. Manejar la conversación a tiempo
+       siempre sale más barato que dejar que explote sola.
+   --------------------------------------------------------------- */
+var COMPROMISOS = [
+
+  { id:'prom_integra', quien:'ventas', nec:'integra', costo:15, plazo:3, politicoDeclinar:8, libro:'trap',
+    n:'La integración que Ventas ya prometió',
+    d:'Un cliente grande firmó pensando que esto ya existía.',
+    d2:'Nadie mintió a propósito: Ventas vendió el roadmap como si fuera el producto de hoy, y ahora el roadmap sos vos.',
+    castigo:function(e,log){
+      e.mrr = Math.round(e.mrr * 0.88);
+      e.marca = Math.max(0, e.marca - 6);
+      nota(log,'malo','El cliente se dio cuenta de que la integración nunca estuvo. Renegoció a la baja y lo dejó por escrito.','trap');
+    },
+    romper:function(e,log){
+      e.mrr = Math.round(e.mrr * 0.94);
+      e.marca = Math.max(0, e.marca - 3);
+      nota(log,'neutro','Llamaste antes de que lo notaran solos. El contrato se achica, pero la cuenta sigue viva.','trap');
+    } },
+
+  { id:'prom_demo', quien:'ceo', nec:'core', costo:13, plazo:2, politicoDeclinar:10, libro:'hard',
+    n:'Lo que el CEO mostró en el escenario',
+    d:'La demo de la conferencia tenía una función que hoy no existe.',
+    d2:'Cuarenta personas la vieron funcionar. Ninguna sabe que era una maqueta con datos de mentira.',
+    castigo:function(e,log){
+      e.marca = Math.max(0, e.marca - 12);
+      e.competidor.atencion = Math.min(1, e.competidor.atencion + 0.05);
+      nota(log,'malo','Alguien preguntó por la función de la demo y la respuesta fue un silencio incómodo. Ya circula.','hard');
+    },
+    romper:function(e,log){
+      e.marca = Math.max(0, e.marca - 5);
+      nota(log,'neutro','El CEO aclaró en un posteo que la demo era un prototipo. Cuesta cara, pero es una corrección, no una mentira descubierta.','hard');
+    } },
+
+  { id:'prom_soporte', quien:'soporte', nec:'soporte', costo:10, plazo:2, politicoDeclinar:6, libro:'trap',
+    n:'Lo que Soporte le prometió a la cuenta que se iba',
+    d:'Le dijeron que sí para bajar la temperatura de una llamada difícil. El tiempo se está por acabar.',
+    d2:'Fue una promesa de pasillo, hecha para ganar una semana. Ahora hay que cumplirla o perder la cuenta de verdad.',
+    castigo:function(e,log){
+      e.usuarios.pragm = (e.usuarios.pragm || 0) * 0.88;
+      e.mrr = Math.round(e.mrr * 0.9);
+      nota(log,'malo','La cuenta se fue. La última llamada la tuvo Soporte solo, sin nada nuevo que ofrecer.','trap');
+    },
+    romper:function(e,log){
+      e.usuarios.pragm = (e.usuarios.pragm || 0) * 0.94;
+      e.mrr = Math.round(e.mrr * 0.96);
+      nota(log,'neutro','Soporte volvió a llamar y bajó la promesa a algo real. La cuenta se achica, pero no se va.','trap');
+    } },
+
+  { id:'prom_partner', quien:'estrella', nec:'escala', costo:16, plazo:3, politicoDeclinar:9, libro:'ddia',
+    n:'Lo que el Staff Engineer le prometió al partner técnico',
+    d:'Firmó una capacidad en una llamada, sin pasar por vos.',
+    d2:'Tenía razón técnica y cero mandato para comprometerse. Ahora el partner espera igual, y espera a tiempo.',
+    castigo:function(e,log){
+      e.fiabPercibida = Math.max(0, e.fiabPercibida - 9);
+      e.marca = Math.max(0, e.marca - 5);
+      nota(log,'malo','El partner esperó la capacidad prometida y no llegó. Lo cuenta en cada llamada con gente nueva.','ddia');
+    },
+    romper:function(e,log){
+      e.fiabPercibida = Math.max(0, e.fiabPercibida - 3);
+      e.marca = Math.max(0, e.marca - 2);
+      nota(log,'neutro','Le explicaste al partner que el plazo no era real. Quedó un poco frío, pero quedó.','ddia');
+    } },
+
+  { id:'prom_inversor', quien:'board', nec:'datos', costo:12, plazo:2, politicoDeclinar:9, libro:'analytics',
+    n:'El número que el Board ya compartió con un inversor',
+    d:'Alguien puso una métrica en un deck sin preguntar si el dato existía todavía.',
+    d2:'El inversor va a preguntar por eso en la próxima llamada. La pregunta no espera a que el dashboard esté listo.',
+    castigo:function(e,log){
+      e.marca = Math.max(0, e.marca - 4);
+      e.politico -= 3;
+      nota(log,'malo','La llamada con el inversor fue incómoda: el número del deck no existía en ningún tablero real.','analytics');
+    },
+    romper:function(e,log){
+      e.marca = Math.max(0, e.marca - 1);
+      nota(log,'neutro','El Board corrigió el deck antes de la llamada. Molesta, pero no deja marca.','analytics');
+    } }
+];
+
+function compromisoPorId(id) {
+  for (var i = 0; i < COMPROMISOS.length; i++) if (COMPROMISOS[i].id === id) return COMPROMISOS[i];
   return null;
 }
 
