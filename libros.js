@@ -3336,3 +3336,157 @@ function aplicarLibro(id, e, c) {
   try { t = APLICAR[id](e, c); } catch (err) { t = null; }
   return t;
 }
+
+/* ================================================================
+   INTEGRACIÓN INTRÍNSECA (Habgood & Ainsworth, 2011)
+
+   El principio: el contenido a aprender tiene que entregarse a través de la
+   parte más divertida del juego y vivir en la mecánica central — no pegado
+   encima. Cuando el concepto solo está asociado decorativamente a la fantasía
+   de fondo (integración exógena), enseña menos. Cutting & Iacovides (CHI PLAY
+   2022, n=210, pre-registrado) encontraron que el mediador es atencional: la
+   integración funciona porque dirige la atención al contenido, más que por
+   motivación.
+
+   Esta tabla es el contrato que hace auditable esa integración. Para cada
+   ficha declara DÓNDE vive el concepto dentro del motor, y por lo tanto qué
+   mecánica lo enseña. Sin esto, un libro nuevo entra como panel de texto y
+   nadie se da cuenta.
+
+     clase    qué mecánica enseña el concepto
+       info      vive en la CALIDAD DE LOS NÚMEROS con los que decidís: el
+                 ancho del error y su sesgo. Lo enseña la predicción antes del
+                 reveal y la calibración acumulada de la carrera.
+       capacidad vive en un MODIFICADOR CON NOMBRE sobre tus puntos del mes
+                 (resta o multiplica). Lo enseña verlo en la pantalla donde
+                 repartís, no en el cierre.
+       postura   vive en una DECISIÓN QUE CAMBIA LA MATRIZ DE PAGOS: precio,
+                 segmento, paridad, cobertura. Aplicar el concepto ES tomarla.
+       relato    NO tiene palanca, y decirlo es más honesto que fingirla. Son
+                 las historias de guerra: su valor es de calibración — saber
+                 que la etapa fea es la etapa normal — no de decisión. Se leen
+                 en la biblioteca y no pretenden ser mecánica.
+
+     var      la variable del puesto (o derivada de Motor) donde se lee
+     palanca  la partida del plan que la mueve, o null si no se mueve
+              repartiendo puntos
+
+   Regla para agregar una ficha: si no podés nombrar su `var`, el concepto
+   todavía no está en el juego — o es `relato`, o falta la mecánica. */
+
+var INTEGRA = {
+  /* --- info: el concepto vive en el ancho y el sesgo de tus números --- */
+  lean:        { clase:'info', v:'evidencia',           palanca:'desc' },
+  momtest:     { clase:'info', v:'sesgo',               palanca:'desc' },
+  torres:      { clase:'info', v:'evidencia',           palanca:'desc' },
+  blank:       { clase:'info', v:'evidencia',           palanca:'desc' },
+  inspired:    { clase:'info', v:'evidencia',           palanca:'desc' },
+  runninglean: { clase:'info', v:'evidencia',           palanca:'desc' },
+  justenough:  { clase:'info', v:'calidadDesc',         palanca:'desc' },
+  sprintk:     { clase:'info', v:'evidencia',           palanca:'desc' },
+  pgscale:     { clase:'info', v:'evidencia',           palanca:'desc' },
+  yctalk:      { clase:'info', v:'evidencia',           palanca:'desc' },
+  thinkingbets:{ clase:'info', v:'sesgo',               palanca:null   },
+  analytics:   { clase:'info', v:'retencionMedia',      palanca:null   },
+  yclaunch:    { clase:'info', v:'apuestasCompletadas', palanca:'cons' },
+  outcomes:    { clase:'info', v:'progresoMandato',     palanca:'cons' },
+  trap:        { clase:'info', v:'progresoMandato',     palanca:'cons' },
+  workingback: { clase:'info', v:'progresoMandato',     palanca:'cons' },
+
+  /* --- capacidad: modificador con nombre sobre tus puntos del mes --- */
+  fowler:      { clase:'capacidad', v:'deuda',            palanca:'plat' },
+  pragmatic:   { clase:'capacidad', v:'deuda',            palanca:'plat' },
+  brooks:      { clase:'capacidad', v:'rampa',            palanca:null   },
+  blitz:       { clase:'capacidad', v:'rampa',            palanca:null   },
+  shapeup:     { clase:'capacidad', v:'enVuelo',          palanca:'cons' },
+  topologies:  { clase:'capacidad', v:'teamTopo',         palanca:null   },
+  staffeng:    { clase:'capacidad', v:'teamTopo',         palanca:null   },
+  elegant:     { clase:'capacidad', v:'ing',              palanca:null   },
+  masters:     { clase:'capacidad', v:'ing',              palanca:null   },
+  sre:         { clase:'capacidad', v:'presupuestoError', palanca:'fiab' },
+  phoenix:     { clase:'capacidad', v:'congelado',        palanca:'fiab' },
+  releaseit:   { clase:'capacidad', v:'incidentesPuesto', palanca:'fiab' },
+  accelerate:  { clase:'capacidad', v:'cd',               palanca:'plat' },
+  contdel:     { clase:'capacidad', v:'cd',               palanca:'plat' },
+  ddia:        { clase:'capacidad', v:'carga',            palanca:'plat' },
+  ousterhout:  { clase:'capacidad', v:'arquitectura',     palanca:'plat' },
+  krug:        { clase:'capacidad', v:'usabilidad',       palanca:'cons' },
+  norman:      { clase:'capacidad', v:'usabilidad',       palanca:'cons' },
+  leanux:      { clase:'capacidad', v:'usabilidad',       palanca:'cons' },
+  grove:       { clase:'capacidad', v:'moral',            palanca:null   },
+  radical:     { clase:'capacidad', v:'moral',            palanca:null   },
+  lencioni:    { clase:'capacidad', v:'moral',            palanca:null   },
+  norules:     { clase:'capacidad', v:'moral',            palanca:null   },
+  drive:       { clase:'capacidad', v:'empoderado',       palanca:null   },
+  empowered:   { clase:'capacidad', v:'empoderado',       palanca:null   },
+  pgmakers:    { clase:'capacidad', v:'foco',             palanca:null   },
+  deepwork:    { clase:'capacidad', v:'foco',             palanca:null   },
+  okrdoerr:    { clase:'capacidad', v:'foco',             palanca:null   },
+  rumelt:      { clase:'capacidad', v:'foco',             palanca:null   },
+  crucial:     { clase:'capacidad', v:'politico',         palanca:null   },
+  elprincipe:  { clase:'capacidad', v:'politico',         palanca:null   },
+  '48laws':    { clase:'capacidad', v:'politico',         palanca:null   },
+  managerpath: { clase:'capacidad', v:'mando',            palanca:null   },
+  hackingg:    { clase:'capacidad', v:'gtm',              palanca:'crec' },
+
+  /* --- postura: la decisión que cambia la matriz de pagos --- */
+  zero:        { clase:'postura', v:'cobertura',      palanca:'cons' },
+  helmer:      { clase:'postura', v:'cobertura',      palanca:'cons' },
+  storymap:    { clase:'postura', v:'cobertura',      palanca:'cons' },
+  jtbd:        { clase:'postura', v:'cobertura',      palanca:'cons' },
+  everything:  { clase:'postura', v:'cobertura',      palanca:'cons' },
+  chasm:       { clase:'postura', v:'compuerta',      palanca:'cons' },
+  positioning: { clase:'postura', v:'compuerta',      palanca:'cons' },
+  seibel:      { clase:'postura', v:'fitMax',         palanca:'cons' },
+  olsen:       { clase:'postura', v:'fit',            palanca:'cons' },
+  hooked:      { clase:'postura', v:'retencionMedia', palanca:'cons' },
+  badass:      { clase:'postura', v:'retencionMedia', palanca:'cons' },
+  innov:       { clase:'postura', v:'precio',         palanca:'crec' },
+  innovsol:    { clase:'postura', v:'precio',         palanca:'crec' },
+  pricing:     { clase:'postura', v:'precio',         palanca:'crec' },
+  dunford:     { clase:'postura', v:'marca',          palanca:'crec' },
+  playbigger:  { clase:'postura', v:'marca',          palanca:'crec' },
+  alchemy:     { clase:'postura', v:'marca',          palanca:'crec' },
+  purplecow:   { clase:'postura', v:'marca',          palanca:'crec' },
+  influence:   { clase:'postura', v:'marca',          palanca:'crec' },
+  coldstart:   { clase:'postura', v:'viral',          palanca:'crec' },
+  contagious:  { clase:'postura', v:'viral',          palanca:'crec' },
+  traction:    { clase:'postura', v:'cac',            palanca:'crec' },
+  ycgrowth:    { clase:'postura', v:'usuarios',       palanca:'crec' },
+  predictable: { clase:'postura', v:'mrr',            palanca:'crec' },
+  pgramen:     { clase:'postura', v:'mrr',            palanca:'crec' },
+  antifragile: { clase:'postura', v:'mrr',            palanca:null   },
+  pgdefault:   { clase:'postura', v:'runwayMeses',    palanca:'crec' },
+  challenger:  { clase:'postura', v:'fiabPercibida',  palanca:'fiab' },
+  paranoid:    { clase:'postura', v:'atencion',       palanca:null   },
+  artofwar:    { clase:'postura', v:'atencion',       palanca:null   },
+  pgmean:      { clase:'postura', v:'lupa',           palanca:null   },
+  whatyoudo:   { clase:'postura', v:'lupa',           palanca:null   },
+  badblood:    { clase:'postura', v:'lupa',           palanca:null   },
+  superpumped: { clase:'postura', v:'lupa',           palanca:null   },
+  pgfund:      { clase:'postura', v:'capFondeo',      palanca:null   },
+  sandhill:    { clase:'postura', v:'capFondeo',      palanca:null   },
+  pitchanything:{clase:'postura', v:'capFondeo',      palanca:null   },
+  rework:      { clase:'postura', v:'capFondeo',      palanca:null   },
+  deals:       { clase:'postura', v:'preferencias',   palanca:null   },
+  voss:        { clase:'postura', v:'preferencias',   palanca:null   },
+  wasserman:   { clase:'postura', v:'capTable',       palanca:null   },
+  psych:       { clase:'postura', v:'ventaSecundaria',palanca:null   },
+  lostfounder: { clase:'postura', v:'valoracion',     palanca:null   },
+  foundingsales:{clase:'postura', v:'mando',          palanca:'desc' },
+
+  /* --- relato: sin palanca, y decirlo es más honesto que fingirla --- */
+  hard:          { clase:'relato', v:'politico', palanca:null },
+  pgdie:         { clase:'relato', v:'caja',     palanca:null },
+  shoedog:       { clase:'relato', v:'caja',     palanca:null },
+  pgrr:          { clase:'relato', v:'eraId',    palanca:null },
+  foundersatwork:{ clase:'relato', v:'esFundador', palanca:null },
+  powerlaw:      { clase:'relato', v:null,       palanca:null },
+  coachb:        { clase:'relato', v:null,       palanca:null },
+  walsh:         { clase:'relato', v:null,       palanca:null },
+  hatching:      { clase:'relato', v:null,       palanca:null },
+  chaosm:        { clase:'relato', v:null,       palanca:null },
+  mafia:         { clase:'relato', v:'palancaSecreta', palanca:null }
+};
+
+function integraDe(id) { return INTEGRA[id] || null; }
