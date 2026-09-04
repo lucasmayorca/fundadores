@@ -1878,6 +1878,17 @@ function _segMejor(e) {
   var mix = Motor.mixSegmentos(e);
   return mix && mix.length ? mix[0].seg.nombre : null;
 }
+/* Tu calibración: cuántas de las llamadas que te animaste a hacer resultaron
+   ciertas. Es lo único del juego que califica tu CRITERIO en vez de tu
+   resultado, así que varias fichas de clase `info` la citan — es su prueba. */
+function _calib(e, c) {
+  var p = Motor.calibracion(e), acum = (c && c.calibracion) || null;
+  var n = p.n, ok = p.ok;
+  if (acum && acum.n) { n = acum.n + p.n; ok = acum.ok + p.ok; }
+  if (!n) return null;
+  return { ok:ok, n:n, pct:Math.round(ok / n * 100) };
+}
+
 /* el requisito de la compuerta que más te falta: la frase más útil del juego */
 function _gateFalta(e) {
   var r = Motor.requisitosGate(e), i;
@@ -1889,8 +1900,8 @@ var APLICAR = {
 
   /* ---------------- STARTUP ---------------- */
 
-  lean: function (e) {
-    var n = _n(e.evidencia), h = e.historialImpacto || [];
+  lean: function (e, c) {
+    var n = _n(e.evidencia), h = e.historialImpacto || [], cal = _calib(e, c);
     var desvio = null;
     if (h.length) {
       var s = 0, i;
@@ -1899,7 +1910,8 @@ var APLICAR = {
     }
     var base = 'Tu evidencia en ' + e.empresa + ' está en ' + n + '/100' +
       (desvio !== null ? ', y tus últimas ' + h.length + ' entregas se desviaron en promedio ' + desvio +
-        '% de lo que el backlog te había prometido' : '') + '. ';
+        '% de lo que el backlog te había prometido' : '') +
+      (cal ? '. Tus llamadas van ' + cal.ok + ' de ' + cal.n + ' (' + cal.pct + '%)' : '') + '. ';
     if (n < 40) return base + 'Eso no es una estimación: es una opinión con decimales. Cada apuesta que ' +
       'metas este mes es una hipótesis sin probar, y el motor ya te está cobrando la diferencia. Si tenés la ' +
       'palanca de descubrir, este es el mes de gastarla' + (_tiene(e, 'desc') ? '' : ' — y como en tu nivel todavía no la tenés, ' +
@@ -2022,7 +2034,15 @@ var APLICAR = {
       'la mesa la pregunta deja de ser si resuelve algo.';
   },
 
-  momtest: function (e) {
+  momtest: function (e, c) {
+    var cal = _calib(e, c);
+    if (e.calidadDesc < 0.6 && cal) return 'En ' + e.empresa + ' las entrevistas pescan opiniones (calidad ' +
+      _pc(e.calidadDesc) + ') y se ve en tus llamadas: van ' + cal.ok + ' de ' + cal.n + ' (' + cal.pct +
+      '%). El sesgo no te deja sin información, te deja con información optimista — las estimaciones vienen ' +
+      'infladas de fábrica hacia el lado que te gusta, así que si venís llamando IGUAL o MÁS y te viene ' +
+      'saliendo MENOS, ese patrón no es mala suerte: es el sesgo, medido. Cambiá la pregunta: qué hiciste la ' +
+      'última vez que tuviste este problema, cuánto te costó, qué probaste. Los cumplidos son ruido; el ' +
+      'único dato es un compromiso concreto.';
     if (e.calidadDesc >= 1) return 'Elegiste preguntar por hechos del pasado, y tus entrevistas en ' +
       e.empresa + ' producen datos usables (calidad ' + _pc(e.calidadDesc) + '). Por eso tus estimaciones ' +
       'del backlog convergen a lo real en vez de quedarse infladas: el sesgo está en cero y lo único que te ' +
@@ -2072,8 +2092,11 @@ var APLICAR = {
         'puede empeorarte la conversión.');
   },
 
-  analytics: function (e) {
-    var mix = Motor.mixSegmentos(e), det = '';
+  analytics: function (e, c) {
+    var cal = _calib(e, c), mix = Motor.mixSegmentos(e), det = '', llam = '';
+    if (cal) llam = ' Y una tasa que sí es accionable: tus llamadas van ' + cal.ok + ' de ' + cal.n +
+      ' — una tasa contra una línea que dibujaste antes de mirar, que es la única forma de que un número ' +
+      'signifique algo.';
     if (mix && mix.length) {
       var i, ps = [];
       for (i = 0; i < mix.length && i < 3; i++) ps.push(_pc(Motor.retencion(e, mix[i].seg.id)) + ' en ' + mix[i].seg.nombre);
@@ -2081,7 +2104,7 @@ var APLICAR = {
     }
     return 'El tablero te muestra ' + _mil(Motor.usuarios(e)) + ' usuarios en grande, y ese número solo sabe ' +
       'subir. La métrica que decide si el mes que viene existe es la retención, hoy en ' +
-      _pc(Motor.retencionMedia(e)) + ' de promedio.' + det + ' El promedio esconde el diagnóstico: un ' +
+      _pc(Motor.retencionMedia(e)) + ' de promedio.' + det + llam + ' El promedio esconde el diagnóstico: un ' +
       'segmento reteniendo bien y otro fugándose se leen igual en el total. Elegí la única métrica de esta ' +
       'etapa — la que tu mandato ya eligió por vos — y tratá el resto como diagnóstico.';
   },
@@ -2717,9 +2740,17 @@ var APLICAR = {
       'la capa equivocada es lo que hace que un equipo trabaje un año sin mover nada.';
   },
 
-  thinkingbets: function (e) {
-    var h = e.historialImpacto || [], buenas = 0, i;
+  thinkingbets: function (e, c) {
+    var h = e.historialImpacto || [], buenas = 0, i, cal = _calib(e, c);
     for (i = 0; i < h.length; i++) if (h[i].real >= h[i].esperado * 0.8) buenas++;
+    if (cal) return 'Tus llamadas van ' + cal.ok + ' de ' + cal.n + ' (' + cal.pct + '%), con evidencia en ' +
+      _n(e.evidencia) + '. Ese marcador es lo único del juego que califica tu CRITERIO y no tu resultado, y ' +
+      'por eso es el más incómodo: una decisión correcta puede salir mal y una mala puede salir bien. Duke ' +
+      'llama resulting a juzgar por cómo salió, y es el error más caro de cualquier organización, porque ' +
+      'premia la suerte y castiga el buen criterio con mala fortuna. ' +
+      (cal.pct >= 60 ? 'Con ' + cal.pct + '% estás leyendo bien el ruido: sabés cuándo el número del backlog ' +
+        'te está mintiendo.' : 'Con ' + cal.pct + '% todavía le crees demasiado a la estimación — y con ' +
+        'evidencia en ' + _n(e.evidencia) + ', esa estimación no se lo ha ganado.');
     return (e.sectorId === 'apuestas' ? 'Trabajás en la industria de las apuestas, donde la suerte es el ' +
       'producto — y el motor te la aplica igual: ' : 'El motor te aplica la suerte de frente: ') +
       'varias opciones muestran su probabilidad antes de elegir y tiran los dados una sola vez. ' + (h.length ? 'De tus últimas ' + h.length + ' entregas, ' + buenas + ' rindieron cerca de lo ' +

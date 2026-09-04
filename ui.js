@@ -1781,6 +1781,24 @@
           '<div class="b' + (sinUsar() <= 0 || sale ? ' off' : '') + '" data-pmas="' + id + '">+</div>' +
           '</div>') +
         (J.enVuelo[id] === undefined ? '<div class="quitar" data-quitar="' + id + '">✕</div>' : '<div class="quitar mut" style="visibility:hidden">✕</div>') +
+        /* Integración intrínseca, clase `info`: tu llamada. Va en la tarjeta de
+           la iniciativa que YA elegiste, porque llamar una apuesta que no vas a
+           construir no significa nada — y es opcional a propósito: obligarla
+           metería un paso en cada mes, y lo que enseña no es el trámite sino el
+           contraste que llega dos meses después, cuando cierran los datos. Es
+           lo único del juego que califica tu criterio y no tu resultado. */
+        (function () {
+          if (espera || esCont) return '';
+          var mia = (J.llamadas || {})[id] || null;
+          var op = [['menos', 'menos'], ['igual', 'igual'], ['mas', 'más']], oh = '', oi;
+          for (oi = 0; oi < op.length; oi++) {
+            oh += '<span class="llb' + (mia === op[oi][0] ? ' on' : '') +
+                  '" data-llamada="' + id + ':' + op[oi][0] + '">' + op[oi][1] + '</span>';
+          }
+          return '<div class="apll"><span class="ml">Tu llamada</span>' + oh +
+            '<span class="llh">' + (mia ? 'se resuelve cuando cierren los datos' :
+              '¿va a rendir más o menos que lo que dice el backlog?') + '</span></div>';
+        })() +
         '</div>';
     }
     /* Lo entregado que todavía no dijo si sirvió. Va acá, pegado a los
@@ -1871,7 +1889,8 @@
           return '<div class="inipos">' + svgIc('book') +
             '<span class="ipt">' + esc(po.txt) + '</span>' +
             (po.libro ? chip(po.libro) : '') + '</div>';
-        })() + '</div>';
+        })() +
+        '</div>';
     }
     $('backlog').innerHTML = h;
   }
@@ -3107,6 +3126,20 @@
       return;
     }
 
+    /* Tu llamada sobre una iniciativa: volver a tocar la misma la borra.
+       Va ANTES de `data-ap` a propósito: `data-ap` vive en el contenedor de la
+       tarjeta, y como attr() sube por el DOM buscando el atributo, el clic en
+       el botón de llamada lo interceptaba el ancestro y terminaba
+       seleccionando la iniciativa en vez de registrar la llamada. */
+    v = attr(t, 'data-llamada');
+    if (v && J) {
+      var pz = v.split(':'), lid = pz[0], lval = pz[1];
+      var actual = (J.llamadas || {})[lid] || null;
+      Motor.llamarApuesta(J, lid, actual === lval ? null : lval);
+      guardar(); renderBacklog();
+      return;
+    }
+
     v = attr(t, 'data-ap');
     if (v && J) {
       if (slotsUsados() < J.slots && plan.orden.indexOf(v) < 0 && sinUsar() > 0) {
@@ -3117,6 +3150,7 @@
       replanificar();
       return;
     }
+
 
     v = attr(t, 'data-act');
     if (!v) return;
