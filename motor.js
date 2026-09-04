@@ -10,13 +10,99 @@ var Motor = (function () {
 
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
   function rnd(a, b) { return a + Math.random() * (b - a); }
+  /* Rendimientos decrecientes, iguales para las cuatro estaciones. Crecimiento
+     ya los tenia (alcance ∝ crec^0.75) y las otras tres eran lineales, y esa
+     sola asimetría explicaba todo el reparto de dificultad del juego: los
+     mandatos que comian una estacion lineal se cumplian casi siempre y los que
+     comian crecimiento casi nunca. Tambien es lo cierto: no se multiplica por
+     diez el descubrimiento poniendo diez veces mas gente — el decimo
+     investigador no vuelve a aprender una décima parte de nuevo. */
+  function rinde(pts, k) { return pts > 0 ? k * Math.pow(pts, 0.55) : 0; }
   function seg(id) {
     for (var i = 0; i < SEGMENTOS.length; i++) if (SEGMENTOS[i].id === id) return SEGMENTOS[i];
     return null;
   }
+  /* Las apuestas derivadas (la segunda vuelta de algo ya entregado) nacen
+     durante la partida y viven en e.derivadas, no en APUESTAS: son de ESA
+     empresa y viajan en la partida guardada. Este índice es la copia rápida
+     para que apuesta() las encuentre; se resincroniza al cargar y en cada
+     relleno de backlog. */
+  var _derivadas = {};
+  function sincronizarDerivadas(e) {
+    _derivadas = {};
+    if (!e || !e.derivadas) return;
+    for (var i = 0; i < e.derivadas.length; i++) _derivadas[e.derivadas[i].id] = e.derivadas[i];
+  }
   function apuesta(id) {
     for (var i = 0; i < APUESTAS.length; i++) if (APUESTAS[i].id === id) return APUESTAS[i];
-    return null;
+    return _derivadas[id] || contingenciaPorId(id) || null;
+  }
+  /* Una contingencia se construye con la misma maquinaria que una apuesta —
+     mismo lookup, mismos slots, mismos puntos, misma barra de progreso — y por
+     eso compite con las apuestas en la misma moneda y en el mismo lugar de la
+     pantalla. Lo único que no comparte es el premio: entregarla no paga nada,
+     solo evita el castigo. */
+  function esContingencia(id) { return !!contingenciaPorId(id); }
+
+  /* Calibra UNA apuesta contra ESTA empresa: el impacto oculto que el jugador
+     no ve, el ruido de la estimación, el talle, el costo en puntos y el vector
+     de métricas. Vive aparte porque corre en tres momentos — al abrir el
+     puesto, después de un pivote y cada vez que una entrega abre su
+     continuación. Toda apuesta que llegue al backlog, venga de donde venga,
+     tiene que pasar por acá o el motor la lee vacía.
+
+     Los talles significan TIEMPO, literalmente, en TUS puntos mensuales:
+     XL = el mes entero, L = dos semanas, M = una semana, S = ~3 días,
+     XS = ~un día. Los costos se normalizan a tu capacidad para que la
+     promesa siempre se cumpla. */
+  var FACTOR_TALLE = { XL:1.0, L:0.5, M:0.25, S:0.12, XS:0.06 };
+  function calibrarApuesta(e, a) {
+    var et = ETAPAS[e.etapa] || {};
+    var R = Math.max(6, Math.round(capacidad(e) * e.mando));
+    if (!e.talles) e.talles = {};
+    if (!e.vectores) e.vectores = {};
+    if (!e.ruidosVec) e.ruidosVec = {};
+    if (!e.costos) e.costos = {};
+    var f = a.senuelo ? rnd(0.03, 0.20) : rnd(0.15, 1.25);
+    if (et.prima && et.prima.indexOf(a.nec) >= 0) f *= 1.3;
+    else if (et.castiga && et.castiga.indexOf(a.nec) >= 0) f *= 0.5;
+    var costo = a.costo;
+    if (e.perfil === 'grandes') {
+      f = a.senuelo ? f : (Math.random() < 0.28 ? rnd(1.2, 2.0) : rnd(0.1, 0.5));
+      costo = Math.round(a.costo * 1.25);
+    } else if (e.perfil === 'chicas') {
+      f = a.senuelo ? f : rnd(0.4, 0.95);
+      costo = Math.max(4, Math.round(a.costo * 0.7));
+    }
+    e.impactos[a.id] = Math.max(2, Math.round(a.imp * f));
+    e.ruidos[a.id] = rnd(-1, 1) * (e.perfil === 'incierto' ? 1.6 : 1);
+    var talle = costo >= 24 ? 'XL' : costo >= 18 ? 'L' : costo >= 12 ? 'M' : costo >= 7 ? 'S' : 'XS';
+    e.talles[a.id] = talle;
+    e.costos[a.id] = Math.max(1, Math.round(R * FACTOR_TALLE[talle]));
+
+    /* Vector de impacto en métricas pirata (AARRR de McClure + Fiabilidad).
+       Cada apuesta mueve 1-3 métricas, a veces en NEGATIVO: la superficie
+       nueva cuesta fiabilidad, la complejidad cuesta activación. El mandato
+       apunta a una de estas métricas — ese es el hilo conductor. */
+    var m2 = e.impactos[a.id];
+    var vec = { adq:0, act:0, ret:0, rev:0, rel:0 };
+    if (a.nec === 'core') { vec.act = m2 * 0.5; vec.ret = m2 * 0.35; }
+    else if (a.nec === 'flujo') { vec.act = m2 * 0.7; vec.adq = m2 * 0.2; }
+    else if (a.nec === 'datos') { vec.ret = m2 * 0.35; vec.rev = m2 * 0.3; }
+    else if (a.nec === 'integra') { vec.adq = m2 * 0.4; vec.ret = m2 * 0.25; }
+    else if (a.nec === 'soporte') { vec.ret = m2 * 0.5; vec.adq = m2 * 0.2; }
+    else if (a.nec === 'segur') { vec.adq = m2 * 0.35; vec.rel = m2 * 0.25; }
+    else if (a.nec === 'escala') { vec.rel = m2 * 0.8; }
+    /* el efecto secundario: las features agregan superficie, y la superficie cuesta algo */
+    if (Math.random() < 0.35 && a.nec !== 'escala' && a.nec !== 'segur') {
+      if (Math.random() < 0.6) vec.rel -= rnd(1.5, 4.5);
+      else vec.act -= rnd(1, 3);
+    }
+    var mk, vv2 = {};
+    for (mk in vec) if (vec.hasOwnProperty(mk)) vv2[mk] = Math.round(vec[mk] * 10) / 10;
+    e.vectores[a.id] = vv2;
+    e.ruidosVec[a.id] = { adq:rnd(-1,1), act:rnd(-1,1), ret:rnd(-1,1), rev:rnd(-1,1), rel:rnd(-1,1) };
+    return a;
   }
 
   /* Capacidades de la empresa: producto/tecnologia/gtm/gente solo se componen
@@ -129,57 +215,17 @@ var Motor = (function () {
        'grandes'  = unas pocas apuestas dominan, el resto vale poco;
        'chicas'   = todo más barato y de tamaño parejo, nada mueve la aguja por sí solo;
        'incierto' = las estimaciones vienen con ruido extra. */
-    var R = Math.max(6, Math.round(capacidad(e) * e.mando));
-    var FACTOR = { XL:1.0, L:0.5, M:0.25, S:0.12, XS:0.06 };
     e.talles = {};
     e.vectores = {};
     e.ruidosVec = {};
-    for (i = 0; i < APUESTAS.length; i++) {
-      var a = APUESTAS[i];
-      var f = a.senuelo ? rnd(0.03, 0.20) : rnd(0.15, 1.25);
-      if (et.prima && et.prima.indexOf(a.nec) >= 0) f *= 1.3;
-      else if (et.castiga && et.castiga.indexOf(a.nec) >= 0) f *= 0.5;
-      var costo = a.costo;
-      if (e.perfil === 'grandes') {
-        f = a.senuelo ? f : (Math.random() < 0.28 ? rnd(1.2, 2.0) : rnd(0.1, 0.5));
-        costo = Math.round(a.costo * 1.25);
-      } else if (e.perfil === 'chicas') {
-        f = a.senuelo ? f : rnd(0.4, 0.95);
-        costo = Math.max(4, Math.round(a.costo * 0.7));
-      }
-      e.impactos[a.id] = Math.max(2, Math.round(a.imp * f));
-      e.ruidos[a.id] = rnd(-1, 1) * (e.perfil === 'incierto' ? 1.6 : 1);
-      /* Los talles significan TIEMPO, literalmente, en TUS puntos mensuales:
-         XL = el mes entero, L = dos semanas, M = una semana, S = ~3 días,
-         XS = ~un día. Los costos se normalizan a tu capacidad para que la
-         promesa siempre se cumpla. */
-      var talle = costo >= 24 ? 'XL' : costo >= 18 ? 'L' : costo >= 12 ? 'M' : costo >= 7 ? 'S' : 'XS';
-      e.talles[a.id] = talle;
-      e.costos[a.id] = Math.max(1, Math.round(R * FACTOR[talle]));
-
-      /* Vector de impacto en métricas pirata (AARRR de McClure + Fiabilidad).
-         Cada apuesta mueve 1-3 métricas, a veces en NEGATIVO: la superficie
-         nueva cuesta fiabilidad, la complejidad cuesta activación. El mandato
-         apunta a una de estas métricas — ese es el hilo conductor. */
-      var m2 = e.impactos[a.id];
-      var vec = { adq:0, act:0, ret:0, rev:0, rel:0 };
-      if (a.nec === 'core') { vec.act = m2 * 0.5; vec.ret = m2 * 0.35; }
-      else if (a.nec === 'flujo') { vec.act = m2 * 0.7; vec.adq = m2 * 0.2; }
-      else if (a.nec === 'datos') { vec.ret = m2 * 0.35; vec.rev = m2 * 0.3; }
-      else if (a.nec === 'integra') { vec.adq = m2 * 0.4; vec.ret = m2 * 0.25; }
-      else if (a.nec === 'soporte') { vec.ret = m2 * 0.5; vec.adq = m2 * 0.2; }
-      else if (a.nec === 'segur') { vec.adq = m2 * 0.35; vec.rel = m2 * 0.25; }
-      else if (a.nec === 'escala') { vec.rel = m2 * 0.8; }
-      /* el efecto secundario: las features agregan superficie, y la superficie cuesta algo */
-      if (Math.random() < 0.35 && a.nec !== 'escala' && a.nec !== 'segur') {
-        if (Math.random() < 0.6) vec.rel -= rnd(1.5, 4.5);
-        else vec.act -= rnd(1, 3);
-      }
-      var mk, vv2 = {};
-      for (mk in vec) if (vec.hasOwnProperty(mk)) vv2[mk] = Math.round(vec[mk] * 10) / 10;
-      e.vectores[a.id] = vv2;
-      e.ruidosVec[a.id] = { adq:rnd(-1,1), act:rnd(-1,1), ret:rnd(-1,1), rev:rnd(-1,1), rel:rnd(-1,1) };
-    }
+    e.derivadas = [];
+    e.derivadoDe = {};
+    e.cont = [];
+    e.contVistas = {};
+    e.espera = {};
+    e.pendientes = [];
+    sincronizarDerivadas(e);
+    for (i = 0; i < APUESTAS.length; i++) calibrarApuesta(e, APUESTAS[i]);
     /* la empresa llegó viva hasta acá: su arquitectura sostiene lo que ya
        tiene, con poco margen. El margen te toca construirlo a ti. */
     var uIni = usuarios(e);
@@ -203,9 +249,357 @@ var Motor = (function () {
     return e;
   }
 
+  /* ---------------- el visto bueno ----------------
+     Lo que frena una iniciativa no es la ingenieria: es una persona que no
+     contesta. Mientras espera, sigue ocupando su slot y no avanza un punto.
+     La probabilidad sube con cuantas cosas tenes en vuelo a la vez — cada
+     frente abierto es otra puerta que alguien te puede cerrar — y baja con tu
+     mando: a un VP le contestan el mail. Por eso subir en el escalafon no te da
+     solo más puntos, y por eso el capital político deja de ser una barra de
+     vida y pasa a ser algo que gastas. */
+
+  var ETAPA_VISTO = { semilla:0.45, serieA:0.8, serieB:1.2, serieC:1.55 };
+  var SECTOR_VISTO = { banco:1.4, biogen:1.45, saludgold:1.35, ciber:1.3, datapol:1.3, apuestas:1.35, chips:1.15 };
+
+  function enEspera(e, id) { return !!(e.espera && e.espera[id]); }
+  function costoEscalar(e) { return Math.max(5, Math.round(11 - e.mando * 6)); }
+
+  /* Gastas credito interno para que alguien te conteste hoy. Es la unica
+     salida rapida, y sale exactamente de la misma cuenta que mira el directorio
+     cuando decide si te asciende. */
+  function escalar(e, id) {
+    if (!enEspera(e, id)) return null;
+    var v = e.espera[id], costo = costoEscalar(e);
+    delete e.espera[id];
+    e.politico -= costo;
+    return { quien:v.quien, cargo:v.cargo, costo:costo };
+  }
+
+  function tickEsperas(e, log) {
+    if (!e.espera) e.espera = {};
+    var id, v, libres = [], i;
+    /* las que ya estaban: se destraban solas, tarde o temprano */
+    for (id in e.espera) if (e.espera.hasOwnProperty(id)) {
+      v = e.espera[id];
+      v.meses++;
+      if (Math.random() < 0.34 + v.meses * 0.10) {
+        log.push({ tipo:'bueno', libro:'grove', visto:'suelta',
+          texto:v.quien + ' finalmente contestó y "' + v.n + '" vuelve a moverse. ' +
+                'Estuvo ' + v.meses + (v.meses === 1 ? ' mes' : ' meses') + ' parada esperando un sí que nunca fue un no.' });
+        delete e.espera[id];
+      }
+    }
+    /* candidatas a bloquearse: lo tuyo en vuelo, sin contar contingencias */
+    for (id in e.enVuelo) if (e.enVuelo.hasOwnProperty(id)) {
+      if (esContingencia(id) || enEspera(e, id)) continue;
+      libres.push(id);
+    }
+    var yaEsperando = 0;
+    for (id in e.espera) if (e.espera.hasOwnProperty(id)) yaEsperando++;
+    if (!libres.length || yaEsperando >= 2) return;
+
+    var pBloq = (0.20 + 0.10 * (libres.length - 1)) *
+                (1 - e.mando * 0.5) *
+                (ETAPA_VISTO[e.etapa] || 1) *
+                (SECTOR_VISTO[e.sectorId] || 1);
+    if (Math.random() >= clamp(pBloq, 0, 0.75)) return;
+
+    id = libres[Math.floor(Math.random() * libres.length)];
+    var a = apuesta(id);
+    if (!a) return;
+    var vd = vistoDe(a.nec);
+    var per = (e.elenco && e.elenco[vd.quien]) || { nombre:'Alguien de arriba', cargo:'' };
+    e.espera[id] = { n:a.n, quien:per.nombre, cargo:per.cargo, txt:vd.txt, meses:0 };
+    log.push({ tipo:'malo', libro:'grove', visto:'traba',
+      texto:'"' + a.n + '" quedó esperando el visto bueno de ' + per.nombre +
+            (per.cargo ? ' (' + per.cargo + ')' : '') + ': ' + vd.txt +
+            ' Sigue ocupando su slot y no avanza hasta que alguien conteste.' });
+  }
+
+  /* ---------------- el impacto llega tarde ----------------
+     Entregar no es saber. Lo que construiste es tuyo el dia que sale — la
+     cobertura, la deuda, el tick de compuerta — pero lo que MUEVE tarda: la
+     gente tiene que encontrarlo, entenderlo y volver. El número real aparece
+     dos meses despues, y para entonces ya comprometiste el plan siguiente.
+     Eso es lo que convierte el juego en una apuesta y no en una cuenta. */
+
+  var TRAMOS = [0.4, 0.35, 0.25];
+
+  function aplicarVector(e, vec, frac, partes) {
+    if (vec.adq) { e.marca = clamp(e.marca + vec.adq * 0.6 * frac, 0, 100); if (partes) partes.push('ACQ ' + (vec.adq > 0 ? '+' : '') + Math.round(vec.adq * frac * 10) / 10); }
+    if (vec.act) { e.usabilidad = clamp(e.usabilidad + vec.act * 0.8 * frac, 0, 100); if (partes) partes.push('ACT ' + (vec.act > 0 ? '+' : '') + Math.round(vec.act * frac * 10) / 10); }
+    if (vec.ret) { e.retBonus = (e.retBonus || 0) + vec.ret * 0.0015 * frac; if (partes) partes.push('RET ' + (vec.ret > 0 ? '+' : '') + Math.round(vec.ret * frac * 10) / 10); }
+    if (vec.rev) { e.precio = Math.max(1, Math.round(e.precio * (1 + vec.rev * 0.004 * frac))); if (partes) partes.push('REV ' + (vec.rev > 0 ? '+' : '') + Math.round(vec.rev * frac * 10) / 10); }
+    if (vec.rel) { e.arquitectura += vec.rel * 0.5 * frac; e.fiabPercibida = clamp(e.fiabPercibida + vec.rel * 0.4 * frac, 0, 100); if (partes) partes.push('REL ' + (vec.rel > 0 ? '+' : '') + Math.round(vec.rel * frac * 10) / 10); }
+  }
+
+  function tickPendientes(e, log) {
+    if (!e.pendientes) e.pendientes = [];
+    var quedan = [], i, pn;
+    for (i = 0; i < e.pendientes.length; i++) {
+      pn = e.pendientes[i];
+      var frac = TRAMOS[pn.tramo] || 0;
+      aplicarVector(e, pn.vec, frac, null);
+      pn.tramo++;
+      if (pn.tramo < TRAMOS.length) { quedan.push(pn); continue; }
+      /* llegaron los datos completos: recien ahora sabes si sirvio */
+      if (!e.historialImpacto) e.historialImpacto = [];
+      e.historialImpacto.unshift({ n:pn.n, real:pn.real, esperado:pn.esperado, vec:pn.vec, mes:e.mesPuesto });
+      e.historialImpacto = e.historialImpacto.slice(0, 6);
+      var frase = 'Cerraron los datos de "' + pn.n + '": impacto real ' + pn.real +
+                  ' (esperabas ' + pn.esperado + ' cuando lo elegiste).';
+      if (pn.real < pn.esperado * 0.55) {
+        log.push({ tipo:'malo', libro:pn.evidencia < 45 ? 'lean' : 'trap',
+          texto:frase + (pn.evidencia < 45 ?
+            ' Con evidencia en ' + Math.round(pn.evidencia) + ', la estimación que viste era ruido con cara de número: ' +
+            'no fallaste al construir, fallaste al elegir sin saber.' :
+            ' La evidencia estaba bien, así que el problema no era la información: esta necesidad ya estaba cubierta ' +
+            'para el segmento que la pedía, y cubrirla más no movía a nadie.'),
+          ship:{ n:pn.n, real:pn.real, esperado:pn.esperado, vec:pn.vec } });
+      } else {
+        log.push({ tipo:pn.real >= pn.esperado * 0.8 ? 'bueno' : 'malo', libro:'inspired', texto:frase,
+          ship:{ n:pn.n, real:pn.real, esperado:pn.esperado, vec:pn.vec } });
+      }
+    }
+    e.pendientes = quedan;
+  }
+
+  /* ---------------- contingencias ----------------
+     El mes nunca es tuyo entero. Esto es la parte que no es tuya: llega sola,
+     ocupa un slot desde el dia que aparece, no mueve el mandato ni un punto, y
+     tiene fecha de vencimiento. Es la razón número uno por la que un roadmap
+     real se atrasa, y hasta ahora el juego no la tenia. */
+
+  function contActiva(e, id) {
+    if (!e.cont) return null;
+    for (var i = 0; i < e.cont.length; i++) if (e.cont[i].id === id) return e.cont[i];
+    return null;
+  }
+  function hayContingencia(e) { return !!(e.cont && e.cont.length); }
+
+  /* Lo que te cuesta este mes tenerla abierta, en PORCENTAJE de la capacidad.
+     En porcentaje y no en puntos a propósito: el lastre pega sobre la
+     capacidad de la organizacion entera, y decirlo en puntos al lado de tu
+     presupuesto personal — que es una fraccion, la de tu mando — se lee como
+     un error. Va en la tarjeta y no en un desglose aparte: la explicación
+     tiene que estar pegada a la causa. */
+  function lastreContingencia(e, id) {
+    var cx = contActiva(e, id), c = contingenciaPorId(id);
+    if (!cx || !c) return 0;
+    return Math.round(9 * (c.plazo - cx.restante + 1));
+  }
+
+  /* El costo se normaliza contra la capacidad de HOY, no la del mes cero: una
+     contingencia que llega en el mes 9 cuesta lo que cuesta un mes 9. */
+  function costoContingencia(e, c) {
+    var R = Math.max(6, Math.round(capacidad(e) * e.mando));
+    var talle = c.costo >= 24 ? 'XL' : c.costo >= 18 ? 'L' : c.costo >= 12 ? 'M' : c.costo >= 7 ? 'S' : 'XS';
+    if (!e.talles) e.talles = {};
+    if (!e.costos) e.costos = {};
+    e.talles[c.id] = talle;
+    e.costos[c.id] = Math.max(1, Math.round(R * FACTOR_TALLE[talle]));
+    return e.costos[c.id];
+  }
+
+  function llegarContingencia(e, log) {
+    var pool = [], propias = [], i, c;
+    for (i = 0; i < CONTINGENCIAS.length; i++) {
+      c = CONTINGENCIAS[i];
+      if (e.contVistas[c.id]) continue;
+      if (c.sectores && c.sectores.indexOf(e.sectorId) < 0) continue;
+      var ok = false;
+      try { ok = c.cuando(e); } catch (err) { ok = false; }
+      if (!ok) continue;
+      pool.push(c);
+      if (c.sectores) propias.push(c);
+    }
+    if (!pool.length) return null;
+    /* las del oficio entran primero la mitad de las veces: en un neobanco la
+       licencia que vence ES el trabajo, no una distraccion generica */
+    var fuente = (propias.length && Math.random() < 0.5) ? propias : pool;
+    c = fuente[Math.floor(Math.random() * fuente.length)];
+    e.contVistas[c.id] = true;
+    e.cont.push({ id:c.id, restante:c.plazo });
+    e.enVuelo[c.id] = 0;
+    costoContingencia(e, c);
+    log.push({ tipo:'malo', libro:c.libro, cont:'llega',
+      texto:'Contingencia: "' + c.n + '". ' + c.d + ' Ocupa un slot desde hoy, no mueve tu mandato ni un punto, ' +
+            'y vence en ' + c.plazo + (c.plazo === 1 ? ' mes' : ' meses') + '. Hacerla no te paga: no hacerla te cobra.' });
+    return c;
+  }
+
+  /* Corre al cierre del mes: descuenta plazos, cobra los vencidos y decide si
+     llega una nueva. Una sola activa a la vez — la presión tiene que ser
+     legible, no un aluvión. */
+  function tickContingencias(e, log) {
+    if (!e.cont) e.cont = [];
+    if (!e.contVistas) e.contVistas = {};
+    var quedan = [], i, cx, c;
+    for (i = 0; i < e.cont.length; i++) {
+      cx = e.cont[i];
+      c = contingenciaPorId(cx.id);
+      if (!c) continue;
+      cx.restante--;
+      if (cx.restante > 0) {
+        quedan.push(cx);
+        if (cx.restante === 1) log.push({ tipo:'malo', libro:c.libro, cont:'avisa',
+          texto:'"' + c.n + '" vence el mes que viene. Sigue ocupando un slot y ya se come el ' +
+                lastreContingencia(e, cx.id) + '% de la capacidad del equipo: cuanto más vieja, más cara. ' +
+                'Si vence, el trabajo se hace igual — pero de urgencia, mal, y con todos mirando.' });
+        continue;
+      }
+      /* Vencio sin entregarse. Se libera el slot, pero el trabajo no
+         desaparece: se hace igual, de urgencia, con todos mirando. Y lo que se
+         hace de urgencia siempre cuesta lo mismo — deuda, porque se hace mal;
+         evidencia, porque mientras se apaga un incendio nadie habla con un
+         usuario; y credito interno, porque lo vieron venir tres meses. */
+      var avance = Math.round(((e.enVuelo[cx.id] || 0) / Math.max(1, costoDe(e, cx.id))) * 100);
+      delete e.enVuelo[cx.id];
+      e.politico -= 4;
+      e.deuda = clamp(e.deuda + 6, 0, 100);
+      e.evidencia = clamp(e.evidencia - 10, 0, 100);
+      log.push({ tipo:'malo', libro:c.libro, cont:'vence',
+        texto:'Se acabó el plazo de "' + c.n + '"' +
+              (avance <= 0 ? ', y nunca le pusiste un punto' : ', con un ' + avance + '% hecho') +
+              '. Se hizo igual, de urgencia: +6 de deuda porque salió mal, −10 de evidencia porque ' +
+              'mientras se apaga un incendio nadie habla con un usuario, y crédito interno porque ' +
+              'lo vieron venir desde hace meses.' });
+      try { c.castigo(e, log); } catch (err) {}
+    }
+    e.cont = quedan;
+
+    if (e.mesPuesto < 2 || hayContingencia(e)) return;
+    /* garantizada una vez por puesto: todo el mundo conoce la mecanica */
+    var ninguna = true, k;
+    for (k in e.contVistas) if (e.contVistas.hasOwnProperty(k)) ninguna = false;
+    var prob = ninguna && e.mesPuesto >= 4 ? 1 : 0.35;
+    if (Math.random() < prob) llegarContingencia(e, log);
+  }
+
+  /* ---------------- la segunda vuelta ---------------- */
+
+  /* Entregar no cierra el tema: lo abre. Cada apuesta que sale deja atrás el
+     trabajo que solo existe porque salió — la versión que el cliente configura
+     solo, el modo sin conexión, las evaluaciones del asistente que hasta ayer
+     era una demo. Por eso el backlog no se puede vaciar: por cada entrega,
+     algo nuevo entra en el mismo mes.
+
+     Las genéricas tienen su continuación escrita a mano (APUESTAS_SIGUE en
+     contenido.js). Las de sector, y cualquier vuelta posterior a esa, se
+     generan como iteración sobre la anterior: el impacto cae más rápido que el
+     costo, así que volver a invertir en lo mismo rinde cada vez menos — pero
+     rinde, y sigue siendo una decisión. */
+  var VUELTAS = ['segunda vuelta', 'tercera vuelta', 'cuarta vuelta'];
+  /* Hasta dónde estira un tema. Tres vueltas y el tema está exprimido: seguir
+     ahí deja de ser una decisión y pasa a ser una cinta de correr. La única
+     excepción es `forzar`, la red de último recurso de completarConDerivadas()
+     cuando ya no queda absolutamente nada más que ofrecer. */
+  var GEN_MAX = 3;
+
+  function derivarSiguiente(e, idMadre, forzar) {
+    if (!e.derivadas) e.derivadas = [];
+    if (!e.derivadoDe) e.derivadoDe = {};
+    if (e.derivadoDe[idMadre]) return null;
+    var madre = apuesta(idMadre);
+    if (!madre) return null;
+
+    var raiz = madre.raiz || madre.id, gen = (madre.gen || 0) + 1, hija = null, k;
+    if (gen > GEN_MAX && !forzar) return null;
+    var escrita = (typeof APUESTAS_SIGUE !== 'undefined') ? APUESTAS_SIGUE[raiz] : null;
+    if (gen === 1 && escrita) {
+      hija = { id:escrita.id, nec:escrita.nec, costo:escrita.costo, imp:escrita.imp,
+               n:escrita.n, d:escrita.d, d2:escrita.d2,
+               impactoSubmetricas:escrita.impactoSubmetricas };
+    } else {
+      /* iteración: la misma necesidad, menos por ganar. El nombre lo dice para
+         que el jugador no crea que está eligiendo algo nuevo. */
+      var base = madre.n.split(' · ')[0];
+      var idxV = gen - (escrita ? 2 : 1);
+      var vuelta = VUELTAS[idxV] || ('vuelta ' + (idxV + 2));
+      var subs = null, sm = madre.impactoSubmetricas;
+      if (sm) {
+        subs = {};
+        for (k in sm) if (sm.hasOwnProperty(k)) {
+          var v = Math.round(sm[k] * 0.7);
+          if (v !== 0) subs[k] = v;
+        }
+      }
+      /* el costo NO baja: volver sobre lo mismo cuesta lo que costaba, y paga
+         menos. Si además saliera barato, iterar sería siempre la jugada obvia
+         y el backlog dejaría de ser una decisión. */
+      hija = { id:raiz + '_v' + (gen + 1), nec:madre.nec,
+               costo:madre.costo,
+               imp:Math.max(5, Math.round(madre.imp * 0.7)),
+               n:base + ' · ' + vuelta,
+               d:'Otra pasada sobre lo que ya salió.',
+               d2:'Los bordes que quedaron, los casos raros, lo que nadie priorizó la primera vez. ' +
+                  'Rinde menos que la vuelta anterior — y aun así hay meses en que es lo mejor que tenés.',
+               impactoSubmetricas:subs };
+    }
+    hija.raiz = raiz;
+    hija.gen = gen;
+    /* si por algún camino la hija ya existe (partida vieja, doble entrega), no
+       se duplica: se reusa la que ya está calibrada */
+    for (k = 0; k < e.derivadas.length; k++) {
+      if (e.derivadas[k].id === hija.id) {
+        e.derivadoDe[idMadre] = hija.id;
+        return null;
+      }
+    }
+    if (apuesta(hija.id)) return null;
+
+    e.derivadas.push(hija);
+    e.derivadoDe[idMadre] = hija.id;
+    sincronizarDerivadas(e);
+    calibrarApuesta(e, hija);
+    return hija;
+  }
+
+  /* Mete la hija en el backlog ahora mismo, no el mes que viene: la promesa es
+     que por cada iniciativa que se ejecuta aparece otra. `mes` es el mes con el
+     que se sella el chip "nuevo": las entregas se resuelven ANTES de que
+     simular() incremente mesPuesto, así que desde ahí se pasa el mes que el
+     jugador va a estar mirando, no el que acaba de terminar. */
+  function abrirSiguiente(e, idMadre, mes, forzar) {
+    var hija = derivarSiguiente(e, idMadre, forzar);
+    if (!hija) return null;
+    if (e.backlog.indexOf(hija.id) < 0) e.backlog.push(hija.id);
+    if (!e.backlogNuevo) e.backlogNuevo = {};
+    e.backlogNuevo[hija.id] = (mes === undefined ? e.mesPuesto : mes);
+    return hija;
+  }
+
+  /* Red de seguridad: si el pool escrito a mano se agotó (partida larga, equipo
+     grande, o una partida guardada de antes de que existiera la segunda
+     vuelta), se abren continuaciones de lo ya entregado hasta llenar el
+     backlog. Mientras algo se haya entregado alguna vez, siempre hay qué
+     hacer. */
+  function completarConDerivadas(e, tope) {
+    if (!e.hechas) return 0;
+    var puestas = 0, id, vueltas = 0, forzar = false;
+    while (e.backlog.length < tope && vueltas < 60) {
+      vueltas++;
+      var abierta = false;
+      for (id in e.hechas) {
+        if (!e.hechas.hasOwnProperty(id)) continue;
+        if (e.derivadoDe && e.derivadoDe[id]) continue;
+        if (abrirSiguiente(e, id, undefined, forzar)) { abierta = true; puestas++; break; }
+      }
+      /* primera pasada respetando el tope de tres vueltas por tema; si aun así
+         el backlog quedaría vacío, se levanta el tope. Preferimos una lista
+         repetitiva a una lista vacía: sin iniciativas no hay juego. */
+      if (!abierta) {
+        if (forzar) break;
+        forzar = true;
+      }
+    }
+    return puestas;
+  }
+
   /* El backlog mezcla lo genérico con lo propio del sector: en un neobanco la
      licencia ES el producto; en silicio, el respin. */
   function rellenarBacklog(e) {
+    sincronizarDerivadas(e);
     var sec = sectorPorId(e.sectorId), pool = [], i, id;
     for (i = 0; i < sec.apuestas.length; i++) {
       id = sec.apuestas[i];
@@ -230,6 +624,9 @@ var Motor = (function () {
       pool.splice(k, 1);
       if (k === 0) propias--;
     }
+    /* el pool escrito a mano es finito; el backlog no. Lo que falte se llena
+       con la segunda vuelta de lo que ya entregaste. */
+    if (e.backlog.length < 8) completarConDerivadas(e, 8);
   }
 
   /* Cada 2 meses, aunque nadie haya entregado nada, una apuesta libre (todavía
@@ -384,15 +781,24 @@ var Motor = (function () {
   function requisitosGate(e) {
     var r = [], i, nec;
     r.push({ txt:'Referencias de gente como ellos',
-             ok:(e.usuarios.visio || 0) >= e.tam.visio * 0.05 && fit(e, 'visio') >= 0.55 });
+             ok:(e.usuarios.visio || 0) >= e.tam.visio * 0.04 && fit(e, 'visio') >= 0.48 });
     for (i = 0; i < e.gateReqs.length; i++) {
       nec = null;
       for (var k = 0; k < NECESIDADES.length; k++) if (NECESIDADES[k].id === e.gateReqs[i][0]) nec = NECESIDADES[k];
       r.push({ txt:nec.nombre + ' (' + e.gateReqs[i][1] + ')',
                ok:(e.cobertura[e.gateReqs[i][0]] || 0) >= e.gateReqs[i][1] });
     }
-    r.push({ txt:'Servicio confiable (75)', ok:e.fiabPercibida >= 75 });
+    r.push({ txt:'Servicio confiable (70)', ok:e.fiabPercibida >= 70 });
     return r;
+  }
+  /* Qué fracción de la compuerta tenés lista. La compuerta como multiplicador
+     vale 0.15 hasta que estan TODOS los requisitos y ahi salta a 1 — como
+     barra de progreso eso es una línea plana y un salto, o sea ninguna
+     informacion. Esto es lo mismo contado de forma legible. */
+  function fraccionGate(e) {
+    var r = requisitosGate(e), ok = 0, i;
+    for (i = 0; i < r.length; i++) if (r[i].ok) ok++;
+    return r.length ? ok / r.length : 0;
   }
   function compuerta(e, segId) {
     if (segId !== 'pragm' && segId !== 'conse') return 1;
@@ -441,7 +847,8 @@ var Motor = (function () {
     if (e.moral < 60) d.push({ k:'Moral baja', v:'-', libro:'grove' });
     if (e.foco < 45) d.push({ k:'Falta de foco', v:'-', libro:'grove' });
     if (e.cd) d.push({ k:'Despliegue continuo', v:'+12%', libro:'accelerate' });
-    if (e.penalCap) d.push({ k:'Resaca del incidente', v:-e.penalCap, libro:'sre' });
+    if (e.penalCap - (e.penalCont || 0) > 0) d.push({ k:'Resaca del incidente', v:-(e.penalCap - (e.penalCont || 0)), libro:'sre' });
+    if (e.penalCont) d.push({ k:'Contingencia sin cerrar', v:-e.penalCont, libro:'shapeup' });
     if (e.capacidadReservada > 0) d.push({ k:'Compromiso de trabajo a medida', v:-8, libro:'trap' });
     return d;
   }
@@ -481,7 +888,9 @@ var Motor = (function () {
     for (i = 0; i < gr.length; i++) {
       if (gr[i][0] === a.nec) {
         var falta = Math.max(0, gr[i][1] - (e.cobertura[a.nec] || 0));
-        d.gate = Math.min(impacto, falta);
+        /* falta sale de una cobertura con decimales: se redondea igual que
+           d.deuda, o el chip muestra "+15.030000000000001" */
+        d.gate = Math.round(Math.min(impacto, falta) * 10) / 10;
         if (d.gate <= 0) d.gate = 0;
       }
     }
@@ -536,8 +945,12 @@ var Motor = (function () {
     if (!m) return 1;
     var meta = m.meta(e), val = m.valor(e);
     if (m.invertido) {
-      if (m.id === 'estabilidad') return val <= meta ? 1 : Math.max(0, 1 - val * 0.34);
-      var ini = e.deuda > meta ? Math.max(e.deuda, meta + 1) : meta;
+      if (m.id === 'estabilidad') return val <= meta ? 1 : Math.max(0, 1 - (val - meta) * 0.34);
+      /* Contra tu linea de partida. Antes `ini` salia de la deuda de HOY, asi
+         que la resta daba cero mientras estuvieras por encima de la meta y el
+         mandato era binario: 0 hasta cruzar, 1.5 despues. Sin rampa no habia
+         nada que leer en la barra ni credito parcial por haber bajado 20. */
+      var ini = e.deudaInicio !== undefined ? Math.max(e.deudaInicio, meta + 1) : Math.max(e.deuda, meta + 1);
       return clamp((ini - val) / Math.max(1, ini - meta), 0, 1.5);
     }
     if (m.id === 'abismo') return val;
@@ -596,18 +1009,17 @@ var Motor = (function () {
       var id = NECESIDADES[i].id;
       e.cobertura[id] = Math.round(e.cobertura[id] * 0.45);
     }
-    var R = Math.max(6, Math.round(capacidad(e) * e.mando));
-    var FACTOR = { XL:1.0, L:0.5, M:0.25, S:0.12, XS:0.06 };
+    /* el pivote borra la memoria del backlog: lo entregado deja de contar como
+       hecho, y las segundas vueltas que habías abierto se van con él — ese
+       trabajo era la continuación de un producto que ya no existe */
     e.talles = {};
     e.vectores = {};
     e.ruidosVec = {};
-    for (i = 0; i < APUESTAS.length; i++) {
-      var a = APUESTAS[i];
-      var f = a.senuelo ? rnd(0.03, 0.20) : rnd(0.15, 1.25);
-      e.impactos[a.id] = Math.max(2, Math.round(a.imp * f));
-      e.ruidos[a.id] = rnd(-1, 1);
-      delete e.hechas[a.id];
-    }
+    e.derivadas = [];
+    e.derivadoDe = {};
+    sincronizarDerivadas(e);
+    e.hechas = {};
+    for (i = 0; i < APUESTAS.length; i++) calibrarApuesta(e, APUESTAS[i]);
     e.backlog = []; e.enVuelo = {}; e.backlogNuevo = {}; rellenarBacklog(e);
     e.moral -= 8;
     e.pivoteHecho = true;
@@ -630,17 +1042,44 @@ var Motor = (function () {
       e.rampa[i].listoEn--;
       if (e.rampa[i].listoEn <= 0) {
         if (e.rampa[i].rol === 'ing') e.ing++; else if (e.rampa[i].rol === 'prod') e.prod++; else e.gtm++;
-        log.push({ tipo:'bueno', texto:'Una contratación nueva terminó su rampa y ya produce.', libro:'brooks' });
+        log.push({ tipo:'bueno', texto:'Terminó la rampa de una contratación: dos meses sin producir y cobrando ' +
+          'mentoría a los demás, y desde este mes suma capacidad completa. Los que quedan en rampa siguen restando.',
+          libro:'brooks' });
       } else quedan.push(e.rampa[i]);
     }
     e.rampa = quedan;
     e.penalCap = 0;
 
+    /* 1b. el peso de lo que no atendiste. Una contingencia abierta no espera
+       quieta: cada mes que sigue ahi le cuesta mas a la organizacion, porque
+       todo el mundo pregunta por ella, todo el mundo la esquiva, y nadie puede
+       planificar alrededor de algo que sigue sin fecha. La cuenta crece a
+       medida que se acerca el vencimiento — si no la hacés, no avanzás. */
+    e.penalCont = 0;
+    if (e.cont && e.cont.length) {
+      var pc, cpc, baseCap = e.ing * 20 + e.prod * 14;
+      for (pc = 0; pc < e.cont.length; pc++) {
+        cpc = contingenciaPorId(e.cont[pc].id);
+        if (!cpc) continue;
+        /* 9% de la capacidad de la org por cada mes que lleva abierta: en una
+           semilla y en una serieC duele lo mismo, que es lo justo */
+        var edad = cpc.plazo - e.cont[pc].restante + 1;
+        e.penalCont += Math.round(baseCap * 0.09 * edad);
+      }
+      e.penalCap += e.penalCont;
+    }
+
     /* 2. lo tuyo + lo que el resto de la organización hace sin ti */
     var capTotal = capacidad(e), mio = capacidadPropia(e);
+    /* Construir no es una estación: se construye asignando puntos a proyectos.
+       Esos puntos SON tu gasto en construcción, y hasta ahora no contaban en
+       ningún lado — ni para la dirección que la org copia, ni para la
+       alineación con el mandato, ni para lo que aprendés. */
+    var misCons = 0, mck;
+    if (plan.asig) for (mck in plan.asig) if (plan.asig.hasOwnProperty(mck)) misCons += plan.asig[mck] || 0;
     var p = { desc:plan.desc||0, cons:plan.cons||0, plat:plan.plat||0, fiab:plan.fiab||0, crec:plan.crec||0 };
-    var mioUsado = p.desc + p.cons + p.plat + p.fiab + p.crec;
-    e.gastoPropio = { desc:plan.desc||0, cons:plan.cons||0, plat:plan.plat||0, fiab:plan.fiab||0, crec:plan.crec||0 };
+    var mioUsado = p.desc + p.cons + p.plat + p.fiab + p.crec + misCons;
+    e.gastoPropio = { desc:plan.desc||0, cons:(plan.cons||0) + misCons, plat:plan.plat||0, fiab:plan.fiab||0, crec:plan.crec||0 };
     e.acum.desc += e.gastoPropio.desc; e.acum.cons += e.gastoPropio.cons;
     e.acum.plat += e.gastoPropio.plat; e.acum.fiab += e.gastoPropio.fiab;
     e.acum.crec += e.gastoPropio.crec;
@@ -654,8 +1093,16 @@ var Motor = (function () {
        escalafón no te da solo más puntos: hace que tus decisiones pesen. */
     var INERCIA = { desc:0.02, cons:0.82, plat:0.04, fiab:0.04, crec:0.08 };
     var resto = Math.max(0, capTotal - mio);
+    /* La construcción inercial se lleva aparte a propósito. La parte de la org
+       que te SIGUE empuja tu tablero; la que no te sigue también construye,
+       pero construye lo suyo — lo que vos no financiaste. Antes las dos caían
+       en la misma bolsa y terminaban empujando exactamente los proyectos que
+       vos habías elegido: un equipo competente y gratis que te hacía el mes.
+       Eso es lo que volvía inofensivo tener poco mando, y lo que hacía que un
+       jugador que no asignaba un solo punto igual entregara. */
+    var consInercia = 0;
     if (resto > 0) {
-      var sigue = resto * e.mando, propio = resto - sigue, k;
+      var sigue = resto * e.mando, suelto = resto - sigue, k;
       /* la parte que te sigue copia TU proporción de este mes */
       if (sigue > 0 && mioUsado > 0) {
         p.desc += Math.round(sigue * (e.gastoPropio.desc / mioUsado));
@@ -663,32 +1110,51 @@ var Motor = (function () {
         p.plat += Math.round(sigue * (e.gastoPropio.plat / mioUsado));
         p.fiab += Math.round(sigue * (e.gastoPropio.fiab / mioUsado));
         p.crec += Math.round(sigue * (e.gastoPropio.crec / mioUsado));
-      } else propio += sigue; /* si no diste dirección, no hay nada que seguir */
-      for (k in INERCIA) if (INERCIA.hasOwnProperty(k)) p[k] += Math.round(propio * INERCIA[k]);
+      } else suelto += sigue; /* si no diste dirección, no hay nada que seguir */
+      for (k in INERCIA) if (INERCIA.hasOwnProperty(k)) {
+        if (k === 'cons') consInercia = Math.round(suelto * INERCIA.cons);
+        else p[k] += Math.round(suelto * INERCIA[k]);
+      }
     }
 
     if (e.refactorFijo) { var mv = Math.round(capTotal * 0.2); p.cons = Math.max(0, p.cons - mv); p.plat += mv; }
     if (e.reescritura > 0) {
       p.plat += p.cons; p.cons = 0; e.reescritura--;
       e.deuda -= 14;
-      log.push({ tipo:'neutro', texto:'Mes de reescritura: cero features. Quedan ' + e.reescritura + '.', libro:'fowler' });
+      log.push({ tipo:'neutro', texto:'Mes de reescritura: toda tu construcción se fue a plataforma, cero apuestas ' +
+        'entregadas, −14 de deuda. Quedan ' + e.reescritura + ' mes(es) así. Esto es lo que Fowler llama la forma más ' +
+        'cara de pagar la misma deuda: el interés baja, y el mes no vuelve.', libro:'fowler' });
     }
     if (e.congelado) {
       var tope = Math.round(capTotal * 0.25);
       if (p.cons > tope) { p.fiab += p.cons - tope; p.cons = tope; }
-      log.push({ tipo:'neutro', texto:'Congelamiento por presupuesto de error: casi no se construye nada.', libro:'sre' });
+      log.push({ tipo:'neutro', texto:'Presupuesto de error agotado: el congelamiento te dejó construir apenas un ' +
+        'cuarto de tu capacidad y mandó el resto a fiabilidad. Nadie decidió esto en una reunión — lo decidió el ' +
+        'número que se acordó cuando había margen. Vuelve a 100 el trimestre que viene.', libro:'sre' });
     }
     if (e.deudaPendiente) { e.deuda += e.deudaPendiente; e.deudaPendiente = 0; }
 
     /* 3. descubrimiento */
     if (p.desc > 0) {
-      var gan = p.desc * 1.1 * e.calidadDesc * (1 + e.hab.producto / 200 + e.capacidades.producto / 300);
+      /* Acercarse al techo cuesta cada vez mas: los primeros veinte puntos de
+         evidencia salen de hablar con cinco personas, los ultimos veinte no
+         salen de hablar con quinientas. Sin esto la evidencia saturaba en 97 y
+         el mandato de discovery se cumplia el 100% de las veces. */
+      var gan = rinde(p.desc, 4.7) * e.calidadDesc * (1 + e.hab.producto / 200 + e.capacidades.producto / 300) *
+                Math.pow(1 - e.evidencia / 100, 1.9);
       e.evidencia = clamp(e.evidencia + gan, 0, 100);
       for (id in e.ruidos) if (e.ruidos.hasOwnProperty(id)) e.ruidos[id] *= 0.88;
-      e.usabilidad += p.desc * 0.14;
-      if (e.calidadDesc < 0.6) log.push({ tipo:'malo', texto:'Entrevistaste pidiendo opiniones. Conseguiste cumplidos, no datos.', libro:'momtest' });
-      else log.push({ tipo:'bueno', texto:'Descubrimiento: evidencia +' + Math.round(gan) + '.', libro:'torres' });
+      e.usabilidad += rinde(p.desc, 0.6);
+      if (e.calidadDesc < 0.6) log.push({ tipo:'malo', texto:'Entrevistaste pidiendo opiniones: la gente fue amable y te ' +
+        'dijo que sí. La evidencia subió ' + Math.round(gan) + ', pero el sesgo sigue ahí, así que el backlog te sigue ' +
+        'prometiendo más de lo que va a rendir — y el error apunta siempre para el lado que te gusta.', libro:'momtest' });
+      else log.push({ tipo:'bueno', texto:'Descubrimiento: evidencia +' + Math.round(gan) + ' (ahora ' + Math.round(e.evidencia) +
+        '/100). Cada punto cierra el margen entre el impacto que el backlog te promete y el que la apuesta rinde al ' +
+        'entregarse. Decae sola: el mes que no la alimentes, vuelve a abrirse.', libro:'torres' });
     }
+
+    /* 3b. los datos de lo que ya entregaste siguen llegando */
+    tickPendientes(e, log);
 
     /* 4. construcción */
     var enVuelo = 0;
@@ -703,7 +1169,9 @@ var Motor = (function () {
     }
     var wip = n > 2 ? Math.max(0.5, 1 - 0.15 * (n - 2)) : 1;
     if (n > 2) log.push({ tipo:'malo', texto:n + ' apuestas en paralelo: el cambio de contexto se comió el ' +
-      Math.round((1 - wip) * 100) + '% del esfuerzo.', libro:'grove' });
+      Math.round((1 - wip) * 100) + '% de tu capacidad del mes, o sea que pagaste ' + n + ' frentes y trabajaron ' +
+      (Math.round(n * wip * 10) / 10) + '. El impacto solo se cobra al entregar, así que ' + n + ' cosas a medias ' +
+      'valen cero: con dos habrías entregado dos.', libro:'shapeup' });
     /* slots de proyecto, estilo Catan: solo caben tantas obras abiertas a la vez */
     var abiertos = 0;
     for (id in e.enVuelo) if (e.enVuelo.hasOwnProperty(id)) abiertos++;
@@ -721,26 +1189,54 @@ var Motor = (function () {
        priorizaste, repartido parejo entre los proyectos que recibieron
        alguno de tus puntos. */
     var asig = plan.asig || null;
-    var activos = [];
+    var activos = [], pasivos = [];
     if (asig) {
-      for (i = 0; i < lista.length; i++) if ((asig[lista[i]] || 0) > 0) activos.push(lista[i]);
-      if (!activos.length) activos = lista.slice();
+      for (i = 0; i < lista.length; i++) {
+        if ((asig[lista[i]] || 0) > 0) activos.push(lista[i]);
+        /* una contingencia no recibe empuje inercial: nadie deriva sin querer
+           hacia una licencia que vence. Hay que agarrarla, o no se mueve */
+        else if (!esContingencia(lista[i])) pasivos.push(lista[i]);
+      }
+      if (!activos.length) { activos = lista.slice(); pasivos = []; }
     } else activos = lista.slice();
-    var propio = 0;
-    if (asig) for (id in asig) if (asig.hasOwnProperty(id)) propio += asig[id];
-    var deOrg = Math.max(0, p.cons - (asig ? propio : 0));
+    var deOrg = Math.max(0, p.cons);
     var porApuesta = activos.length ? (deOrg * wip) / activos.length : 0;
+    /* La construcción que no te sigue va a lo que dejaste sin financiar, y va
+       mal: sin nadie mirando rinde poco más de la mitad. Si no dejaste nada
+       suelto, ese esfuerzo no aparece en tu tablero — se fue en trabajo que no
+       elegiste, y lo único que deja atrás es deuda. */
+    var porSuelto = pasivos.length ? (consInercia * 0.6) / pasivos.length : 0;
+    if (!pasivos.length && consInercia > 0) e.deuda += consInercia * 0.05;
     for (i = 0; i < lista.length; i++) {
       id = lista[i];
-      var empuje = (asig && activos.indexOf(id) >= 0 ? porApuesta : (asig ? 0 : porApuesta));
+      /* esperando una firma no avanza ni con todos los puntos del mundo */
+      if (enEspera(e, id)) continue;
+      var empuje = (asig && activos.indexOf(id) >= 0 ? porApuesta : (asig ? porSuelto : porApuesta));
       if (asig) empuje += (asig[id] || 0) * wip;
       e.enVuelo[id] += empuje;
       var a = apuesta(id);
       if (e.enVuelo[id] >= costoDe(e, id)) {
+        /* Una contingencia entregada no paga impacto, no cubre necesidad y no
+           abre continuacion: solo se va, y el equipo respira por haberse sacado
+           la piedra del zapato. Ese es todo el premio, y es el correcto. */
+        if (esContingencia(id)) {
+          var cc = contingenciaPorId(id), ci;
+          delete e.enVuelo[id];
+          e.hechas[id] = true;
+          for (ci = 0; ci < e.cont.length; ci++) if (e.cont[ci].id === id) { e.cont.splice(ci, 1); break; }
+          e.moral = clamp(e.moral + 4, 0, 100);
+          log.push({ tipo:'bueno', libro:cc.libro, cont:'cierra',
+            texto:'Cerraste "' + cc.n + '" a tiempo. No movió tu mandato ni una décima, que era exactamente el trato: ' +
+                  'el trabajo que no se ve es el que te deja seguir haciendo el que si.' });
+          continue;
+        }
         var esperado = estimacion(e, id);
         delete e.enVuelo[id];
         e.hechas[id] = true;
         e.apuestasCompletadas++;
+        /* por cada iniciativa que se ejecuta, una nueva: lo entregado abre su
+           propia continuación y entra al backlog ahora, no el mes que viene */
+        var hija = abrirSiguiente(e, id, e.mesPuesto + 1);
         var real = e.impactos[id];
         /* las dimensiones extra se miden ANTES de mover la cobertura: cuánto
            de este impacto se come lo que falta para la compuerta */
@@ -751,25 +1247,25 @@ var Motor = (function () {
         var vec3 = {}, vk3, vsrc = (e.vectores && e.vectores[id]) || {};
         for (vk3 in vsrc) if (vsrc.hasOwnProperty(vk3)) vec3[vk3] = vsrc[vk3];
         for (dxk in dxr) if (dxr.hasOwnProperty(dxk)) vec3[dxk] = dxr[dxk];
-        if (!e.historialImpacto) e.historialImpacto = [];
-        e.historialImpacto.unshift({ n:a.n, real:real, esperado:esperado, vec:vec3, mes:e.mesPuesto });
-        e.historialImpacto = e.historialImpacto.slice(0, 6);
-        var regalo = '', partes = [];
-        if (vec3.adq) { e.marca = clamp(e.marca + vec3.adq * 0.6, 0, 100); partes.push('ACQ ' + (vec3.adq > 0 ? '+' : '') + vec3.adq); }
-        if (vec3.act) { e.usabilidad = clamp(e.usabilidad + vec3.act * 0.8, 0, 100); partes.push('ACT ' + (vec3.act > 0 ? '+' : '') + vec3.act); }
-        if (vec3.ret) { e.retBonus = (e.retBonus || 0) + vec3.ret * 0.0015; partes.push('RET ' + (vec3.ret > 0 ? '+' : '') + vec3.ret); }
-        if (vec3.rev) { e.precio = Math.max(1, Math.round(e.precio * (1 + vec3.rev * 0.004))); partes.push('REV ' + (vec3.rev > 0 ? '+' : '') + vec3.rev); }
-        if (vec3.rel) { e.arquitectura += vec3.rel * 0.5; e.fiabPercibida = clamp(e.fiabPercibida + vec3.rel * 0.4, 0, 100); partes.push('REL ' + (vec3.rel > 0 ? '+' : '') + vec3.rel); }
+        /* Lo que CONSTRUISTE es tuyo hoy: la cobertura de la necesidad, la
+           deuda que dejaste, la evidencia de una apuesta de datos, el tick de
+           la compuerta. Lo que MUEVE tarda: la gente tiene que encontrarlo,
+           entenderlo y volver. El primer tramo entra ahora y el resto en los
+           dos meses siguientes — el número real recién se sabe al final, y
+           para entonces ya comprometiste el plan del mes que viene. */
+        var partes = [];
+        aplicarVector(e, vec3, TRAMOS[0], partes);
         if (a.nec === 'datos') { e.evidencia = clamp(e.evidencia + 4, 0, 100); partes.push('+4 de evidencia'); }
         if (a.nec === 'soporte' || a.nec === 'segur' || a.nec === 'integra') partes.push('tick de compuerta');
-        if (partes.length) regalo = ' Movió: ' + partes.join(' · ') + '.';
-        var frase = 'Entregaste "' + a.n + '": impacto real ' + real + ' (esperabas ' + esperado + ').' + regalo;
-        if (real < esperado * 0.55) {
-          log.push({ tipo:'malo', texto:frase + ' Construiste sin saber.', libro:e.evidencia < 45 ? 'lean' : 'trap',
-                     ship:{ n:a.n, real:real, esperado:esperado, vec:vec3 } });
-        } else {
-          log.push({ tipo:real >= esperado * 0.8 ? 'bueno' : 'malo', texto:frase, libro:'inspired',
-                     ship:{ n:a.n, real:real, esperado:esperado, vec:vec3 } });
+        e.pendientes.push({ id:id, n:a.n, real:real, esperado:esperado, vec:vec3,
+                            tramo:1, evidencia:e.evidencia });
+        log.push({ tipo:'neutro', libro:'analytics', dato:'sale',
+          texto:'Entregaste "' + a.n + '".' + (partes.length ? ' Primer movimiento: ' + partes.join(' · ') + '.' : '') +
+                ' Los datos completos llegan en dos meses: hasta entonces no vas a saber si acertaste, y el plan del ' +
+                'mes que viene lo tenés que cerrar igual.' });
+        if (hija) {
+          log.push({ tipo:'neutro', texto:'Entregar "' + a.n + '" abrió lo que sigue: "' + hija.n +
+            '" entró al backlog. Ningún envío cierra un tema; lo abre.', libro:'inspired' });
         }
       }
     }
@@ -778,22 +1274,31 @@ var Motor = (function () {
 
     /* 5. plataforma */
     if (p.plat > 0) {
-      e.deuda -= p.plat * 0.55 * (1 + e.hab.tecnologia / 150 + e.capacidades.tecnologia / 200);
-      e.arquitectura += p.plat * 0.28;
+      /* Lo mismo por abajo: bajar de 60 a 40 es una tarde, bajar de 25 a 15 es
+         tocar lo que nadie quiere tocar. Antes la deuda se iba a cero en un mes
+         de plataforma y el mandato se cumplia siempre. */
+      e.deuda -= rinde(p.plat, 2.35) * (1 + e.hab.tecnologia / 150 + e.capacidades.tecnologia / 200) *
+                 Math.pow(clamp(e.deuda, 0, 100) / 60, 2.0);
+      e.arquitectura += rinde(p.plat, 1.2);
     }
     e.deuda += 2.5;
     e.deuda = clamp(e.deuda, 0, 100);
 
     /* 6. fiabilidad */
-    var escudo = Math.min(0.30, p.fiab * 0.018);
+    /* El escudo multiplica, no resta. Restando, 17 puntos de fiabilidad
+       llevaban la probabilidad a cero y el equipo quedaba literalmente inmune:
+       el mandato de cero caidas se cumplia el 100% de las veces. Ningun sistema
+       es inmune; se compra tiempo entre caidas, no la ausencia de caídas. */
+    var escudo = Math.min(0.70, rinde(p.fiab, 0.055));
     if (p.fiab > 0) {
-      e.fiabPercibida = clamp(e.fiabPercibida + p.fiab * 0.45, 0, 100);
-      e.presupuestoError = clamp(e.presupuestoError + p.fiab * 0.6, -50, 100);
+      e.fiabPercibida = clamp(e.fiabPercibida + rinde(p.fiab, 1.92), 0, 100);
+      e.presupuestoError = clamp(e.presupuestoError + rinde(p.fiab, 2.6), -50, 100);
     }
 
     /* 7. incidentes: cada sector se rompe a su manera */
     var c = carga(e);
-    var pInc = 0.05 + Math.max(0, c - 0.8) * 0.5 + e.deuda / 400 + (e.riesgoExtra || 0) - escudo - (e.cd ? 0.05 : 0);
+    var pInc = (0.105 + Math.max(0, c - 0.8) * 0.5 + e.deuda / 400 + (e.riesgoExtra || 0)) *
+               (1 - escudo) * (e.cd ? 0.8 : 1);
     if (Math.random() < clamp(pInc, 0, 0.9)) resolverIncidente(e, log, c);
     e.riesgoExtra = (e.riesgoExtra || 0) * 0.5;
 
@@ -848,8 +1353,10 @@ var Motor = (function () {
       e.usuarios[sid] += trafico * conv;
     }
     if (bloqueado > 120 && !e.gateRevelado) {
-      log.push({ tipo:'malo', texto:'Mucho alcance hacia el mercado grande no convirtió en nada. No es el precio: es ' +
-        e.gateNombre.toLowerCase() + '.', libro:'chasm' });
+      log.push({ tipo:'malo', texto:'Pagaste alcance hacia el mercado grande y no convirtió: ese segmento está ' +
+        'detrás de la compuerta "' + e.gateNombre + '", y mientras no cumplas sus requisitos convierte a una fracción ' +
+        'de lo normal. No es el precio ni el mensaje — es una lista de requisitos, y está en la pantalla de la ' +
+        'compuerta. Hasta cumplirla, cada punto en crecer hacia ellos se fuga en esa proporción.', libro:'chasm' });
       e.gateRevelado = true;
     }
 
@@ -945,6 +1452,8 @@ var Motor = (function () {
       e.presupuestoError = 100; e.congelado = false;
       log.push({ tipo:'neutro', texto:'Trimestre nuevo: el presupuesto de error vuelve a 100.', libro:'sre' });
     }
+    tickEsperas(e, log);
+    tickContingencias(e, log);
     rellenarBacklog(e);
     var refresco = refrescarBacklogPeriodico(e);
     if (refresco) {
@@ -1228,9 +1737,16 @@ var Motor = (function () {
     carga:carga, capacidadSistema:capacidadSistema, burnMensual:burnMensual, runwayMeses:runwayMeses,
     nomina:nomina, infra:infra, calcularMrr:calcularMrr,
     estimacion:estimacion, estimacionDetalle:estimacionDetalle, costoDe:costoDe, comprometido:comprometido, confianza:confianza, requisitosGate:requisitosGate, compuerta:compuerta,
-    abierto:abierto, contratar:contratar, ronda:ronda, pivotar:pivotar,
+    abierto:abierto, fraccionGate:fraccionGate, contratar:contratar, ronda:ronda, pivotar:pivotar,
     progresoMandato:progresoMandato, progresoDe:progresoDe, ritmoMandato:ritmoMandato, alineacion:alineacion, cascada:cascada,
     seg:seg, apuesta:apuesta,
+    esContingencia:esContingencia, contActiva:contActiva, hayContingencia:hayContingencia,
+    enEspera:enEspera, escalar:escalar, costoEscalar:costoEscalar,
+    lastreContingencia:lastreContingencia,
+    /* asegurarBacklog() corre al cargar una partida guardada: resincroniza el
+       índice de derivadas y, si el backlog quedó vacío (partidas de antes de
+       la segunda vuelta), lo vuelve a llenar sin gastar un mes */
+    asegurarBacklog:function (e) { if (e) rellenarBacklog(e); },
     setearSubmetricasBase:setearSubmetricasBase, updateSubmetricasMonth:updateSubmetricasMonth, submetricasDelEje:submetricasDelEje
   };
 })();

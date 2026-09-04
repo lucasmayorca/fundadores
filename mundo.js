@@ -104,7 +104,9 @@ var Mundo = (function () {
      los ejecutivos reales de su sector, sin serlo). Si no lo trae — el caso de
      tu propia empresa cuando fundas — se sortea uno. */
   var CARGOS = { ceo:'CEO', cto:'CTO', ventas:'VP de Ventas',
-                 estrella:'Staff Engineer', board:'Board' };
+                 estrella:'Staff Engineer', board:'Board',
+                 /* los que no te traen dilemas pero te firman (o no) lo que sale */
+                 legal:'Directora Legal', socio:'El socio de la integración' };
 
   function elenco(empresaId) {
     var emp = (typeof empresaPorId === 'function' && empresaId) ? empresaPorId(empresaId) : null;

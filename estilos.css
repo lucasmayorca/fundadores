@@ -163,8 +163,6 @@ h2, h3 { font-weight:500; }
 .pill.frio { background:var(--color-accent-800); color:var(--color-accent-100); }
 .pill.rojo { color:#f37b72; }
 .pill.nueva { color:#4ade7c; text-transform:uppercase; letter-spacing:.5px; }
-.masdet { color:var(--color-accent-400); cursor:pointer; font-size:10.5px; margin-left:4px; }
-.masdet:active { opacity:.6; }
 
 /* ---------- INICIO / FINAL ---------- */
 #p-final, #p-cierre, #p-ofertas { padding:36px 48px; }
@@ -485,8 +483,6 @@ h2, h3 { font-weight:500; }
 .est .esti { width:18px; -webkit-flex-shrink:0; flex-shrink:0; margin-right:5px; }
 .est .esti.v { color:#35c46a; } .est .esti.a { color:#e8a33d; } .est .esti.r { color:#e2564a; }
 .est .elbl { font-size:12.5px; color:var(--color-neutral-500); }
-.est .estchip { margin:3px 0 5px 23px; }
-.est .estchip .pill { margin-left:0; }
 .est .etrk { margin-top:4px; }
 
 /* ---------- briefing y fase ---------- */
@@ -651,6 +647,40 @@ h2, h3 { font-weight:500; }
 .shiptag { display:inline-block; margin-left:10px; padding:2px 8px; border-radius:9px;
   font-size:9.5px; font-weight:500; letter-spacing:0.08em; background:var(--color-neutral-800);
   color:#4ade7c; border:none; }
+
+/* La contingencia vive en la misma tarjeta que un proyecto porque compite por
+   lo mismo: un slot y tus puntos. El borde ambar es todo lo que la separa —
+   y se pone rojo el mes en que vence. */
+.ap.tuyo.cont { box-shadow:0 0 0 1px #6b5320; }
+.ap.tuyo.cont.urge { box-shadow:0 0 0 1px #7a3129; }
+.ap.tuyo.cont.sale { box-shadow:0 0 0 1px #2f6b3f; }
+.conttag { display:inline-block; margin-left:10px; padding:2px 8px; border-radius:9px;
+  font-size:9.5px; font-weight:500; letter-spacing:0.08em; background:var(--color-neutral-800);
+  color:#e8a33d; border:none; }
+.ap.tuyo.cont.urge .conttag { color:#e2564a; }
+
+/* Esperando un visto bueno: la tarjeta se apaga porque no avanza, y los
+   controles de puntos se reemplazan por la única jugada que queda. */
+.ap.tuyo.trabada { box-shadow:0 0 0 1px #3a3a52; background:var(--color-neutral-900); }
+.ap.tuyo.trabada .n2 { color:var(--color-neutral-500); }
+.ap.tuyo.trabada .prog { opacity:0.45; }
+.esperatag { display:inline-block; margin-left:10px; padding:2px 8px; border-radius:9px;
+  font-size:9.5px; font-weight:500; letter-spacing:0.08em; background:var(--color-neutral-800);
+  color:var(--color-accent2); border:none; }
+.escalar { padding:7px 12px; border-radius:var(--radius-sm); cursor:pointer; text-align:center;
+  font-size:12px; line-height:1.25; border:1px solid var(--color-neutral-700);
+  color:var(--color-neutral-300); background:var(--color-neutral-900); white-space:nowrap; }
+.escalar:hover { border-color:var(--color-accent); color:var(--color-neutral-100); }
+.escalar span { display:block; font-size:10px; color:var(--color-neutral-600); margin-top:1px; }
+.escalar.off { opacity:0.4; cursor:default; }
+.escalar.off:hover { border-color:var(--color-neutral-700); color:var(--color-neutral-300); }
+
+/* Lo entregado que todavía no dijo si sirvió. */
+.esperandodatos { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  gap:8px; margin:10px 0 2px 0; padding:8px 12px; border-radius:var(--radius-sm);
+  background:var(--color-neutral-900); font-size:11.5px; color:var(--color-neutral-500); }
+.esperandodatos .ic { width:13px; height:13px; -webkit-flex:none; flex:none; opacity:0.7; }
+.esperandodatos b { color:var(--color-neutral-300); font-weight:500; }
 .quitar { width:30px; height:30px; line-height:28px; text-align:center; margin-left:6px;
   color:var(--color-neutral-700); font-size:13px; cursor:pointer;
   border:1px solid var(--color-neutral-800); border-radius:var(--radius-sm); }
@@ -1194,8 +1224,10 @@ body.movil .shipc { -webkit-flex:1 1 100%; flex:1 1 100%; }
 .ini .inih { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
   gap:8px; margin-bottom:6px; }
 .ini .inin { -webkit-flex:1; flex:1; font-size:16px; font-weight:500; min-width:0; }
-.ini .inid { font-size:13px; color:var(--color-neutral-400); line-height:1.55; margin-bottom:12px; }
-.ini .inid2 { display:block; margin-top:5px; color:var(--color-neutral-600); }
+.ini .inid { font-size:13px; color:var(--color-neutral-300); line-height:1.55; margin-bottom:12px; }
+/* La segunda linea explica de que va la iniciativa y siempre esta a la vista:
+   es texto de lectura, no una nota al pie, asi que se le da contraste. */
+.ini .inid2 { display:block; margin-top:6px; font-size:12.5px; color:var(--color-neutral-500); }
 .ini .inim { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
   -webkit-flex-wrap:wrap; flex-wrap:wrap; gap:6px 16px; font-size:12px; margin-bottom:12px; }
 .ini .ml { font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--color-neutral-600); }
@@ -1206,7 +1238,6 @@ body.movil .shipc { -webkit-flex:1 1 100%; flex:1 1 100%; }
   padding:2px 9px; border-radius:999px; font-size:10.5px;
   background:var(--color-neutral-900); color:var(--color-neutral-600); }
 .ini .sello.on { background:var(--color-accent-800); color:var(--color-accent-100); }
-.ini .masdet { color:var(--color-accent-300); cursor:pointer; }
 
 /* El chip del esperado nombra la palanca, no el eje. A que metrica sube lo
    dice este punto, con el mismo tinte que el icono de ese eje en el panel de

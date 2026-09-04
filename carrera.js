@@ -50,7 +50,10 @@ var Carrera = (function () {
       mes:0, nivel:n0, nivelInicial:n0, reputacion:35 + n0 * 4,
       hab:hab,
       puestos:[], equities:[], ahorros:0,
-      trabajadas:{}, codex:{}, dilemasVistos:{},
+      /* codex: tarjetas abiertas. libroUsado: libros que ya se explicaron como
+         "la teoría" en algún cierre o briefing — un concepto se cuenta una vez
+         por carrera, después vive en la biblioteca. */
+      trabajadas:{}, codex:{}, libroUsado:{}, dilemasVistos:{},
       ofertas:null, ofertaActual:null,
       retirado:false, final:null
     };

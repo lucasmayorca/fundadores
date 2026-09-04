@@ -13,11 +13,14 @@
   var M = null;        /* mundo */
   var J = null;        /* puesto actual */
   var R = Logros.cargar();
-  var plan = null, evActual = null, notasEvento = [], ofertaSel = -1, detalleAbierto = {};
+  var plan = null, evActual = null, notasEvento = [], ofertaSel = -1;
   /* filtro del backlog: ver solo los proyectos que mueven el eje del mandato */
   var soloMandato = false;
-  /* el cuerpo de "La teoría" en el cierre del mes: plegado por defecto */
-  var teoriaAbierta = false;
+  /* el cuerpo de "La teoría" en el cierre del mes. Estaba plegado por defecto
+     porque salía todos los meses y ocupaba media pantalla; ahora sale solo
+     cuando cambió el concepto, así que arranca abierto — plegar algo que
+     aparece cuatro veces por puesto es esconderlo. */
+  var teoriaAbierta = true;
   /* secciones plegadas del panel derecho: por defecto solo se ve lo que decide
      el mes; el resto está a un click, no a la vista */
   var secAbierta = {};
@@ -285,6 +288,10 @@
       var o = JSON.parse(s);
       C = o.c; M = o.m; J = o.j;
       if (J) Motor.capacidad(J); /* migra partidas viejas: siembra J.capacidades/capFondeo si faltan */
+      /* y vuelve a llenar el backlog: una partida guardada de antes de la
+         segunda vuelta puede haber quedado sin iniciativas, y esperar un mes
+         para que aparezcan sería castigar al jugador por un bug nuestro */
+      if (J && J.backlog) Motor.asegurarBacklog(J);
       return !!(C && M);
     } catch (e) { return false; }
   }
@@ -971,32 +978,57 @@
   /* El libro que la situacion de hoy dispara. Usa los mismos gatillos
      `cuando` de libros.js que abren fichas durante el mes, pero en modo
      lectura: no marca el codex — el briefing muestra la teoria, no la
-     desbloquea. Si nada dispara, cae al libro canonico de la etapa. */
+     desbloquea.
+
+     Devolvia el PRIMERO del array cuyo gatillo diera verdadero, y como los
+     gatillos son pegajosos — `apuestasCompletadas >= 1` sigue siendo cierto
+     para siempre despues de la primera entrega — 'Launch Now' ganaba todos los
+     meses de la partida y se leia como mobiliario. Ahora el sorteo es entre
+     TODOS los que disparan, descartando los que ya se mostraron como teoria en
+     esta carrera (`c.libroUsado`), y de esos prefiere el que todavia no esta
+     abierto en la biblioteca: la teoria del mes trae algo nuevo o no viene.
+     `soloNuevos` lo pide el cierre de mes, que preferiere no decir nada antes
+     que repetirse; el briefing acepta el repetido porque sale una vez. */
   var LIBRO_ETAPA = { 'PRE-PMF':'lean', 'VALIDANDO PMF':'hooked' };
-  function libroDelDia(e, c) {
-    var i, l, ok;
+  function libroDelDia(e, c, soloNuevos) {
+    var i, l, ok, cand = [], frescos = [];
+    var usados = (c && c.libroUsado) || {};
     for (i = 0; i < LIBROS.length; i++) {
       l = LIBROS[i];
       if (!l.cuando) continue;
       ok = false;
       try { ok = l.cuando(e, c); } catch (err) { ok = false; }
-      if (ok) return l;
+      if (!ok || usados[l.id]) continue;
+      cand.push(l);
+      if (!(c && c.codex && c.codex[l.id])) frescos.push(l);
     }
-    return libroPorId(LIBRO_ETAPA[e.faseCorta] || 'chasm');
+    var pool = frescos.length ? frescos : cand;
+    if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+    if (soloNuevos) return null;
+    var base = libroPorId(LIBRO_ETAPA[e.faseCorta] || 'chasm');
+    return (base && !usados[base.id]) ? base : null;
   }
 
   function libroHoyHtml(e, c) {
     var l = libroDelDia(e, c);
     if (!l) return '';
+    /* el briefing también consume del pozo: si el día uno ya explicó este
+       libro, ningún cierre de mes lo va a volver a explicar */
+    if (c) { if (!c.libroUsado) c.libroUsado = {}; c.libroUsado[l.id] = true; }
     var pil = pilarDe(l.pilar);
-    var ap = aplicarLibro(l.id, e);
+    var ap = aplicarLibro(l.id, e, c);
     return '<div class="seccion-tit">Libro disparado hoy</div>' +
       '<div class="libhoy" data-lib="' + esc(l.id) + '" style="cursor:pointer">' +
       '<div class="rot">' + esc(pil.nombre) + '</div>' +
       '<div class="lhtit">' + esc(l.titulo) + ' — ' + esc(l.autor) + '</div>' +
       (l.concepto ? '<div class="pq" style="color:var(--color-accent-300);margin-bottom:5px">' +
         esc(l.concepto) + '</div>' : '') +
-      '<div class="lhtx">' + esc(ap || primeraOracion(l.idea)) + '</div>' +
+      /* el briefing mostraba una sola oración recortada del libro y quedaba en
+         epígrafe decorativo. Sale una vez por puesto: entra la lectura
+         aplicada completa — el concepto contra los números con los que
+         arrancás — y debajo la tesis del libro. */
+      '<div class="lhtx">' + esc(ap || l.idea) + '</div>' +
+      (ap ? '<div class="pq" style="margin-top:6px;opacity:.8">' + esc(primeraOracion(l.idea)) + '</div>' : '') +
       '<div class="pq" style="margin-top:7px"><span class="linklike">Abrir la tarjeta →</span></div></div>';
   }
 
@@ -1094,34 +1126,51 @@
     }
     h += '</div>';
 
-    /* la teoría detrás de la etapa, y el veredicto sobre ESTA empresa */
+    /* Las reglas de la etapa, y el veredicto sobre ESTA empresa. Esto citaba a
+       Blank, a Rachleff y a Moore en tres párrafos de teoría — con el bloque
+       de "Libro disparado hoy" cuatro centímetros más abajo haciendo lo mismo
+       pero aplicado a los números del puesto. Dos clases magistrales en la
+       misma pantalla y ninguna leída. Acá quedan las reglas: qué premia y qué
+       castiga el motor en esta etapa, y con qué palanca se toca. La teoría, con
+       autor y todo, vive en un solo lugar. */
     var teo = '', caso = '';
     if (J.faseCorta === 'PRE-PMF') {
-      teo = 'Steve Blank: antes del encaje, una startup no es una empresa chica — es una búsqueda. El estudio ' +
-        'Startup Genome midió la causa número uno de muerte: escalar demasiado pronto (contratar, crecer, endurecer ' +
-        'procesos antes de validar que el problema arde). Por eso aquí el juego premia Core y Flow y castiga Scale.';
+      teo = 'Antes del encaje no estás administrando una empresa chica: estás corriendo una búsqueda, y el motor ' +
+        'está calibrado para eso. Las apuestas sobre el trabajo central y el flujo hasta el primer valor rinden ' +
+        'el máximo; las de escala rinden la mitad, porque aguantar volumen que todavía no tenés no mueve ninguna ' +
+        'métrica. La forma más común de morir acá es escalar antes de validar — contratar, comprar alcance y ' +
+        'endurecer procesos mientras la evidencia sigue baja — y el motor la castiga sin avisar: las estimaciones ' +
+        'que ves vienen con un ruido proporcional a lo poco que sabés, así que construir rápido con evidencia ' +
+        'baja es gastar el mes contra un número inventado.';
       var fx = Math.round(Motor.fitMax(J) * 100);
       caso = esc(J.empresa) + ' hoy: ' + mil(Motor.usuarios(J)) + ' usuarios, evidencia ' + Math.round(J.evidencia) +
         ', mejor encaje ' + fx + '%. ' + (fx < 50 ? 'Traducción: todavía no sabes si alguien quiere esto. Descubre antes de construir.' :
         'El encaje asoma: valídalo con retención antes de pisar el acelerador.');
     } else if (J.faseCorta === 'VALIDANDO PMF') {
-      teo = 'Andy Rachleff (acuñó el término): el encaje producto-mercado no se declara, se nota — la curva de retención ' +
-        'se aplana en vez de caer a cero, y el crecimiento empieza a llegar solo, sin comprarlo. La curva plana es LA ' +
-        'prueba; los acumulados son teatro. Por eso aquí mandan Flow (activar mejor) y Data (ver las cohortes).';
+      teo = 'El encaje no se declara, se mide, y el número que lo mide es la retención: si la curva se aplana en ' +
+        'vez de caer a cero, hay encaje; si cae, no lo hay, por más usuarios totales que muestre el tablero. Esta ' +
+        'etapa premia el flujo — activar mejor a los que ya llegan — y los datos, que son los que te dejan ver la ' +
+        'cohorte en vez del acumulado. El acumulado solo sabe subir y por eso no informa nada. La trampa de la ' +
+        'etapa es comprar crecimiento acá: con retención floja, cada punto en crecer llena un balde agujereado, y ' +
+        'el agujero se agranda con el volumen.';
       var rr = Math.round(Motor.retencionMedia(J) * 100);
       caso = esc(J.empresa) + ' retiene ' + rr + '% al mes. ' + (rr >= 90 ? 'La curva se está aplanando: esto empieza a ser encaje real.' :
         'De cada 100 que entran, a los 6 meses quedan ' + Math.round(Math.pow(Motor.retencionMedia(J), 6) * 100) + '. Esa curva todavía cae: el encaje no está probado.');
     } else {
-      teo = 'Geoffrey Moore: el mercado grande no compra promesas — compra el producto completo: integraciones, ' +
-        'soporte, garantías, referencias. Y Accelerate suma la otra mitad: a escala, velocidad y estabilidad se ' +
-        'construyen juntas o se pierden juntas. Por eso aquí mandan Integr., Support, Security y Scale.';
+      teo = 'El mercado grande no compra promesas: compra el producto completo, y la lista de qué lo completa no la ' +
+        'escribís vos — la escribe la compuerta de tu sector, con umbrales concretos en integraciones, soporte, ' +
+        'seguridad y aguante de volumen. Mientras no la cumplas, ese segmento convierte a una fracción de lo ' +
+        'normal, así que el gasto en alcance se fuga en esa proporción y no hay mensaje ni precio que lo arregle. ' +
+        'La otra mitad de la etapa es que a esta escala velocidad y estabilidad ya no se negocian una contra otra: ' +
+        'se construyen juntas con plataforma, o se pierden juntas con cada incidente que te quema el presupuesto ' +
+        'de error y la marca.';
       var rg = Motor.requisitosGate(J), okg = 0, gi;
       for (gi = 0; gi < rg.length; gi++) if (rg[gi].ok) okg++;
       caso = esc(J.empresa) + ' cumple ' + okg + ' de ' + rg.length + ' requisitos de "' + esc(J.gateNombre) +
         '" y la carga del sistema está en ' + Math.round(Motor.carga(J) * 100) + '%. Lo que falte de esa lista ES tu roadmap.';
     }
     h += '<div class="teoria-caso" style="margin-top:10px">' +
-         '<div class="rot" style="margin-bottom:4px">El manual que sigue esta etapa</div>' +
+         '<div class="rot" style="margin-bottom:4px">Las reglas de esta etapa</div>' +
          '<div class="pq" style="line-height:1.5">' + teo + '</div>' +
          '<div class="rot" style="margin:10px 0 4px 0">' + esc(J.empresa) + ', ahora mismo</div>' +
          '<div class="pq caso-linea" style="border-top:none;margin-top:0;padding-top:0">' + caso + '</div></div>';
@@ -1157,7 +1206,8 @@
     var libres = Motor.capacidadPropia(J);
     for (iv = 0; iv < idsVuelo.length; iv++) {
       var falta0 = Math.ceil(Motor.costoDe(J, idsVuelo[iv]) - J.enVuelo[idsVuelo[iv]]);
-      var pongo = Math.max(0, Math.min(libres, falta0));
+      /* lo que espera un visto bueno no toma puntos: no avanzaria igual */
+      var pongo = Motor.enEspera(J, idsVuelo[iv]) ? 0 : Math.max(0, Math.min(libres, falta0));
       plan.asig[idsVuelo[iv]] = pongo;
       plan.orden.push(idsVuelo[iv]);
       libres -= pongo;
@@ -1204,6 +1254,10 @@
     var total = 0, i, f, id, d;
     for (i = 0; i < plan.orden.length; i++) {
       id = plan.orden[i];
+      /* una contingencia no proyecta nada sobre el mandato: ese es el trato.
+         Y lo que espera una firma no va a salir este mes, por muchos puntos
+         que le pongas. */
+      if (Motor.esContingencia(id) || Motor.enEspera(J, id)) continue;
       if ((J.enVuelo[id] || 0) + (plan.asig[id] || 0) < Motor.costoDe(J, id)) continue;
       d = Motor.estimacionDetalle(J, id);
       var alineada = J.prima.indexOf(Motor.apuesta(id).nec) >= 0;
@@ -1320,8 +1374,12 @@
       else { tono = 'ok'; txt = 'A este ritmo llegas en ' + mesesTxt + ' — la caja aguanta ' + runTxt + '.'; }
     }
     $('ritmo').className = 'ritmobar ' + tono;
+    /* Acá vivía chip('pgdefault'): el mismo título de libro clavado en la
+       barra más visible del juego, los nueve meses del puesto. La barra dice
+       si llegás o no — eso es la información. El libro se cuenta una vez,
+       cuando el concepto te golpea, y después vive en la biblioteca. */
     $('ritmo').innerHTML = svgIc(tono === 'ok' ? 'check' : 'warning') +
-      '<span class="rtx">' + txt + '</span>' + chip('pgdefault');
+      '<span class="rtx">' + txt + '</span>';
   }
 
   /* Age track: el ESCALAFON de carrera (8 niveles, cada uno desbloquea una
@@ -1682,20 +1740,58 @@
       var sale = hecho + pts >= cst;
       var pDone = Math.min(100, Math.round(hecho / cst * 100));
       var pPrev = Math.min(100 - pDone, Math.round(pts / cst * 100));
-      h += '<div class="ap tuyo' + (sale ? ' sale' : '') + '">' +
+      /* La contingencia comparte tarjeta con los proyectos a proposito: ocupa
+         un slot, se paga con los mismos puntos y se lee en el mismo renglon.
+         Lo unico distinto es el sello — cuanto falta para que venza, y que
+         terminarla no te paga nada. */
+      var esCont = Motor.esContingencia(id);
+      var cx = esCont ? Motor.contActiva(J, id) : null;
+      var vence = cx ? cx.restante : 0;
+      /* Esperando una firma no avanza ni con todos los puntos del mundo, así
+         que la tarjeta cambia de controles: en vez de sumar y restar puntos,
+         la única jugada es gastar capital político para que alguien conteste
+         hoy — o esperar. Es la primera vez que el político se gasta en algo. */
+      var espera = J.espera && J.espera[id] ? J.espera[id] : null;
+      h += '<div class="ap tuyo' + (sale && !espera ? ' sale' : '') + (esCont ? ' cont' : '') +
+        (esCont && vence <= 1 ? ' urge' : '') + (espera ? ' trabada' : '') + '">' +
         '<div class="t"><div class="n2">' + esc(a.n) +
-        (sale ? '<span class="shiptag">SALE ESTE MES</span>' :
-          (pts === 0 ? '<span class="pill">en pausa</span>' : '')) + '</div>' +
-        '<div class="prog"><i class="pdone" style="width:' + pDone + '%"></i><i class="pprev" style="width:' + pPrev + '%"></i></div>' +
-        '<div class="d2">faltan ' + falta + ' de ' + cst + ' pts</div></div>' +
-        '<div class="ctrl">' +
-        '<div class="b' + (pts <= 0 ? ' off' : '') + '" data-pmenos="' + id + '">−</div>' +
-        '<div class="n num">' + pts + '</div>' +
-        '<div class="b' + (sinUsar() <= 0 || sale ? ' off' : '') + '" data-pmas="' + id + '">+</div>' +
-        '</div>' +
+        (espera ? '<span class="esperatag">EN ESPERA</span>' :
+         sale ? '<span class="shiptag">' + (esCont ? 'SE CIERRA ESTE MES' : 'SALE ESTE MES') + '</span>' :
+          (esCont ? '<span class="conttag">VENCE EN ' + vence + (vence === 1 ? ' MES' : ' MESES') + '</span>' :
+          (pts === 0 ? '<span class="pill">en pausa</span>' : ''))) + '</div>' +
+        '<div class="prog"><i class="pdone" style="width:' + pDone + '%"></i>' +
+          (espera ? '' : '<i class="pprev" style="width:' + pPrev + '%"></i>') + '</div>' +
+        '<div class="d2">' +
+          (espera ? esc(espera.quien) + (espera.cargo ? ' · ' + esc(espera.cargo) : '') + ' ' + esc(espera.txt) :
+            'faltan ' + falta + ' de ' + cst + ' pts' +
+            (esCont ? ' · no mueve tu mandato · abierta se come el ' +
+                      Motor.lastreContingencia(J, id) + '% del equipo' : '')) + '</div></div>' +
+        (espera ?
+          '<div class="ctrl"><div class="escalar' + (J.politico < Motor.costoEscalar(J) ? ' off' : '') +
+            '" data-escalar="' + id + '">Escalar<span>−' + Motor.costoEscalar(J) + ' político</span></div></div>' :
+          '<div class="ctrl">' +
+          '<div class="b' + (pts <= 0 ? ' off' : '') + '" data-pmenos="' + id + '">−</div>' +
+          '<div class="n num">' + pts + '</div>' +
+          '<div class="b' + (sinUsar() <= 0 || sale ? ' off' : '') + '" data-pmas="' + id + '">+</div>' +
+          '</div>') +
         (J.enVuelo[id] === undefined ? '<div class="quitar" data-quitar="' + id + '">✕</div>' : '<div class="quitar mut" style="visibility:hidden">✕</div>') +
         '</div>';
     }
+    /* Lo entregado que todavía no dijo si sirvió. Va acá, pegado a los
+       proyectos, porque es la consecuencia directa de haberlos entregado: el
+       mes que viene vas a elegir sin saber todavía cómo salió este. */
+    if (J.pendientes && J.pendientes.length) {
+      var esp = [], pe;
+      for (i = 0; i < J.pendientes.length; i++) {
+        pe = J.pendientes[i];
+        var faltanM = 3 - pe.tramo;
+        esp.push('<b>' + esc(pe.n) + '</b> <span class="mut">' +
+          (faltanM <= 1 ? 'cierra este mes' : 'en ' + faltanM + ' meses') + '</span>');
+      }
+      h += '<div class="esperandodatos">' + svgIc('discover') +
+        '<span>Esperando datos · ' + esp.join(' · ') + '</span></div>';
+    }
+
     /* Cuántas iniciativas del backlog mueven de verdad el mandato, y un filtro
        para ver solo esas. */
     var ejesAqui = ejesEnJuego(), mueven = [], di;
@@ -1738,9 +1834,8 @@
         '<div class="inih"><span class="inin">' + esc(a.n) + '</span>' +
           (esNueva ? '<span class="pill nueva">nuevo</span>' : '') +
           (nec ? '<span class="pill">' + esc(nec.corto) + (alineada ? ' ▲' : '') + '</span>' : '') + '</div>' +
-        '<div class="inid">' + esc(a.d) + (a.d2 ? ' <span class="masdet" data-detalle="' + id + '">' +
-          (detalleAbierto[id] ? 'menos' : 'más') + '</span>' : '') +
-          (detalleAbierto[id] && a.d2 ? '<span class="inid2">' + esc(a.d2) + '</span>' : '') + '</div>' +
+        '<div class="inid">' + esc(a.d) +
+          (a.d2 ? '<span class="inid2">' + esc(a.d2) + '</span>' : '') + '</div>' +
         '<div class="inim">' +
           '<span class="ml tipped" data-tip="prob">Prob</span>' + dots(d.prob) +
           '<span class="ml">Esfuerzo</span><span class="tipped" data-tip="esf"><span class="esf e' + d.esf + '">' + d.esf + '</span></span>' +
@@ -1762,13 +1857,17 @@
     return '<span class="rojo">' + palabras[2] + '</span>';
   }
 
+  /* `libro` quedó sin usar a propósito: cada barra mostraba la chapa de su
+     libro, o sea cinco o seis títulos permanentes en el panel derecho todos
+     los meses, ninguno leído. La etiqueta ya tiene su tooltip, que explica la
+     variable cuando el jugador la pide. El parámetro sigue en la firma porque
+     documenta de qué concepto es cada barra y lo leen los call sites. */
   function barraEstado(lbl, v, invertido, libro, icono) {
     var x = invertido ? 100 - v : v;
     var cls = x >= 62 ? 'v' : x >= 38 ? 'a' : 'r';
     return '<div class="est">' +
       '<div class="estl">' + (icono ? '<span class="esti ' + cls + '">' + svgIc(icono) + '</span>' : '') +
       '<span class="elbl">' + lbl + '</span></div>' +
-      (libro ? '<div class="estchip">' + chip(libro) + '</div>' : '') +
       '<div class="etrk"><span class="track"><i class="' + cls + '" style="width:' + Math.round(Math.max(4, Math.min(100, v))) + '%"></i></span></div>' +
       '</div>';
   }
@@ -1965,11 +2064,18 @@
 
   /* ================= dilemas ================= */
 
+  /* La primera oracion de un texto largo. El tope estaba en 140 y las tesis de
+     libros.js abren con oraciones mas largas que eso, asi que el resultado era
+     un corte a mitad de palabra — "y que tuvieron que dejar de ha…". Sube a
+     220, y cuando ni asi entra una oracion completa corta en el ultimo espacio
+     en vez de partir la palabra. */
   function primeraOracion(txt) {
     if (!txt) return '';
-    var m = txt.match(/^[^.]{0,140}\./);
+    var m = txt.match(/^[^.]{0,220}\./);
     if (m) return m[0];
-    return txt.length > 140 ? txt.slice(0, 140) + '…' : txt;
+    if (txt.length <= 220) return txt;
+    var corte = txt.slice(0, 220), esp = corte.lastIndexOf(' ');
+    return (esp > 120 ? corte.slice(0, esp) : corte) + '…';
   }
 
   function mostrarEvento(ev) {
@@ -1985,14 +2091,11 @@
            '<div><div class="qn">' + esc(quien.nombre) + '</div><div class="qc">' + esc(quien.cargo) + '</div></div></div>';
     }
     h += '<div class="pq mut" style="margin-bottom:4px">' + esc(tx.texto) + '</div>';
-    var libroEv = ev.libro ? libroPorId(ev.libro) : null;
-    if (libroEv) {
-      var yaLeido = !!C.codex[ev.libro];
-      h += '<div class="teoria-caso" style="margin:8px 0">' +
-        '<div class="rot" style="margin-bottom:4px">' + (yaLeido ? 'Esto pone a prueba un concepto que conoces' : 'Antes de decidir') + '</div>' +
-        '<div class="pq" style="line-height:1.5">' + esc(primeraOracion(libroEv.idea)) + ' ' + chip(ev.libro) + '</div>' +
-        '</div>';
-    }
+    /* Antes había un adelanto de la teoría acá: la primera oración del libro,
+       treinta segundos antes de que la pantalla de resultado mostrara el
+       concepto entero aplicado a tus números. Dos veces el mismo libro, la
+       primera en versión pobre. El dilema se decide con la situación; la
+       teoría llega después, una sola vez y completa. */
     h += '<div class="cuerpo2 scroll">';
     var i;
     for (i = 0; i < ev.opciones.length; i++) {
@@ -2191,8 +2294,11 @@
         var l = eventos[i];
         var ic = l.tipo === 'bueno' ? '<span class="verde">▲</span>' :
              l.tipo === 'malo' ? '<span class="rojo">▼</span>' : '<span class="mut">•</span>';
+        /* sin chip de libro por renglón: un mes movido dejaba seis u ocho
+           títulos sueltos en la lista, ninguno leído. El libro del mes va una
+           sola vez, abajo, con el concepto entero. */
         h += '<div class="linea"><div class="ic">' + ic + '</div><div class="tx">' +
-             esc(l.texto) + ' ' + (l.libro ? chip(l.libro) : '') + '</div></div>';
+             esc(l.texto) + '</div></div>';
       }
       if (notas.length) {
         var chipsN = '';
@@ -2205,13 +2311,46 @@
     /* La teoria del mes ocupaba un bloque de cinco renglones al pie de cada
        cierre. Queda el titular — el libro y su autor — y el cuerpo se abre
        tocandolo. En una decision arranca abierto: ahi el porque ES el premio. */
-    if (!esDecision && !libroTeoria && J) {
-      var lm = libroDelDia(J, C);
-      if (lm) libroTeoria = lm.id;
+    /* El cierre de mes traía teoría SIEMPRE, y siempre la misma: el bloque
+       pedía el libro del día, que devolvía el primer gatillo pegajoso del
+       array. Resultado: cinco cierres seguidos explicando 'Launch Now' — y en
+       el mismo cierre en que se habían abierto dos tarjetas nuevas, que eran
+       exactamente lo que había para contar. Ahora el orden de preferencia es
+       el correcto: primero una tarjeta que se abrió ESTE mes; si no hubo,
+       un libro disparado que no se haya mostrado antes en esta carrera; y si
+       tampoco, el mes cierra sin teoría. Repetirse cuesta más que callarse. */
+    /* El bloque respira: un concepto cada dos meses, no uno por cierre. La
+       biblioteca abre tarjetas casi todos los meses, así que preferir siempre
+       la recién abierta devolvía un ensayo largo en los diez cierres del
+       puesto — que se saltea igual que el mismo libro repetido. El renglón
+       "tarjetas nuevas" de arriba ya avisa que se abrieron; esto es la lectura
+       larga, y llega más lento a propósito. */
+    if (!esDecision && !libroTeoria && J &&
+        (J.mesUltTeoria === undefined || J.mesPuesto - J.mesUltTeoria >= 2)) {
+      var usados = (C && C.libroUsado) || {};
+      /* si hay tarjeta abierta este mes, gana: es el momento en que el juego le
+         puso nombre a lo que estaba pasando. Salvo que ese libro ya se haya
+         explicado antes — la última fuente de repetidos que quedaba, porque
+         libroDelDia no marca el codex y el mismo título podía salir primero
+         como disparado y después como recién abierto. */
+      var nuevaFicha = null;
+      for (i = 0; i < notas.length; i++) {
+        if (notas[i].libro && !usados[notas[i].libro]) { nuevaFicha = notas[i].libro; break; }
+      }
+      if (nuevaFicha) libroTeoria = nuevaFicha;
+      else {
+        var lm = libroDelDia(J, C, true);
+        if (lm) libroTeoria = lm.id;
+      }
+    }
+    if (libroTeoria && C) {
+      if (!C.libroUsado) C.libroUsado = {};
+      C.libroUsado[libroTeoria] = true;
+      if (!esDecision && J) J.mesUltTeoria = J.mesPuesto;
     }
     if (libroTeoria) {
       var lt = libroPorId(libroTeoria);
-      var ap2 = J ? aplicarLibro(libroTeoria, J) : null;
+      var ap2 = J ? aplicarLibro(libroTeoria, J, C) : null;
       if (lt) {
         var abierto = esDecision || teoriaAbierta;
         h += '<div class="teoria-caso' + (abierto ? ' on' : '') + '" style="margin-top:12px">' +
@@ -2558,7 +2697,7 @@
       '<div class="rot" style="margin:16px 0 5px 0">Cómo lo modela el juego</div>' +
       '<div class="pq" style="font-size:14px;line-height:1.55">' + esc(l.juego) + '</div>' +
       (function () {
-        var ap = J ? aplicarLibro(l.id, J) : null;
+        var ap = J ? aplicarLibro(l.id, J, C) : null;
         if (!ap) return '';
         return '<div class="teoria-caso"><div class="rot" style="margin-bottom:4px">En tu partida, hoy</div>' +
                '<div class="pq" style="font-size:14px;line-height:1.55">' + esc(ap) + '</div></div>';
@@ -2881,18 +3020,25 @@
       if ((plan.asig[v] || 0) > 0) { plan.asig[v]--; replanificar(); }
       return;
     }
+    v = attr(t, 'data-escalar');
+    if (v && J) {
+      if (J.politico >= Motor.costoEscalar(J)) {
+        var res = Motor.escalar(J, v);
+        if (res) {
+          notasEvento.push({ tipo:'neutro', libro:'grove',
+            texto:'Llamaste a ' + res.quien + ' y conseguiste el sí hoy. Costó ' + res.costo +
+                  ' de capital político — el mismo del que sale tu ascenso.' });
+          guardar(); replanificar();
+        }
+      }
+      return;
+    }
+
     v = attr(t, 'data-quitar');
     if (v && J) {
       var qi = plan.orden.indexOf(v);
       if (qi >= 0) { plan.orden.splice(qi, 1); delete plan.asig[v]; }
       replanificar();
-      return;
-    }
-
-    v = attr(t, 'data-detalle');
-    if (v !== null && J) {
-      detalleAbierto[v] = !detalleAbierto[v];
-      renderBacklog();
       return;
     }
 

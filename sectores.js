@@ -44,7 +44,7 @@ var SECTORES = [
   precio:850, escala:0.2, viral:0.6, cac:0.7, competidor:0.6, capex:15000,
   eje:'Aquí un solo escándalo vale más que cien funcionalidades.',
   gate:'Auditoría de transparencia',
-  gateReqs:[['segur',60],['datos',60],['soporte',45]],
+  gateReqs:[['segur',43], ['datos',43], ['soporte',32]],
   incidente:'escandalo', retMod:0.02,
   apuestas:['padron','microseg','transparencia','simulador'] },
 
@@ -53,7 +53,7 @@ var SECTORES = [
   precio:6500, escala:0.02, viral:0.12, cac:0.3, competidor:0.55, capex:220000,
   eje:'La biología no compila más rápido solo porque tengas prisa.',
   gate:'Validación regulatoria y bioseguridad',
-  gateReqs:[['segur',70],['datos',65],['soporte',55]],
+  gateReqs:[['segur',50], ['datos',47], ['soporte',40]],
   incidente:'clinico', retMod:0.12,
   apuestas:['plegado','sintesis','bioseg','patentes'] },
 
@@ -62,7 +62,7 @@ var SECTORES = [
   precio:18, escala:9, viral:2.0, cac:1.6, competidor:0.7, capex:40000,
   eje:'El abismo aquí tiene forma de licencia.',
   gate:'Licencia y control de fraude',
-  gateReqs:[['segur',70],['soporte',60],['datos',50]],
+  gateReqs:[['segur',50], ['soporte',43], ['datos',36]],
   incidente:'fraude', retMod:0.10,
   apuestas:['licencia','antifraude','adelanto','conciliar'] },
 
@@ -71,7 +71,7 @@ var SECTORES = [
   precio:75, escala:0.9, viral:0.7, cac:0.9, competidor:0.45, capex:55000,
   eje:'Si no puedes probar el ahorro, no hay producto.',
   gate:'Prueba verificable de ahorro',
-  gateReqs:[['datos',65],['integra',55],['soporte',45]],
+  gateReqs:[['datos',47], ['integra',40], ['soporte',32]],
   incidente:'infra', retMod:0.07,
   apuestas:['sensor','verificacion','despacho','tarifas'] },
 
@@ -80,7 +80,7 @@ var SECTORES = [
   precio:45, escala:1.6, viral:2.2, cac:1.8, competidor:0.5, capex:0,
   eje:'Adopción no es ingreso. Son dos embudos distintos.',
   gate:'Compra la organización, no el individuo',
-  gateReqs:[['integra',55],['segur',50],['datos',50]],
+  gateReqs:[['integra',40], ['segur',36], ['datos',36]],
   incidente:'infra', retMod:0.05,
   apuestas:['plantillas2','cli','openq','gobernanza'] },
 
@@ -89,7 +89,7 @@ var SECTORES = [
   precio:55, escala:5, viral:2.4, cac:1.4, competidor:0.65, capex:25000,
   eje:'La banca siempre gana. La pregunta es cuánto te deja ganar el regulador.',
   gate:'Licencia de juego y controles de adicción',
-  gateReqs:[['segur',65],['datos',55],['soporte',50]],
+  gateReqs:[['segur',47], ['datos',40], ['soporte',36]],
   incidente:'granwin', retMod:0.12,
   apuestas:['cuotas','vip','autoexclusion','pagos'] },
 
@@ -98,7 +98,7 @@ var SECTORES = [
   precio:320, escala:0.6, viral:0.9, cac:0.8, competidor:0.5, capex:30000,
   eje:'Tu cliente puede pagar lo que sea. Incluidos tus competidores.',
   gate:'Confianza médica y servicio impecable',
-  gateReqs:[['soporte',65],['segur',60],['datos',50]],
+  gateReqs:[['soporte',47], ['segur',43], ['datos',36]],
   incidente:'clinico', retMod:0.10,
   apuestas:['concierge','longevidad','vipapp','redmedica'] },
 
@@ -107,7 +107,7 @@ var SECTORES = [
   precio:120, escala:1.4, viral:1.8, cac:1.3, competidor:0.75, capex:90000,
   eje:'Aquí la demo siempre funciona. La producción es otro deporte.',
   gate:'Precisión auditable y datos que no se filtran',
-  gateReqs:[['datos',65],['segur',60],['integra',55]],
+  gateReqs:[['datos',47], ['segur',43], ['integra',40]],
   incidente:'alucina', retMod:0.03,
   apuestas:['finetune','evals','guardrails','inferencia'] },
 
@@ -116,7 +116,7 @@ var SECTORES = [
   precio:2200, escala:0.06, viral:0.15, cac:0.35, competidor:0.6, capex:400000,
   eje:'El software se parchea. El silicio se vuelve a fabricar.',
   gate:'Rendimiento de fábrica y clientes de referencia',
-  gateReqs:[['escala',65],['integra',60],['soporte',50]],
+  gateReqs:[['escala',47], ['integra',43], ['soporte',36]],
   incidente:'respin', retMod:0.14,
   apuestas:['tapeout','sdk','yield','fundicion'] },
 
@@ -125,7 +125,7 @@ var SECTORES = [
   precio:95, escala:1.1, viral:0.8, cac:1.5, competidor:0.7, capex:20000,
   eje:'Tu producto es invisible cuando funciona y titular cuando no.',
   gate:'Certificaciones y el cuestionario de seguridad del cliente',
-  gateReqs:[['segur',75],['soporte',55],['integra',55]],
+  gateReqs:[['segur',54], ['soporte',40], ['integra',40]],
   incidente:'brecha', retMod:0.11,
   apuestas:['edr','soc','certifica','cazador'] },
 
@@ -134,7 +134,7 @@ var SECTORES = [
   precio:14, escala:8, viral:2.3, cac:1.9, competidor:0.8, capex:60000,
   eje:'Sin densidad no hay unidad económica: solo un subsidio con app.',
   gate:'Unidad económica positiva por pedido',
-  gateReqs:[['escala',60],['soporte',55],['datos',55]],
+  gateReqs:[['escala',43], ['soporte',40], ['datos',40]],
   incidente:'pico', retMod:0.06,
   apuestas:['densidad','vendedores','logistica','reputacion'] },
 
@@ -143,7 +143,7 @@ var SECTORES = [
   precio:12, escala:7, viral:2.1, cac:1.5, competidor:0.75, capex:70000,
   eje:'El catálogo es un costo fijo que caduca. La costumbre es el único activo.',
   gate:'Catálogo propio y una razón para no cancelar',
-  gateReqs:[['core',60],['datos',55],['escala',55]],
+  gateReqs:[['core',43], ['datos',40], ['escala',40]],
   incidente:'derechos', retMod:0.04,
   apuestas:['creadores','recomendador','offline','original'] }
 ];
@@ -473,30 +473,41 @@ function empresaPorId(id) {
    NO es una métrica suelta, es un índice — 50% activación, 30% retención,
    20% confiabilidad — y de ahí sale cuánto aporta cada iniciativa. */
 var MANDATOS = [
-  { id:'retencion', txt:'Lleva la retención al 88%', alinea:['desc','cons'], fuentes:[['ret',1]],
-    meta:function(e){ return 0.88; }, valor:function(e){ return Motor.retencionMedia(e); },
-    fmt:function(v){ return Math.round(v*100)+'%'; }, libro:'hooked' },
+  /* Las metas salen de medir con el arnés qué alcanza de verdad un jugador que
+     juega para el mandato, y se ponen en esa mediana. Antes eran números
+     redondos elegidos a ojo, y por eso cinco de los ocho se cumplían casi
+     siempre y tres casi nunca: la dificultad del puesto la decidía el sorteo
+     del mandato, no cómo jugabas. Las que tienen línea de partida se miden
+     contra ella — una retención de 88% es un regalo si arrancaste en 90. */
+  { id:'retencion', txt:'Lleva la retención al 98%', alinea:['desc','cons'], fuentes:[['ret',1]],
+    meta:function(e){ return Math.min(0.98, Math.max(0.93, (e.retencionInicio || 0.9) + 0.14)); },
+    valor:function(e){ return Motor.retencionMedia(e); },
+    fmt:function(v){ return Math.round(v*1000)/10+'%'; }, libro:'hooked' },
   { id:'crecer', txt:'Multiplica los usuarios activos', alinea:['crec','cons'], fuentes:[['adq',1]],
-    meta:function(e){ return e.usuariosInicio * (1 + 2 * e.meses / 14); }, valor:function(e){ return Motor.usuarios(e); },
+    meta:function(e){ return e.usuariosInicio * (1 + 1.5 * e.meses / 14); }, valor:function(e){ return Motor.usuarios(e); },
     fmt:function(v){ return Math.round(v).toLocaleString ? Math.round(v).toLocaleString('en') : Math.round(v); }, libro:'chasm' },
+  /* Se mide por requisitos listos, no por el multiplicador de la compuerta: ese
+     vale 0.15 hasta que estan todos y despues salta a 1, o sea que la barra no
+     decia nada durante diez meses y el jugador no sabia si iba bien. */
   { id:'abismo', txt:'Abre el gran mercado', alinea:['cons','desc','fiab'], fuentes:[['gate',1]],
-    meta:function(e){ return 1; }, valor:function(e){ return Motor.compuerta(e,'pragm'); },
-    fmt:function(v){ return v>=1?'abierta':'bloqueada'; }, libro:'chasm' },
+    meta:function(e){ return 1; }, valor:function(e){ return Motor.fraccionGate(e); },
+    fmt:function(v){ return v>=1?'abierta':Math.round(v*100)+'% de los requisitos'; }, libro:'chasm' },
   { id:'ingresos', txt:'Duplica el ingreso mensual', alinea:['crec','cons'], fuentes:[['rev',1]],
-    meta:function(e){ return Math.max(20000, e.mrrInicio * (1 + e.meses / 14)); }, valor:function(e){ return e.mrr; },
+    meta:function(e){ return Math.max(20000, e.mrrInicio * (1 + 0.85 * e.meses / 14)); }, valor:function(e){ return e.mrr; },
     fmt:function(v){ return '$'+Math.round(v/1000)+'k'; }, libro:'analytics' },
   { id:'estabilidad', txt:'Termina el año con cero caídas', alinea:['fiab','plat'], fuentes:[['rel',1]],
     meta:function(e){ return 0; }, valor:function(e){ return e.incidentesPuesto; },
-    fmt:function(v){ return v+' caídas'; }, invertido:true, libro:'sre' },
-  { id:'deuda', txt:'Baja la deuda técnica a 25', alinea:['plat'], fuentes:[['deuda',1]],
-    meta:function(e){ return 25; }, valor:function(e){ return e.deuda; },
+    fmt:function(v){ return v+(v===1?' caída':' caídas'); }, invertido:true, libro:'sre' },
+  { id:'deuda', txt:'Baja la deuda técnica a un cuarto', alinea:['plat'], fuentes:[['deuda',1]],
+    meta:function(e){ return Math.max(6, Math.round((e.deudaInicio || 50) * 0.28)); },
+    valor:function(e){ return e.deuda; },
     fmt:function(v){ return Math.round(v)+''; }, invertido:true, libro:'fowler' },
   /* el unico mandato compuesto: usabilidad = 0.5 activacion + 0.3 retencion +
      0.2 confiabilidad. El tope sube a 95 porque el indice arranca mas alto que
      la activacion cruda — con el viejo tope de 82 la meta quedaba servida. */
-  { id:'activacion', txt:'Sube la usabilidad 20 puntos', alinea:['desc','cons'],
+  { id:'activacion', txt:'Sube la usabilidad 36 puntos al año', alinea:['desc','cons'],
     fuentes:[['act',0.5],['ret',0.3],['rel',0.2]],
-    meta:function(e){ return Math.min(95, e.usabilidadInicio + 20 * e.meses / 12); },
+    meta:function(e){ return Math.min(98, e.usabilidadInicio + 36 * e.meses / 12); },
     valor:function(e){ return Motor.usabilidadIndice(e); },
     fmt:function(v){ return Math.round(v)+''; }, libro:'krug' },
   { id:'descubrir', txt:'Instala discovery continuo (evidencia 70)', alinea:['desc'], fuentes:[['evid',1]],
