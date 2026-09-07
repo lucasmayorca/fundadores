@@ -772,12 +772,12 @@ var EVENTOS = [
       libro:'fowler',
       ef:function(e,log){ e.reescritura = 3; e.deuda = 18;
         nota(log,'malo','Tres meses congelados para features. Ojalá el mercado espere.','fowler'); } },
-    { txt:'Refactor continuo: 20% de cada mes',
-      nota:'Pagar la deuda en cuotas mientras sigues entregando se siente más lento y sale más barato.',
+    { txt:'Seguir pagándola en cuotas, como hasta ahora',
+      nota:'Pagar la deuda todos los meses mientras sigues entregando se siente más lento y sale más barato. Es lo que ya hace la operación: la respuesta acá es no cambiar de plan por un documento de 12 páginas.',
       libro:'fowler',
-      ef:function(e,log){ e.refactorFijo = true;
-        nota(log,'bueno','Refactor permanente: cada mes reserva capacidad para pagar deuda.','fowler'); } },
-    { txt:'Ahora no. Estamos por lanzar',
+      ef:function(e,log){ e.deuda = Math.max(0, e.deuda - 4); e.moral -= 3;
+        nota(log,'bueno','Sin reescritura: la deuda se sigue pagando en cuotas, -4 este mes. Tu mejor ingeniera no quedó contenta.','fowler'); } },
+    { txt:'Congelar el refactor hasta después del lanzamiento',
       nota:'Legítimo una vez. Repetido, es la definición del interés compuesto trabajando en tu contra.',
       libro:'fowler',
       ef:function(e,log){ e.deuda += 10; e.moral -= 4;
@@ -912,27 +912,6 @@ var EVENTOS = [
         nota(log,'malo','Más coordinación sobre el mismo enredo. El techo sigue donde estaba.','brooks'); } }
   ]},
 
-{ id:'deploys', libro:'accelerate', prio:78, quien:'estrella',
-  cuando:function(e){ return e.mesPuesto > 2 && !e.cd; },
-  titulo:'Los deploys son un evento',
-  texto:'"Subimos a producción cada tres semanas, un jueves de noche, con dos personas rezando."',
-  variantes:[
-    { titulo:'El tren de release', texto:'"Lanzamos cada tercer jueves, 9 PM, sala de guerra, pizza. Es tradición. El último tomó seis horas y dos rollbacks."' },
-    { titulo:'El pedido de freeze', texto:'"Ops quiere dos semanas de congelamiento de código antes de la demo para el cliente grande. Los freezes agrandan los releases, y los releases grandes son la razón del freeze."' }
-  ],
-  opciones:[
-    { txt:'Invertir en despliegue continuo',
-      nota:'Los lotes chicos y frecuentes fallan menos y se recuperan más rápido. Velocidad y estabilidad suben juntas.',
-      libro:'accelerate',
-      ef:function(e,log){ e.cd = true; e.deudaPendiente = 8;
-        nota(log,'bueno','Despliegue continuo: menos riesgo de incidentes y más capacidad, para siempre.','accelerate'); } },
-    { txt:'Dejarlo así: funciona',
-      nota:'Funciona hasta el día que no. Y ese día el problema no va a ser el cambio: va a ser el tamaño del lote.',
-      libro:'accelerate',
-      ef:function(e,log){ e.riesgoExtra = (e.riesgoExtra||0) + 0.06;
-        nota(log,'neutro','Se sigue desplegando por evento. El riesgo se acumula en silencio.','accelerate'); } }
-  ]},
-
 { id:'escala', libro:'ddia', prio:105, quien:'cto',
   cuando:function(e){ return Motor.carga(e) > 0.85 && e.mesPuesto > 2; },
   titulo:'La base de datos empezó a sudar',
@@ -1023,10 +1002,10 @@ var EVENTOS = [
   ],
   opciones:[
     { txt:'Una entrevista semanal, sagrada, hecha por el equipo que construye',
-      nota:'El discovery no es una fase: es un hábito. Y funciona cuando los que construyen lo hacen ellos mismos.',
+      nota:'El discovery no es una fase: es un hábito. Y funciona cuando los que construyen lo hacen ellos mismos — nadie traduce, nadie filtra.',
       libro:'torres',
-      ef:function(e,log){ e.cadenciaDesc = true;
-        nota(log,'bueno','Cadencia semanal: la evidencia deja de evaporarse tan rápido.','torres'); } },
+      ef:function(e,log){ e.calidadDesc = Math.min(1, e.calidadDesc + 0.08); e.evidencia = Math.min(100, e.evidencia + 6);
+        nota(log,'bueno','El equipo que construye volvió a hablar con usuarios: +6 de evidencia y entrevistas que preguntan mejor.','torres'); } },
     { txt:'Contratar una consultora para un gran estudio',
       nota:'Un informe de 80 páginas llega tarde, se lee una vez y no cambia ninguna decisión de la semana siguiente.',
       libro:'torres',
@@ -1042,12 +1021,12 @@ var EVENTOS = [
     { txt:'Una lista de features con fechas',
       nota:'Un roadmap de entregables convierte al equipo en fábrica: medido por cuánto salió, nunca por qué cambió.',
       libro:'trap',
-      ef:function(e,log){ e.fabrica = true; e.foco -= 5; e.politico += 4;
-        nota(log,'malo','Modo fábrica. Vas a entregar mucho y mover poco.','trap'); } },
+      ef:function(e,log){ e.foco -= 9; e.politico += 4; e.deuda += 4;
+        nota(log,'malo','Comprometiste entregables: foco -9 y +4 de deuda para llegar a las fechas. Vas a entregar mucho y mover poco.','trap'); } },
     { txt:'Problemas por resolver, con resultados esperados',
       nota:'Comprometerse con el problema y la métrica deja abierto el cómo, que es donde el equipo agrega valor.',
       libro:'trap',
-      ef:function(e,log){ e.fabrica = false; e.foco += 7; e.politico -= 3;
+      ef:function(e,log){ e.foco += 7; e.politico -= 3;
         nota(log,'bueno','Un roadmap de resultados. Más difícil de vender adentro, paga mejor.','trap'); } }
   ]},
 
@@ -1469,8 +1448,8 @@ var EVENTOS = [
     { txt:'Darles el Gantt de features que pidieron',
       nota:'Acabas de prometer entregables a un año con el conocimiento del primer trimestre. Cada descubrimiento futuro es ahora una promesa rota.',
       libro:'outcomes',
-      ef:function(e,log){ e.politico += 6; e.fabrica = true;
-        nota(log,'malo','Amaron la certeza. Ahora eres una fábrica de features con impresora de fechas límite.','outcomes'); } },
+      ef:function(e,log){ e.politico += 6; e.foco -= 8; e.deuda += 5;
+        nota(log,'malo','Amaron la certeza. Doce meses de entregables prometidos: foco -8 y +5 de deuda para sostener las fechas.','outcomes'); } },
     { txt:'Comprometerse a resultados con una vista ahora/después/luego',
       nota:'Más difícil de vender, honesto de operar: comprométete con los problemas y las métricas, deja las soluciones negociables.',
       libro:'outcomes',

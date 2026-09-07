@@ -95,8 +95,8 @@ Qué cambia:
 
 - **El lienzo se estira** al viewport (sin `transform: scale`), con las
   `safe-area-inset-*` del notch como padding.
-- **La pantalla de juego se parte en dos pestañas**: *Tu mes* (estaciones +
-  proyectos, un solo scroll) y *La empresa* (los signos vitales que en ancho
+- **La pantalla de juego se parte en dos pestañas**: *Tu mes* (iniciativas +
+  cierre, un solo scroll) y *La empresa* (los signos vitales que en ancho
   viven en la columna derecha). El paso del tour que ilumina el panel cambia
   de pestaña solo.
 - **Ritmo y era se mudan adentro del scroll** de la columna izquierda: son
@@ -105,8 +105,8 @@ Qué cambia:
   del mes.
 - **Todo lo que era una fila de columnas de ancho fijo se apila** (portada,
   ofertas, briefing, cierre, final, Salón de la Fama). En el HTML esas
-  columnas van marcadas con `.dosc` / `.colx`; las estaciones pasan a tres
-  por fila y las tarjetas de oferta a una por fila.
+  columnas van marcadas con `.dosc` / `.colx`; las tarjetas de oferta pasan a
+  una por fila.
 - **Los overlays son hojas a pantalla completa** (dilemas, resumen del mes,
   biblioteca, tarjetas de libro), con el botón de cerrar clavado abajo.
 - **De lado se pide vertical**, y solo en la pantalla de juego: con ~390px de
@@ -135,16 +135,27 @@ Lupa, prob/impacto, compromiso, Evidencia, Deuda, Carga, Presupuesto de
 error...) muestran una explicación de una línea al tocarlas — 16 en total.
 Sin hover: es un iPad.
 
-## El ciclo mensual: estaciona a tu equipo (estilo AoE/Catan)
+## El ciclo mensual: repartí a tu equipo
 
 Tu equipo produce **puntos** cada mes — un solo recurso visible, una barra
 donde cada punto está contado:
 
-1. **Estaciona a tu equipo**: steppers +/- en cuatro estaciones, cada una
-   mostrando su rendimiento en vivo — Descubrir (`+N evidencia`), Plataforma
-   (`−N deuda`), Fiabilidad (`+N uptime`), Crecimiento (`+alcance`). Las
-   estaciones se desbloquean al subir la escalera. **Lo que no estaciones va
-   a Construir** y empuja tus proyectos.
+1. **Repartí tus puntos entre iniciativas**. Los cuatro bucles que sostienen
+   a la empresa — descubrimiento, plataforma, fiabilidad, crecimiento — los
+   corre la **operación** con todo lo que no comprometas, y se enfoca en el
+   eje por el que te mide tu mandato (`FOCO = 0.34 + 0.42 × mando`). Fueron
+   cuatro steppers en el tablero y dejaron de serlo: repartir puntos entre
+   cuatro diales que casi siempre se quieren en el mismo lugar costaba
+   atención y no cambiaba la partida.
+
+   **Cómo trabaja la empresa tampoco se elige**: se construye por proyectos,
+   se hace discovery por proyecto, se despliega continuo y la deuda se paga en
+   cuotas todos los meses. Eso vive en `motor.js` como tres constantes con
+   nombre (`ENTREGA_CONTINUA`, `ESCUDO_ENTREGA`, `EVID_DECAE`) y no como
+   estado del puesto. Antes eran cuatro booleanos que un evento al azar te
+   regalaba, así que media partida corría una empresa que en 2026 no existe.
+   Si vuelve a aparecer la tentación de hacerlos configurables: se midió, y lo
+   que agregaba era una pantalla de setup, no una decisión.
 2. **Elige tus proyectos**: **slots** limitados (2 seed / 3 Serie A / 4
    Serie B) mostrados como cajas que se llenan al elegir. Cada tarjeta de
    proyecto muestra puntos de prob, bloques de impacto, tamaño de esfuerzo —
