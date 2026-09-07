@@ -178,6 +178,34 @@ var ETAPAS = {
              usuariosBase:0.16,  valoracion:520000000,equity:[0.012, 0.05],caos:0.9 }
 };
 
+/* ---------------- FÍSICA ECONÓMICA POR SECTOR ----------------
+   ETAPAS daba la MISMA caja y la MISMA valoración a cualquier sector en la
+   misma etapa: una demo de devtools arrancaba con la misma plata que un chip
+   de silicio. El sector ya declara cuánto cuesta operar (capex); esto lo usa
+   para escalar caja y valoración por sector, normalizado a promedio 1 para
+   no correr la banda medida en sim.js — ver [[fundadores-calibracion]]. */
+(function () {
+  function media(arr) { var t = 0, i; for (i = 0; i < arr.length; i++) t += arr[i]; return t / arr.length; }
+  function normalizar(arr) { var m = media(arr), out = [], i; for (i = 0; i < arr.length; i++) out.push(arr[i] / m); return out; }
+  function acotar(v, a, b) { return v < a ? a : (v > b ? b : v); }
+
+  var capexMed = media(SECTORES.map(function (s) { return s.capex; }));
+  var capMults = normalizar(SECTORES.map(function (s) {
+    return acotar(Math.sqrt((s.capex || 1) / capexMed), 0.82, 1.45);
+  }));
+
+  for (var i = 0; i < SECTORES.length; i++) {
+    /* cuánto capital de más (o de menos) necesita este sector para el mismo
+       hito de etapa: biogen/chips arrancan con varias veces la caja de un
+       devtools, porque el laboratorio o la fábrica no negocian */
+    SECTORES[i].cajaMult = capMults[i];
+    /* la valoración pre-ingreso sube con la intensidad de capital (ciencia
+       profunda cotiza contra promesa, no contra MRR) pero mucho menos que
+       la caja: se amortigua con raíz cuadrada */
+    SECTORES[i].valMult = Math.pow(capMults[i], 0.5);
+  }
+})();
+
 /* ---------------- EMPRESAS ----------------
    60 empresas, 5 por sector. Todas son parodias de compañías que cotizan en
    la bolsa de Estados Unidos: el nombre suena a la real, el pitch cuenta su
@@ -484,7 +512,7 @@ var MANDATOS = [
     valor:function(e){ return Motor.retencionMedia(e); },
     fmt:function(v){ return Math.round(v*1000)/10+'%'; }, libro:'hooked' },
   { id:'crecer', txt:'Multiplica los usuarios activos', alinea:['crec','cons'], fuentes:[['adq',1]],
-    meta:function(e){ return e.usuariosInicio * (1 + 1.5 * e.meses / 14); }, valor:function(e){ return Motor.usuarios(e); },
+    meta:function(e){ return e.usuariosInicio * (1 + 1.35 * e.meses / 14); }, valor:function(e){ return Motor.usuarios(e); },
     fmt:function(v){ return Math.round(v).toLocaleString ? Math.round(v).toLocaleString('en') : Math.round(v); }, libro:'chasm' },
   /* Se mide por requisitos listos, no por el multiplicador de la compuerta: ese
      vale 0.15 hasta que estan todos y despues salta a 1, o sea que la barra no
@@ -493,13 +521,13 @@ var MANDATOS = [
     meta:function(e){ return 1; }, valor:function(e){ return Motor.fraccionGate(e); },
     fmt:function(v){ return v>=1?'abierta':Math.round(v*100)+'% de los requisitos'; }, libro:'chasm' },
   { id:'ingresos', txt:'Duplica el ingreso mensual', alinea:['crec','cons'], fuentes:[['rev',1]],
-    meta:function(e){ return Math.max(20000, e.mrrInicio * (1 + 0.85 * e.meses / 14)); }, valor:function(e){ return e.mrr; },
+    meta:function(e){ return Math.max(20000, e.mrrInicio * (1 + 0.78 * e.meses / 14)); }, valor:function(e){ return e.mrr; },
     fmt:function(v){ return '$'+Math.round(v/1000)+'k'; }, libro:'analytics' },
   { id:'estabilidad', txt:'Termina el año con cero caídas', alinea:['fiab','plat'], fuentes:[['rel',1]],
     meta:function(e){ return 0; }, valor:function(e){ return e.incidentesPuesto; },
     fmt:function(v){ return v+(v===1?' caída':' caídas'); }, invertido:true, libro:'sre' },
   { id:'deuda', txt:'Baja la deuda técnica a un cuarto', alinea:['plat'], fuentes:[['deuda',1]],
-    meta:function(e){ return Math.max(6, Math.round((e.deudaInicio || 50) * 0.28)); },
+    meta:function(e){ return Math.max(6, Math.round((e.deudaInicio || 50) * 0.31)); },
     valor:function(e){ return e.deuda; },
     fmt:function(v){ return Math.round(v)+''; }, invertido:true, libro:'fowler' },
   /* el unico mandato compuesto: usabilidad = 0.5 activacion + 0.3 retencion +
