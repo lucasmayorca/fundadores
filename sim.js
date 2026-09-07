@@ -16,7 +16,18 @@
      ignora   juega el mandato y no mira las contingencias
      atiende  igual, pero paga la contingencia antes que nada
      escala   como atiende, y además gasta político para destrabar firmas
-     ciego    como atiende, pero no mira qué va antes de qué                */
+     ciego    como atiende, pero no mira qué va antes de qué
+     honra    como atiende, y siempre CUMPLE los compromisos del elenco
+     declina  como atiende, y siempre LOS RECHAZA en el acto
+
+   Hasta esta versión el arnés nunca disparaba dilemas: Motor.simular() corre
+   solo, y los dilemas (momtest, contratar, los compromisos) viven en
+   eventoAplicable()/elegirOpcion(), que sólo llamaba ui.js. Toda la
+   calibración anterior — la banda de mandatos, el hueco de dependencias — se
+   midió CON LOS DILEMAS APAGADOS. Ahora se disparan igual que en la partida
+   real (mismo eventoAplicable, misma cadencia, mismo tope EVERGREEN), así que
+   los números de esta versión no son comparables byte a byte con corridas
+   anteriores: son más fieles, no más flojos.                                */
 
 var fs = require('fs'), vm = require('vm'), path = require('path');
 var D = __dirname + '/';
@@ -27,12 +38,9 @@ vm.createContext(ctx);
 });
 
 vm.runInContext(function () {
-  /* las estaciones que la UI expone de verdad, y la palanca que cada una pide */
-  var ESTACIONES = ['desc', 'plat', 'fiab', 'crec'];
-
   function planDelMes(e, m, modo) {
     var cap = Motor.capacidadPropia(e);
-    var plan = { desc:0, plat:0, fiab:0, crec:0, apuestas:[], asig:{} };
+    var plan = { apuestas:[], asig:{} };
     if (modo === 'pasivo') return plan;
     var queda = cap, i, id;
 
@@ -46,7 +54,10 @@ vm.runInContext(function () {
       }
     }
 
-    /* 1. la contingencia primero: lo justo para llegar al vencimiento */
+    /* 1. la contingencia primero: lo justo para llegar al vencimiento. Un
+       compromiso que el bot decidió honrar entra con la misma urgencia — decir
+       que sí y no financiarlo es peor que haber declinado, así que un jugador
+       competente que acepta, prioriza. */
     if (modo !== 'ignora' && e.cont) {
       for (i = 0; i < e.cont.length; i++) {
         id = e.cont[i].id;
@@ -55,19 +66,20 @@ vm.runInContext(function () {
         plan.asig[id] = cuota; queda -= cuota;
       }
     }
+    if (e.compromisos) {
+      for (i = 0; i < e.compromisos.length; i++) {
+        id = e.compromisos[i].id;
+        var faltaP = Math.ceil(Motor.costoDe(e, id) - (e.enVuelo[id] || 0));
+        var cuotaP = Math.min(queda, Math.max(0, Math.ceil(faltaP / Math.max(1, e.compromisos[i].restante))));
+        plan.asig[id] = cuotaP; queda -= cuotaP;
+      }
+    }
 
-    /* 2. las estaciones del mandato que el rol tiene abiertas */
-    var est = [];
-    for (i = 0; i < m.alinea.length; i++) {
-      if (ESTACIONES.indexOf(m.alinea[i]) >= 0 && e.palancas.indexOf(m.alinea[i]) >= 0) est.push(m.alinea[i]);
-    }
-    /* si el mandato pide construir, la mitad del mes va a proyectos */
-    var quiereCons = m.alinea.indexOf('cons') >= 0;
-    var paraEst = quiereCons ? Math.floor(queda * 0.5) : queda;
-    if (est.length) {
-      var por = Math.floor(paraEst / est.length);
-      for (i = 0; i < est.length; i++) { plan[est[i]] = por; queda -= por; }
-    }
+    /* 2. Sin estaciones, lo que antes se estacionaba ahora se deja sin asignar:
+       todo punto que no va a un proyecto lo toma la operación, que es la que
+       mueve descubrimiento, plataforma, fiabilidad y crecimiento. Un mandato
+       que no pide construir se juega dejando el mes libre. */
+    if (m.alinea.indexOf('cons') < 0) queda = Math.floor(queda * 0.5);
 
     /* 3. el resto a proyectos: los que ya están en vuelo, después backlog nuevo.
        El bot que ignora no le pone un punto a la contingencia: la mira pasar. */
@@ -116,29 +128,81 @@ vm.runInContext(function () {
   /* expuesto sin var para que otros scripts de medición reusen el mismo bot */
   planMes = planDelMes;
 
+  /* Política del bot frente a un compromiso: honrar (0) o declinar (1). Los
+     perfiles 'honra'/'declina' fijan la respuesta para aislar el efecto de
+     cada rama; el resto usa una heurística mínima — declinar si el político
+     ya está flaco o si ya hay demasiado en vuelo, porque acumular compromisos
+     sin resolver es la forma más rápida de quedarte sin capacidad Y sin
+     crédito al mismo tiempo. */
+  function decidirCompromiso(e, modo) {
+    if (modo === 'honra') return 0;
+    if (modo === 'declina') return 1;
+    var activos = (e.compromisos ? e.compromisos.length : 0) + (e.cont ? e.cont.length : 0);
+    if (e.politico < 40 || activos >= 2) return 1;
+    return 0;
+  }
+
+  /* Reproduce lo que hace elegirOpcion() en ui.js, sin DOM: aplica la rama
+     elegida (resolviendo el cara-o-ceca de las opciones con `prob`, igual que
+     la integración intrínseca de "Tu llamada") y deja la marca de vista para
+     que la cadencia/EVERGREEN de eventoAplicable funcione idéntica a la
+     partida real. Para cualquier dilema que no sea un compromiso, la política
+     es la más simple posible — la primera opción — porque lo que este arnés
+     necesita es que el mes no quede libre de dilemas, no arbitrar CADA rama
+     narrativa del juego. */
+  function resolverDilemaBot(e, c, log, modo, stats) {
+    var ev = eventoAplicable(e, c);
+    if (!ev) return;
+    e.eventosVistos[ev.id] = true;
+    c.dilemasVistos[ev.id] = (c.dilemasVistos[ev.id] || 0) + 1;
+    var esProm = ev.id.indexOf('prom_') === 0;
+    var idx = esProm ? decidirCompromiso(e, modo) : 0;
+    /* la decision YA se sabe por el indice elegido — no hace falta inferirla
+       de lo que el `ef` haya escrito en el log, y menos inventar una entrada
+       de log solo para que el arnes la lea (esa entrada la vería tambien el
+       jugador real: casi se filtra un renglon vacio a producción por eso) */
+    if (esProm) { if (idx === 0) stats.compHonrados++; else stats.compDeclinados++; }
+    var op = ev.opciones[idx];
+    var rama = (typeof op.prob === 'number') ? (Math.random() * 100 < op.prob ? op.ok : op.ko) : op;
+    try { rama.ef(e, log); } catch (err) {}
+  }
+
   jugar = function (modo) {
     var mundo = Mundo.nuevo(), c = Carrera.nueva('bot', 0, 'product');
-    var out = { puestos:[], llegaron:0, cerradas:0, vencidas:0, trabas:0, entregas:0, sinBase:0, runwayMin:[] };
+    var out = { puestos:[], llegaron:0, cerradas:0, vencidas:0, trabas:0, entregas:0, sinBase:0,
+                compHonrados:0, compDeclinados:0, compCumplidos:0, compVencidos:0, runwayMin:[], polMin:[] };
     while (c.puestos.length < Carrera.MAX_PUESTOS) {
       var of = Carrera.ofertas(c, mundo)[0];
       var e = Carrera.aceptar(c, of, mundo);
-      var m = mandatoPorId(e.mandatoId), runMin = 999;
+      var m = mandatoPorId(e.mandatoId), runMin = 999, polMin = 999;
       while (e.vivo) {
-        var log = Motor.simular(e, planDelMes(e, m, modo), mundo);
+        var evLog = [];
+        resolverDilemaBot(e, c, evLog, modo, out);
+        var log = evLog.concat(Motor.simular(e, planDelMes(e, m, modo), mundo));
         for (var li = 0; li < log.length; li++) {
+          /* cont:'cierra'/'vence' lo comparten contingencias Y compromisos —
+             misma etiqueta, misma maquinaria de slot. Se distinguen por
+             `promo`, que solo llevan las entradas de compromiso: sin este
+             filtro, cerradas/vencidas contaba las dos cosas mezcladas y el
+             porcentaje contra `llegaron` (que solo cuenta contingencias)
+             podía pasarse de 100%. */
           if (log[li].cont === 'llega') out.llegaron++;
-          else if (log[li].cont === 'cierra') out.cerradas++;
-          else if (log[li].cont === 'vence') out.vencidas++;
+          else if (log[li].cont === 'cierra' && !log[li].promo) out.cerradas++;
+          else if (log[li].cont === 'vence' && !log[li].promo) out.vencidas++;
           else if (log[li].visto === 'traba') out.trabas++;
           if (log[li].dato === 'sale') { out.entregas++; if (log[li].sinBase) out.sinBase++; }
+          if (log[li].promo === 'cumple') out.compCumplidos++;
+          else if (log[li].promo === 'vence') out.compVencidos++;
         }
         var rw = Motor.runwayMeses(e); if (rw < runMin) runMin = rw;
+        if (e.politico < polMin) polMin = e.politico;
         Mundo.tick(mundo, 1);
       }
       var r = Carrera.cerrar(c, e, mundo);
       out.puestos.push({ mandato:e.mandatoId, etapa:e.etapa, cumplido:r.cumplido, promocion:r.promocion,
         final:e.final, prog:r.progreso, hechas:e.apuestasCompletadas });
       out.runwayMin.push(runMin);
+      out.polMin.push(polMin);
       if (c.final) break;
     }
     out.boletin = Carrera.boletin(c);
@@ -154,11 +218,14 @@ function pct(a, b) { return b ? (100 * a / b).toFixed(0) + '%' : '—'; }
 
 MODOS.forEach(function (modo) {
   var n = 0, ok = 0, fin = {}, pat = 0, hechas = 0, lleg = 0, cer = 0, ven = 0, tra = 0, promo = 0, ent = 0, sb = 0;
-  var porCarrera = [];
+  var compH = 0, compD = 0, compC = 0, compV = 0;
+  var porCarrera = [], polMinAll = [];
   var porMandato = {}, runway = [];
   for (var i = 0; i < CARRERAS; i++) {
     var r = vm.runInContext('jugar("' + modo + '")', ctx);
     pat += r.boletin.patrimonio; lleg += r.llegaron; cer += r.cerradas; ven += r.vencidas; tra += r.trabas; ent += r.entregas; sb += r.sinBase;
+    compH += r.compHonrados; compD += r.compDeclinados; compC += r.compCumplidos; compV += r.compVencidos;
+    polMinAll = polMinAll.concat(r.polMin);
     runway = runway.concat(r.runwayMin);
     var okC = 0;
     for (var q = 0; q < r.puestos.length; q++) if (r.puestos[q].cumplido) okC++;
@@ -194,6 +261,13 @@ MODOS.forEach(function (modo) {
               '   cerradas ' + pct(cer, lleg) + '   vencidas ' + pct(ven, lleg));
   console.log('  firmas trabadas/puesto ' + (tra / n).toFixed(2) + '   ascensos ' + pct(promo, n));
   console.log('  entregas sin su base ' + pct(sb, ent) + ' (' + sb + ' de ' + ent + ')');
+  if (compH + compD) console.log('  compromisos: ' + (compH + compD) + ' ofrecidos · honrados ' + pct(compH, compH + compD) +
+    '   de los honrados, vencidos sin cumplir ' + pct(compV, compH) +
+    '   de los declinados, ' + compD + ' resueltos en el acto');
+  polMinAll.sort(function (a, b) { return a - b; });
+  if (polMinAll.length) console.log('  político mínimo alcanzado — p10 ' + Math.round(polMinAll[Math.floor(polMinAll.length * 0.1)]) +
+    '   mediana ' + Math.round(polMinAll[Math.floor(polMinAll.length * 0.5)]) +
+    '   bajo 0 (riesgo de despido) ' + pct(polMinAll.filter(function (v) { return v < 0; }).length, polMinAll.length));
   console.log('  patrimonio medio $' + Math.round(pat / CARRERAS / 1000) + 'k');
   var linea = [];
   for (var k in porMandato) linea.push(k + ' ' + pct(porMandato[k].ok, porMandato[k].n));

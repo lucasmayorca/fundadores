@@ -456,6 +456,47 @@ h2, h3 { font-weight:500; }
   color:var(--color-neutral-400); }
 .pa .libro { -webkit-flex-shrink:0; flex-shrink:0; margin-left:8px; }
 .rondalib { margin-right:10px; }
+
+/* ---------- la pieza de concepto ----------
+   Se toma el ancho y respira, porque sale pocas veces: es lo contrario de la
+   pastilla que aparecía sesenta veces por puesto. El orden vertical es el del
+   argumento — el hecho, el dibujo, la teoría, la jugada — y la fuente va al
+   pie, chica, como una nota y no como un premio. */
+.pieza { margin-top:16px; border:1px solid var(--color-divider);
+  border-radius:var(--radius-md); background:var(--color-surface); overflow:hidden; }
+.pz-cab { padding:11px 16px 9px; border-bottom:1px solid var(--color-divider);
+  background:var(--color-accent-900, transparent); }
+.pz-rot { font-size:14.5px; font-weight:500; color:var(--color-accent-300); }
+.pz-sit { padding:13px 16px 0; font-size:13.5px; line-height:1.55;
+  color:var(--color-neutral-200); }
+.pz-graf { padding:14px 16px 4px; }
+.pz-graf .dgc { width:100%; max-width:340px; height:auto; display:block; }
+.pz-teo { padding:6px 16px 0; }
+.pz-teo p { margin:0 0 9px 0; font-size:12.8px; line-height:1.6;
+  color:var(--color-neutral-400); max-width:none; }
+.pz-apl { padding:4px 16px 14px; }
+.pz-rot2 { display:block; font-size:10px; text-transform:uppercase;
+  letter-spacing:0.05em; color:var(--color-neutral-600); margin-bottom:4px; }
+.pz-apl p { margin:0; font-size:13px; line-height:1.55; color:var(--color-neutral-200);
+  max-width:none; }
+.pz-fte { padding:9px 16px; border-top:1px solid var(--color-divider);
+  font-size:11px; color:var(--color-neutral-600); }
+.pz-fte .linklike { margin-left:6px; }
+
+/* los diagramas: la convención de color de la casa, y el dato en el trazo */
+.dgc text { font-family:inherit; }
+.dgct { font-size:8px; letter-spacing:0.08em; fill:var(--color-neutral-600); }
+.dgcl { font-size:8.5px; fill:var(--color-neutral-400); }
+.dgcl.mal { fill:var(--color-rojo, #C0562F); }
+.dgcm { font-size:9px; fill:var(--color-bg); }
+.dgcm.mal { fill:var(--color-neutral-600); }
+.dgcn { font-size:8px; fill:var(--color-neutral-700); font-style:italic; }
+.dgc-ok { fill:var(--color-accent); }
+.dgc-off { fill:var(--color-neutral-800, #2a2d38); }
+.dgc-mal { fill:var(--color-rojo, #C0562F); opacity:0.55; }
+.dgc-flow { fill:var(--color-accent); opacity:0.35; }
+.dgc-rango { fill:var(--color-accent); opacity:0.25; }
+.dgc-pt { fill:var(--color-neutral-200); }
 body.movil .palarg { display:none; }
 body.movil .llh { display:none; }
 body.movil .dglcaja { width:auto; right:0; }
@@ -739,6 +780,17 @@ body.movil .dglcaja { width:auto; right:0; }
   font-size:9.5px; font-weight:500; letter-spacing:0.08em; background:var(--color-neutral-800);
   color:#e8a33d; border:none; }
 .ap.tuyo.cont.urge .conttag { color:#e2564a; }
+
+/* El compromiso usa el color lila del acento en vez del ámbar de contingencia:
+   no es trabajo ajeno que te cae encima, es tu propia palabra empeñada. Mismo
+   patrón — borde suave, rojo el mes que vence, verde cuando se cierra. */
+.ap.tuyo.comp { box-shadow:0 0 0 1px color-mix(in srgb, var(--color-accent) 45%, var(--color-neutral-900)); }
+.ap.tuyo.comp.urge { box-shadow:0 0 0 1px #7a3129; }
+.ap.tuyo.comp.sale { box-shadow:0 0 0 1px #2f6b3f; }
+.comptag { display:inline-block; margin-left:10px; padding:2px 8px; border-radius:9px;
+  font-size:9.5px; font-weight:500; letter-spacing:0.08em; background:var(--color-neutral-800);
+  color:var(--color-accent); border:none; }
+.ap.tuyo.comp.urge .comptag { color:#e2564a; }
 
 /* Esperando un visto bueno: la tarjeta se apaga porque no avanza, y los
    controles de puntos se reemplazan por la única jugada que queda. */
@@ -1308,6 +1360,62 @@ body.movil .shipc { -webkit-flex:1 1 100%; flex:1 1 100%; }
 .inicrot .init { display:-webkit-inline-flex; display:inline-flex; -webkit-align-items:center; align-items:center; }
 .inicrot .inihint { text-transform:none; letter-spacing:0; font-size:11px;
   color:var(--color-neutral-600); text-align:right; }
+/* ---- El metodo: observacion -> problema -> hipotesis -> iniciativa ----
+   El encabezado del tema no es un panel: es el enunciado del que las
+   iniciativas de abajo son respuestas en competencia. Por eso no lleva caja
+   propia ni fondo — lleva un riel a la izquierda que agrupa visualmente las
+   tarjetas que le cuelgan, y se lee antes que ellas sin pesar mas que ellas.
+   La jerarquia de la pantalla no cambia: la iniciativa sigue mandando. */
+.tema { margin:18px 0 10px 0; padding:0 0 0 12px; border-left:2px solid var(--color-accent-800); }
+.tema .temah { display:-webkit-flex; display:flex; -webkit-align-items:baseline; align-items:baseline;
+  gap:8px; margin-bottom:6px; }
+.tema .temak { font-size:13.5px; font-weight:500; color:var(--color-neutral-200); }
+.tema .temac { font-size:10.5px; letter-spacing:0.04em; color:var(--color-neutral-600); }
+.tema .temap { display:-webkit-flex; display:flex; -webkit-align-items:baseline; align-items:baseline;
+  -webkit-flex-wrap:wrap; flex-wrap:wrap; gap:4px 8px; margin-bottom:4px; }
+.tema .ml { font-size:10px; letter-spacing:0.06em; text-transform:uppercase;
+  color:var(--color-neutral-600); -webkit-flex-shrink:0; flex-shrink:0; min-width:74px; }
+.tema .tept { -webkit-flex:1; flex:1; min-width:200px; font-size:12px; line-height:1.5;
+  color:var(--color-neutral-500); }
+/* el numero observado va con el mismo peso que en el panel de la derecha:
+   es el mismo dato, leido desde el otro lado de la pantalla */
+.tema .tept b { color:var(--color-neutral-300); font-weight:500; }
+.tema .tesep { font-style:normal; color:var(--color-neutral-700); margin:0 6px; }
+/* el problema es la unica linea del encabezado que se lee entera */
+.tema .tepr { color:var(--color-neutral-400); }
+.tema .pill.libro { font-size:10px; }
+
+/* La historia es el problema con cara. Va en cursiva y un punto mas apagada:
+   no es un dato, es la escena de la que salio el dato. */
+.tema .tehi { font-style:italic; color:var(--color-neutral-600); }
+/* La frontera entre problem space y solution space, dicha en voz alta. Es una
+   linea, no una caja: separar sin partir la pantalla en dos bloques. */
+.frontera { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;
+  gap:8px; margin:12px 0 10px 0; }
+.frontera .fro { font-size:10px; letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--color-neutral-400); -webkit-flex-shrink:0; flex-shrink:0; }
+.frontera .frl { font-size:11px; color:var(--color-neutral-600); -webkit-flex:1; flex:1;
+  border-top:1px solid var(--color-divider); padding-left:8px; line-height:1; }
+.frontera .pill.libro { font-size:10px; }
+
+/* La hipotesis vive pegada al ESPERADO y no en el cuerpo del texto: el
+   supuesto y la prediccion que lo falsea son la misma frase partida en dos,
+   y el mes que viene el reveal se lee contra ese numero. */
+.ini .inihip { display:-webkit-flex; display:flex; -webkit-align-items:baseline; align-items:baseline;
+  gap:8px; margin-bottom:10px; }
+.ini .inihip .ml { -webkit-flex-shrink:0; flex-shrink:0; }
+.ini .inihip .ihp { -webkit-flex:1; flex:1; font-size:12.5px; line-height:1.5;
+  color:var(--color-neutral-400); }
+.ini .inihip .ihp b { color:var(--color-neutral-200); font-weight:500; }
+/* El tercer nivel de la cadena. Encendido cuando la iniciativa llega hasta el
+   mandato; apagado cuando se queda en el outcome, que es la mitad del punto. */
+.ini .inihip .ihimp { font-style:normal; color:var(--color-neutral-600); }
+.ini .inihip .ihimp.on { color:var(--color-accent-300); }
+/* el aviso de techo es una mala noticia sobre una prediccion, no un error:
+   se marca como el resto de lo que resta en el juego, sin gritar */
+.ini .inihip .ihtope { display:block; margin-top:3px; font-style:normal;
+  font-size:11.5px; color:#e8a33d; }
+
 .ini { padding:16px 18px; margin-bottom:12px; border-radius:var(--radius-md);
   background:var(--color-surface); box-shadow:var(--shadow-sm); cursor:pointer; }
 .ini.aporta { box-shadow:0 0 0 1px var(--color-accent-700); }

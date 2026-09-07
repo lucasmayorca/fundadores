@@ -1028,10 +1028,22 @@ var LIBROS = [
        'pregunta no es qué feature falta, es en qué capa se rompió la cadena. Puede ser que el '+
        'segmento esté mal elegido, que la necesidad ya estuviera bien atendida por otro, o que la '+
        'propuesta prometa algo que las features no entregan. Arreglar la capa equivocada es lo que '+
-       'hace que los equipos trabajen un año sin mover nada.',
+       'hace que los equipos trabajen un año sin mover nada. La otra mitad del libro es el corte '+
+       'que atraviesa esa pirámide: las dos capas de abajo son PROBLEM SPACE — quién sufre y qué '+
+       'necesita, dicho sin nombrar nada de lo que vas a construir — y las de arriba son SOLUTION '+
+       'SPACE. Olsen insiste en que la mayoría de las discusiones de producto empiezan ya del lado '+
+       'de la solución, con alguien defendiendo una feature, y que ahí el problema nunca se llega a '+
+       'escribir: se deduce de la solución que alguien ya quería. La disciplina concreta es poder '+
+       'enunciar el problema completo — observación, a quién le pasa, qué hace hoy en su lugar — '+
+       'sin que aparezca una sola palabra de lo que se va a construir. Si no podés, todavía no '+
+       'tenés un problema: tenés una solución buscando justificación.',
   juego:'El fit se calcula por segmento: la misma cobertura da fit alto con los innovadores y bajo '+
         'con los pragmáticos, porque cada segmento pesa las necesidades distinto. Perseguir "el '+
-        'fit" en general no significa nada — el motor solo conoce fit con alguien.',
+        'fit" en general no significa nada — el motor solo conoce fit con alguien. El corte entre '+
+        'los dos espacios es literal en la pantalla del mes: arriba de la línea van la observación, '+
+        'el problema y la historia del que lo sufre, y ninguno de esos textos puede nombrar una '+
+        'iniciativa; abajo van las que compiten por resolverlo. El arnés del repo falla si un texto '+
+        'de arriba nombra una de abajo.',
   cuando:function(e,c){ return Motor.fit(e, 'visio') > 0.6; } },
 
 { id:'thinkingbets', pilar:'producto', titulo:'Thinking in Bets', autor:'Annie Duke',
@@ -3361,6 +3373,223 @@ var APLICAR = {
   }
 };
 
+/* ================================================================
+   PIEZAS DE CONCEPTO
+
+   El cambio de criterio: muchas menos citas, cada una mucho más profunda.
+   Hasta acá el juego nombraba ~82 conceptos repartidos en seis superficies,
+   una pastilla por vez. Cantidad máxima, profundidad mínima — y una pastilla
+   que aparece sesenta veces por puesto no la lee nadie.
+
+   Una PIEZA es lo contrario: sale pocas veces por puesto, y cuando sale se
+   toma la pantalla. Tiene cuatro partes y las cuatro son obligatorias:
+
+     situacion  qué está pasando en TU empresa, con tus números. No el
+                concepto en abstracto: el hecho concreto que lo hace urgente
+                hoy y no en otro mes.
+     teoria     qué dice el libro sobre eso. Más largo que un chip, porque
+                acá sí hay espacio: el mecanismo, por qué es contraintuitivo,
+                y qué se rompe cuando se ignora.
+     aplicar    qué hacer con las palancas que tu nivel te deja tocar. Termina
+                en una jugada concreta, no en una moraleja.
+     grafico    el mecanismo dibujado con tus datos (ver Arte.diagrama). `dato`
+                arma el paquete; arte.js no conoce a Motor.
+
+   `cuando` es DELIBERADAMENTE estrecho. Una pieza no se dispara porque una
+   variable cruzó un umbral: se dispara cuando el concepto es lo que decide el
+   puesto. Si dudás, subí el umbral — el costo de no mostrarla es cero y el de
+   mostrarla de más es que el jugador aprenda a saltearla.
+   ================================================================ */
+
+var PIEZAS = [
+{ id:'deuda', libro:'fowler', diag:'deuda',
+  titulo:'Tu equipo trabaja para el pasado',
+
+  /* deuda alta Y ya se cobró un mes entero de trabajo: sin la segunda
+     condición esto saldría el mes 1, cuando todavía no dolió */
+  cuando:function (e) {
+    return e.deuda >= 45 && e.mesPuesto >= 3 &&
+           Motor.capacidadPropia(e) * (e.deuda / 100) * 0.55 >= 8;
+  },
+
+  situacion:function (e) {
+    var eq = e.ing + e.prod;
+    var pct = Math.round((e.deuda / 100) * 55);
+    return 'La deuda de ' + e.empresa + ' está en ' + Math.round(e.deuda) + ', y este mes le cobró ' +
+      pct + '% a todo lo que tu equipo hizo. No a un proyecto: a todo. Con ' + eq +
+      ' personas construyendo, es como si ' + Math.max(1, Math.round(eq * pct / 100)) +
+      ' hubieran trabajado nada más que para sostener lo que ya existía.';
+  },
+
+  teoria:function (e) {
+    return 'Fowler usa la palabra deuda y no la palabra desorden, y la diferencia es todo el ' +
+      'concepto: una deuda paga intereses. El atajo no cuesta una vez — cuesta un porcentaje de ' +
+      'cada cambio que venga después, para siempre, hasta que se pague. Por eso es la única ' +
+      'variable de tu tablero que empeora sola mientras no la mirás, y la única que se paga más ' +
+      'barato hoy que el mes que viene.\n\n' +
+      'La parte contraintuitiva es cómo se paga. La reacción natural es pedir un proyecto de tres ' +
+      'meses llamado "refactor", y Fowler es explícito en que eso es casi siempre la forma más ' +
+      'cara de pagar la misma deuda: la empresa no avanza durante todo el proyecto y al final ' +
+      'tenés el mismo producto con bugs nuevos. Se paga en cuotas chicas y continuas, mientras ' +
+      'trabajás en ese código por otra razón.\n\n' +
+      'Y hay una razón por la que nadie lo hace a tiempo: pagar deuda no se ve. No hay demo, no ' +
+      'hay línea en el reporte, nadie te felicita. Lo único que pasa es que tu capacidad deja de ' +
+      'caerse — y eso es invisible para todos menos para vos.';
+  },
+
+  aplicar:function (e) {
+    var pts = Math.max(1, Math.round(Motor.capacidadPropia(e) * 0.2));
+    if (!e.palancas || e.palancas.indexOf('plat') < 0) {
+      return 'En tu nivel todavía no podés mover plataforma, así que la cuota no la podés pagar ' +
+        'vos. Lo que sí está en tu mano es dejar de pedir prestado: cada iniciativa que entra suma ' +
+        'deuda proporcional a lo que cuesta, y las que salen sin su base suman 8 de golpe. Elegir ' +
+        'menos frentes y respetar el orden es la única palanca que tenés sobre esto hoy.';
+    }
+    return 'Poné ' + pts + ' de tus ' + Motor.capacidadPropia(e) + ' puntos en plataforma este mes, ' +
+      'y otra vez el que viene. Va a parecer que no pasa nada: no vas a ver una entrega, vas a ver ' +
+      'que el mes que viene tenés más puntos que hoy. Eso es el interés dejando de correr. La ' +
+      'alternativa —' + (e.deuda >= 70 ? 'la que ya tenés sobre la mesa con la deuda en ' +
+        Math.round(e.deuda) + ': pedir un trimestre de reescritura' :
+        'esperar a que la deuda esté en 70 y pedir un trimestre de reescritura') +
+      '— cuesta el trimestre entero y te devuelve al mismo lugar.';
+  },
+
+  dato:function (e) {
+    var total = Motor.capacidadPropia(e);
+    var frac = (e.deuda / 100) * 0.55;
+    return { total:total, interes:Math.round(total * frac), fraccion:frac,
+             pie:'La franja rayada no se agranda si contratás: es un porcentaje.' };
+  } },
+
+{ id:'compuerta', libro:'chasm', diag:'compuerta',
+  titulo:'Estás pagando por una puerta cerrada',
+
+  /* la compuerta cerrada sola no alcanza: hace falta que YA estés gastando en
+     alcance hacia el mercado que no te puede comprar */
+  cuando:function (e) {
+    return Motor.compuerta(e, 'pragm') < 0.6 && e.mesPuesto >= 3 &&
+           (e.gastoPropio && e.gastoPropio.crec >= 3);
+  },
+
+  situacion:function (e) {
+    var g = Motor.compuerta(e, 'pragm');
+    var r = Motor.requisitosGate(e), ok = 0, i;
+    for (i = 0; i < r.length; i++) if (r[i].ok) ok++;
+    return 'Este mes pusiste ' + Math.round(e.gastoPropio.crec) + ' puntos en crecimiento, y la ' +
+      'mayoría temprana convierte al ' + Math.round(g * 100) + '% de lo normal: de cada 100 usuarios ' +
+      'que pagaste por traer de ese segmento, entraron ' + Math.round(g * 100) + '. Cumplís ' + ok +
+      ' de ' + r.length + ' requisitos de "' + e.gateNombre + '".';
+  },
+
+  teoria:function (e) {
+    return 'Moore encontró que el mercado no es una pendiente: es dos mercados con un abismo en ' +
+      'el medio. Los visionarios te compran por una promesa y te perdonan todo. Los pragmáticos ' +
+      'compran algo que ya le funciona a alguien parecido a ellos, y no te perdonan nada.\n\n' +
+      'Lo que hace difícil el cruce es quién escribe la lista. No la escribís vos: la escribe el ' +
+      'comprador pragmático, y es larga, aburrida y no negociable — integraciones, soporte, ' +
+      'seguridad, referencias de gente como él. Moore lo llama el producto completo, y la palabra ' +
+      'importa: no es el mejor producto, es el que no le deja ningún riesgo abierto.\n\n' +
+      'El error clásico —y es exactamente el que estás cometiendo este mes— es leer el amor de los ' +
+      'early adopters como señal de que el mercado grande está a un lanzamiento de distancia, y ' +
+      'abrir la canilla del presupuesto. El abismo no se cruza con más marketing. Primero se ' +
+      'completa la lista; después se abre la canilla.';
+  },
+
+  aplicar:function (e) {
+    var r = Motor.requisitosGate(e), falta = null, i;
+    for (i = 0; i < r.length; i++) if (!r[i].ok) { falta = r[i].txt; break; }
+    return 'Sacá los puntos de crecimiento hasta que la compuerta abra: hoy se fugan en esa misma ' +
+      'proporción y no hay mensaje que lo compense. ' +
+      (falta ? 'El requisito que más te traba es "' + falta + '" — las iniciativas que cubren esa ' +
+        'necesidad son las que mueven la compuerta, y el backlog te dice cuál es cada una. ' : '') +
+      'Es la inversión más aburrida del puesto y la única que multiplica todo lo que venga después.';
+  },
+
+  dato:function (e) {
+    var g = Motor.compuerta(e, 'pragm');
+    return { titulo:'"' + e.gateNombre.toUpperCase() + '"',
+             reqs:Motor.requisitosGate(e), pasa:g, entran:Math.round(g * 100),
+             pie:'Falta uno solo y el caudal es un hilo: la compuerta no es gradual.' };
+  } },
+
+{ id:'estimacion', libro:'momtest', diag:'estimacion',
+  titulo:'Tus números vienen inflados de fábrica',
+
+  /* hace falta un historial: sin entregas cerradas no hay nada que mostrar */
+  cuando:function (e) {
+    /* 0.7 es el valor de arranque, y arrancar preguntando por opiniones es
+       justamente el caso: con `< 0.7` la pieza no disparaba nunca */
+    return e.calidadDesc <= 0.7 && (e.historialImpacto || []).length >= 3 && e.mesPuesto >= 4;
+  },
+
+  situacion:function (e) {
+    var h = e.historialImpacto || [], bajo = 0, i;
+    for (i = 0; i < h.length; i++) if (h[i].real < h[i].esperado * 0.85) bajo++;
+    return bajo + ' de tus últimas ' + h.length + ' entregas rindieron menos de lo que el backlog ' +
+      'te había prometido. No es mala suerte y no es el equipo: tu calidad de discovery está en ' +
+      Math.round(e.calidadDesc * 100) + '%, y eso tiene una consecuencia con dirección.';
+  },
+
+  teoria:function (e) {
+    return 'La tesis de Fitzpatrick no es que la gente miente. Es que la gente es amable, y la ' +
+      'amabilidad tiene una dirección: nadie quiere ser el que te dice que tu bebé es feo. Si ' +
+      'preguntás si tu idea le gusta, la respuesta va a ser mejor que la verdad — siempre para el ' +
+      'mismo lado.\n\n' +
+      'Por eso el problema de las malas entrevistas no es que te dejen sin información. Es peor: ' +
+      'te dejan con información equivocada y la confianza intacta. Un equipo que entrevistó mal ' +
+      'no duda — decide rápido, con números que apuntan todos en la dirección que le gusta.\n\n' +
+      'La salida es no preguntar por el futuro ni por opiniones, sino por hechos del pasado: qué ' +
+      'hiciste la última vez que tuviste este problema, cuánto te costó, qué probaste antes, cuánto ' +
+      'pagaste. Los cumplidos son ruido y hay que descartarlos aunque se sientan bien. El único ' +
+      'dato duro es un compromiso concreto — tiempo, plata, una reunión con su jefe.';
+  },
+
+  aplicar:function (e) {
+    if (!e.palancas || e.palancas.indexOf('desc') < 0) {
+      return 'En tu nivel no manejás el discovery, así que el sesgo no lo podés bajar vos. Lo que ' +
+        'podés hacer es descontarlo a mano: si tres de cada cuatro entregas rinden por debajo, ' +
+        'tratá cada estimación como un techo y no como un pronóstico, y elegí apuestas chicas ' +
+        'mientras el número no se te haya ganado la confianza.';
+    }
+    return 'Cambiá la pregunta antes de gastar otro mes. El sesgo no se cierra con más entrevistas ' +
+      '— se cierra con otras entrevistas, y es lo único que lo baja: la evidencia cierra el ruido, ' +
+      'no el sesgo. Y mientras esté ahí, usá tu llamada: si venís poniendo IGUAL y te viene saliendo ' +
+      'MENOS, ese patrón es el sesgo medido en tu propio marcador.';
+  },
+
+  dato:function (e) {
+    var h = e.historialImpacto || [], pts = [], i;
+    for (i = 0; i < h.length && i < 6; i++) {
+      /* 0.5 es "lo real"; a la derecha rindió más de lo prometido */
+      pts.push(0.5 * (h[i].real / Math.max(1, h[i].esperado)));
+    }
+    return { centro:0.5 + (1 - e.calidadDesc) * 0.34,
+             ancho:Math.max(0.12, (100 - e.evidencia) / 100 * 0.7),
+             puntos:pts,
+             pie:'El ancho lo cierra la evidencia. El corrimiento, sólo preguntar distinto.' };
+  } }
+];
+
+function piezaPorId(id) {
+  for (var i = 0; i < PIEZAS.length; i++) if (PIEZAS[i].id === id) return PIEZAS[i];
+  return null;
+}
+
+/* La pieza del mes, si hay alguna que corresponda. Una por mes como máximo y
+   una vez por carrera cada concepto: `c.piezasVistas` es el registro. */
+function piezaDelMes(e, c) {
+  if (!e || !c) return null;
+  if (!c.piezasVistas) c.piezasVistas = {};
+  for (var i = 0; i < PIEZAS.length; i++) {
+    var P = PIEZAS[i];
+    if (c.piezasVistas[P.id]) continue;
+    var ok = false;
+    try { ok = P.cuando(e); } catch (err) { ok = false; }
+    if (ok) return P;
+  }
+  return null;
+}
+
 function aplicarLibro(id, e, c) {
   if (!e || !APLICAR[id]) return null;
   var t = null;
@@ -3533,3 +3762,93 @@ var INTEGRA = {
 };
 
 function integraDe(id) { return INTEGRA[id] || null; }
+
+/* ================================================================
+   EL MÉTODO: qué paso del ciclo enseña cada ficha
+
+   El backlog del mes ya no es una lista plana: cada necesidad del cliente se
+   presenta como observación → problema → hipótesis → iniciativa (ver TEMAS en
+   contenido.js). Esta tabla es la revisión de la biblioteca contra ese ciclo:
+   para cada ficha que enseña uno de los cuatro pasos, cuál es.
+
+   Sirve para dos cosas. Una: el encabezado de cada tema en la pantalla del mes
+   nombra la ficha del paso que está mostrando, así el concepto llega en el
+   momento en que se está usando y no en un panel aparte. Dos: deja ver los
+   huecos — un paso con pocas fichas es un paso que el juego pide y la
+   biblioteca no respalda.
+
+     observacion  cómo se consigue un dato que no miente, y cómo se distingue
+                  del que solo tranquiliza.
+     problema     cómo se convierte ese dato en un problema bien planteado.
+                  Un problema mal planteado se resuelve rápido y no sirve.
+     hipotesis    cómo se escribe una apuesta falsable antes de gastar el mes,
+                  y qué se hace cuando la evidencia dice que estaba mal.
+     iniciativa   cómo se ejecuta sin perder de vista que lo entregado no es
+                  el resultado, y cómo se lee lo que volvió.
+
+   La mayoría de las 108 fichas NO está acá, y es correcto: hablan de
+   capacidad, de postura o de contexto, y eso ya lo declara INTEGRA arriba.
+   Forzarlas al ciclo sería inventar una alineación que no existe. Lo que sí
+   se revisó es que cada paso tenga fichas de verdad: la observación y la
+   hipótesis eran las mejor cubiertas de la biblioteca (era de esperar, es una
+   biblioteca de producto); el paso de PROBLEMA era el más flaco y por eso
+   entran acá Rumelt y Olsen, que estaban clasificados solo por su palanca.
+   El otro hueco era de pilar: los cuatro pasos salían todos de producto y
+   startup, y el tema de escala es de ingeniería. Por eso entran también SRE
+   (el presupuesto de error ES una observación con número) y DDIA (nombra el
+   problema: a la escala nueva se rompió un supuesto viejo). Un libro puede
+   estar acá y en INTEGRA a la vez: son dos ejes distintos — INTEGRA dice
+   dónde vive el concepto en el motor, METODO dice qué paso del ciclo enseña. */
+var METODO = {
+  /* --- observación: el dato antes de la opinión --- */
+  analytics:   'observacion',   /* métrica accionable vs. de vanidad */
+  momtest:     'observacion',   /* preguntá por el pasado, no por el futuro */
+  torres:      'observacion',   /* cadencia: observar es un hábito, no un proyecto */
+  blank:       'observacion',   /* el dato está afuera del edificio */
+  justenough:  'observacion',   /* cuánta investigación alcanza */
+  seibel:      'observacion',   /* distinguir la señal real del entusiasmo */
+  sre:         'observacion',   /* el presupuesto de error es el dato que decide si podés seguir entregando */
+
+  /* --- problema: plantearlo bien es la mitad del trabajo --- */
+  jtbd:        'problema',      /* para qué te contratan de verdad */
+  rumelt:      'problema',      /* diagnóstico antes que política y acción */
+  storymap:    'problema',      /* el mapa del recorrido, no la lista de features */
+  olsen:       'problema',      /* la pirámide: dónde está el hueco */
+  krug:        'problema',      /* la fricción es el problema, no el usuario */
+  chasm:       'problema',      /* el problema lo escribe el comprador, no vos */
+  ddia:        'problema',      /* la escala rompe supuestos: el problema es cuál se rompió */
+
+  /* --- hipótesis: escrita antes de gastar el mes --- */
+  lean:        'hipotesis',     /* aprendizaje validado: qué te haría cambiar de opinión */
+  leanux:      'hipotesis',     /* el diseño como hipótesis, explícitamente */
+  runninglean: 'hipotesis',     /* del plan A al plan que funciona */
+  sprintk:     'hipotesis',     /* cinco días para saber, en vez de un trimestre */
+  thinkingbets:'hipotesis',     /* decisión ≠ resultado: la apuesta se juzga por cómo se tomó */
+  inspired:    'hipotesis',     /* los cuatro riesgos son cuatro hipótesis distintas */
+  coldstart:   'hipotesis',     /* la red atómica es una hipótesis con umbral */
+
+  /* --- iniciativa: ejecutar y leer lo que volvió --- */
+  outcomes:    'iniciativa',    /* resultado ≠ entregable */
+  trap:        'iniciativa',    /* la trampa de medir por entregas */
+  shapeup:     'iniciativa',    /* apetito fijo: cuánto vale la pena apostar */
+  okrdoerr:    'iniciativa',    /* comprometer el resultado, no la tarea */
+  workingback: 'iniciativa',    /* escribí el final antes de empezar */
+  yclaunch:    'iniciativa',    /* entregar es parte de medir */
+  accelerate:  'iniciativa'     /* entregar seguido es lo que hace posible el ciclo */
+};
+
+/* Los cuatro pasos, en orden, con el nombre que usa la pantalla del mes. */
+var METODO_PASOS = [
+  { id:'observacion', n:'Observación', d:'Lo que dicen tus números hoy.' },
+  { id:'problema',    n:'Problema',    d:'Lo que ese número te está planteando.' },
+  { id:'hipotesis',   n:'Hipótesis',   d:'Lo que tendría que ser cierto para que esto pague.' },
+  { id:'iniciativa',  n:'Iniciativa',  d:'La apuesta que lo pone a prueba este mes.' }
+];
+
+function metodoDe(id) { return METODO[id] || null; }
+function librosDelPaso(paso) {
+  var r = [], k;
+  for (k in METODO) if (METODO.hasOwnProperty(k) && METODO[k] === paso) r.push(k);
+  return r;
+}
+
