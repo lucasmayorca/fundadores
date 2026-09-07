@@ -1464,7 +1464,7 @@
     act: {
       n:'Activación', ab:'ACT', ic:'activation', est:'desc',
       submetricas: [
-        { id:'time_value', n:'Time-to-value (d1)', fmt:'num' },
+        { id:'time_value', n:'Time-to-value (d1)', fmt:'num', u:' días' },
         { id:'feature_adopt', n:'Core feature adoption', fmt:'pct' },
         { id:'onboard', n:'Onboarding completion', fmt:'pct' },
         { id:'task_success', n:'Task success rate', fmt:'pct' }
@@ -1485,7 +1485,7 @@
         { id:'uptime', n:'Uptime %', fmt:'pct' },
         { id:'error_rate', n:'Error rate por request', fmt:'pct', inv:true },
         { id:'mttr', n:'MTTR (minutos)', fmt:'num', inv:true },
-        { id:'latency_p95', n:'API latency p95', fmt:'num', inv:true }
+        { id:'latency_p95', n:'API latency p95', fmt:'num', inv:true, u:' ms' }
       ]
     },
     rev: {
@@ -1695,6 +1695,161 @@
     return n;
   }
 
+  /* ---- El método: observación → problema → hipótesis → iniciativa ----
+
+     Ocho tarjetas sueltas se eligen por costo o por título. Con el tema
+     arriba, se eligen contra un problema: las iniciativas de una misma
+     necesidad son hipótesis en competencia para lo mismo, y eso es lo que
+     las conecta entre sí. La observación NO es copy — sale de `J.submetricas`,
+     los mismos números del panel de la derecha. El problema tampoco: TEMAS
+     evalúa sus cortes contra esos números y gana el primero que da verdadero
+     (ver TEMAS en contenido.js). */
+
+  /* El valor de hoy de una submétrica, ya formateado con su unidad. */
+  function valorSub(key) {
+    if (!J || !J.submetricas || J.submetricas[key] === undefined) return null;
+    var def = defSubmetrica(key), v = J.submetricas[key];
+    var r = Math.round(v * 10) / 10;
+    return { def:def, v:v, r:r, txt:fmtSub(def, v) };
+  }
+
+  /* Un valor de submétrica con su unidad. Sin esto la observación dice
+     "Time-to-value 3.5" y el jugador no sabe si son días, semanas o puntos. */
+  function fmtSub(def, v) {
+    var r = Math.round(v * 10) / 10;
+    if (def.fmt === 'pct') return r + '%';
+    if (def.fmt === 'ratio') return r.toFixed(1) + '×';
+    if (def.fmt === 'pts') return Math.round(v) + ' pts';
+    return r + (def.u || '');
+  }
+
+  /* El marco del tema, resuelto contra los números de ESTA partida. */
+  function marcoTema(necId) {
+    var t = (typeof TEMAS !== 'undefined') && TEMAS[necId];
+    if (!t) return null;
+    var obs = [], i, s;
+    for (i = 0; i < t.obs.length; i++) {
+      s = valorSub(t.obs[i]);
+      if (s) obs.push({ n:s.def.n, txt:s.txt });
+    }
+    /* Si ningún corte pega, la necesidad está cubierta: va el texto sano y NO
+       va historia. Una escena de alguien sufriendo debajo de "esto funciona"
+       es la contradicción que hace que nadie lea ninguna de las dos. */
+    var problema = t.sano, disparo = null, historia = null;
+    for (i = 0; i < t.problemas.length; i++) {
+      var p = t.problemas[i];
+      s = valorSub(p.k);
+      if (!s) continue;
+      var pega = (p.bajo !== undefined && s.v < p.bajo) || (p.alto !== undefined && s.v > p.alto);
+      if (!pega) continue;
+      problema = p.t.replace('{v}', s.txt).replace('{c}', Math.max(0, Math.round(100 - s.v)));
+      disparo = p.k;
+      historia = p.h || null;
+      break;
+    }
+    return { obs:obs, claves:t.obs, problema:problema, historia:historia, disparo:disparo, libros:t.libros };
+  }
+
+  /* La hipótesis de una iniciativa, con la predicción pegada: el supuesto que
+     tiene que ser cierto, y a cuánto llevaría la submétrica que más mueve si
+     lo fuera. El número no es decorativo — es contra ese que se lee el reveal
+     del mes que viene. */
+  function lineaHipotesis(a, subs, marco, aporte) {
+    if (!a || !a.h) return '';
+    /* Contra qué métrica se falsea. El orden importa: primero la que disparó
+       el problema del tema, después las que el tema observa, y sólo si la
+       iniciativa no toca ninguna, la de mayor movimiento. Así la hipótesis
+       contesta el problema que está escrito arriba y no otro — que es toda la
+       diferencia entre una cadena y cuatro rótulos apilados. */
+    var pref = [], k, s;
+    if (marco) {
+      if (marco.disparo) pref.push(marco.disparo);
+      for (k = 0; k < (marco.claves || []).length; k++) pref.push(marco.claves[k]);
+    }
+    var mejor = null, i2;
+    for (i2 = 0; i2 < pref.length && !mejor; i2++) {
+      k = pref[i2];
+      if (!subs || !subs[k]) continue;
+      s = valorSub(k);
+      if (s && (s.def.inv ? subs[k] < 0 : subs[k] > 0)) mejor = { k:k, s:s };
+    }
+    if (!mejor) {
+      for (k in subs || {}) {
+        if (!subs.hasOwnProperty(k) || !subs[k]) continue;
+        s = valorSub(k);
+        if (!s) continue;
+        if (!(s.def.inv ? subs[k] < 0 : subs[k] > 0)) continue;
+        if (!mejor || Math.abs(subs[k]) > Math.abs(subs[mejor.k])) mejor = { k:k, s:s };
+      }
+    }
+    var pred = '', mueve = true;
+    if (mejor) {
+      var lim = Motor.limiteSub ? Motor.limiteSub(mejor.k) : null;
+      var crudo = mejor.s.v + subs[mejor.k], fin = crudo;
+      if (lim) fin = Math.max(lim.min === undefined ? fin : lim.min,
+                              Math.min(lim.max === undefined ? fin : lim.max, fin));
+      var t2 = fmtSub(mejor.s.def, fin);
+      /* Si la métrica ya está contra su tope, el impacto que promete la
+         iniciativa no tiene dónde entrar. Decirlo es la parte cara del
+         método: el número grande del chip existe, y aun así acá no paga. */
+      var margen = Math.abs(fin - mejor.s.v), nominal = Math.abs(crudo - mejor.s.v);
+      var recortado = margen < nominal * 0.5;
+      mueve = margen > nominal * 0.02;
+      pred = ' <b>' + esc(mejor.s.def.n) + '</b> pasa de ' + esc(mejor.s.txt) + ' a ' + esc(t2) + '.' +
+             (recortado ? '<i class="ihtope">' + (mueve ?
+                'Ya casi en su techo: casi todo ese impacto no tiene dónde entrar.' :
+                'Ya está en su techo: ese impacto no tiene dónde entrar.') + '</i>' : '');
+    }
+    /* El tercer nivel. La hipótesis no termina en la métrica: termina en el
+       mandato, que es el impact de este puesto. Una solución que mueve su
+       outcome y no llega hasta acá es una solución sin problema arriba — y el
+       jugador tiene que poder verlo en la misma frase, no deducirlo del
+       sello. Output (esta iniciativa) → outcome (la submétrica) → impact
+       (el mandato): las tres, o la cadena no cierra. */
+    var impacto = !mueve ? ' El outcome no se mueve: la cadena se corta acá.' :
+                  aporte > 0 ? ' Y con eso, tu mandato.' : ' Tu mandato no se entera.';
+    return '<div class="inihip"><span class="ml">Hipótesis</span>' +
+      '<span class="ihp">Si ' + esc(a.h) + ',' + (pred || ' esto paga.') +
+      '<i class="ihimp' + (mueve && aporte > 0 ? ' on' : '') + '">' + impacto + '</i></span></div>';
+  }
+
+  /* El encabezado de un tema: lo que dicen tus números, el problema que
+     plantean, y la ficha de la biblioteca que enseña ese paso. */
+  function cabeceraTema(m, nec, necId, cuantas, primera) {
+    if (!m) return '';
+    var h = '<div class="tema">' +
+      '<div class="temah"><span class="temak">' + esc(nec ? nec.nombre : necId) + '</span>' +
+      '<span class="temac">problem space</span></div>';
+    if (m.obs.length) {
+      h += '<div class="temap"><span class="ml">Observación</span><span class="tept">';
+      for (var i = 0; i < m.obs.length; i++) {
+        h += (i ? '<i class="tesep">·</i>' : '') + esc(m.obs[i].n) + ' <b>' + esc(m.obs[i].txt) + '</b>';
+      }
+      h += '</span>' + chip(m.libros.obs) + '</div>';
+    }
+    h += '<div class="temap"><span class="ml">Problema</span>' +
+      '<span class="tept tepr">' + esc(m.problema) + '</span>' + chip(m.libros.prob) + '</div>';
+    /* El problema con nombre y cara. Va sin solución adentro: es la mitad de
+       la frontera entre problem space y solution space. */
+    if (m.historia) {
+      h += '<div class="temap"><span class="ml">Historia</span>' +
+        '<span class="tept tehi">' + esc(m.historia) + '</span></div>';
+    }
+    h += '</div>';
+    /* La otra mitad de la frontera, dicha en voz alta. Hasta acá se describió
+       lo que pasa; de acá para abajo empieza lo que se podría construir, y son
+       varias en competencia, no una. Cruzar esta línea antes de tiempo es el
+       error que nombra Olsen, y por eso la chapa está justo acá y no en un
+       panel de teoría. */
+    h += '<div class="frontera"><span class="fro">' + cuantas +
+      (cuantas === 1 ? ' posible solución' : ' posibles soluciones') + '</span>' +
+      '<span class="frl">ninguna probada todavía</span>' +
+      /* la ficha va una sola vez por pantalla: la frontera es un concepto, no
+         una etiqueta de sección. Repetida en los cinco grupos deja de leerse. */
+      (primera ? chip('olsen') : '') + '</div>';
+    return h;
+  }
+
   function renderBacklog() {
     var usados = slotsUsados(), i2, cajas = '';
     for (i2 = 0; i2 < J.slots; i2++) cajas += '<span class="slot' + (i2 < usados ? ' lleno' : '') + '"></span>';
@@ -1825,58 +1980,88 @@
       h += '<div class="avisoeje">Nada de acá mueve tu mandato. Lo mueve: ' + COMO_MOVER[J.mandatoId] + '.</div>';
     }
 
+    /* Agrupadas por necesidad, no en una lista plana: cada grupo abre con la
+       observación y el problema, y las tarjetas de abajo son las hipótesis en
+       competencia para ESE problema. El orden de los grupos es el de aparición
+       en el backlog, así lo del sector sigue entrando primero. */
+    var grupos = [], porNec = {};
     for (i = 0; i < J.backlog.length; i++) {
-      id = J.backlog[i]; a = Motor.apuesta(id);
+      id = J.backlog[i];
       if (plan.orden.indexOf(id) >= 0) continue;
       if (soloMandato && mueven.length && mueven.indexOf(id) < 0) continue;
-      d = Motor.estimacionDetalle(J, id);
-      var cabe = slotsUsados() < J.slots && sinUsar() > 0;
-      var nec = null, k2;
-      for (k2 = 0; k2 < NECESIDADES.length; k2++) if (NECESIDADES[k2].id === a.nec) nec = NECESIDADES[k2];
-      var alineada = J.prima.indexOf(a.nec) >= 0;
-      var aporte = aporteMandato(d.vec, alineada);
-      var esNueva = J.backlogNuevo && J.backlogNuevo[id] === J.mesPuesto;
-      /* La iniciativa es la protagonista de la pantalla, así que se le da
-         tamaño: título grande, la descripción entera, y una fila de decisión
-         separada por una regla donde los chips que alimentan el mandato van
-         encendidos. El sello final dice, sin rodeos, si mueve la aguja. */
-      h += '<div class="ini' + (cabe ? '' : ' nocabe') + (aporte > 0 ? ' aporta' : '') + '" data-ap="' + id + '">' +
-        '<div class="inih"><span class="inin">' + esc(a.n) + '</span>' +
-          (esNueva ? '<span class="pill nueva">nuevo</span>' : '') +
-          (nec ? '<span class="pill">' + esc(nec.corto) + (alineada ? ' ▲' : '') + '</span>' : '') + '</div>' +
-        '<div class="inid">' + esc(a.d) +
-          (a.d2 ? '<span class="inid2">' + esc(a.d2) + '</span>' : '') + '</div>' +
-        /* Lo que va antes. No bloquea la tarjeta — bloquear sería quitarte la
-           decisión. Avisa, y los números de acá abajo ya vienen partidos a la
-           mitad, así que el costo de saltearlo se lee donde el jugador ya está
-           mirando. */
-        (d.dep ? '<div class="inidep">Va después de <b>' + esc(d.dep.n) + '</b>' +
-                 '<span>sin esa base rinde el ' + Math.round(Motor.factorSinBase() * 100) +
-                 '% y deja 8 de deuda — los números de abajo ya lo cuentan</span></div>' : '') +
-        '<div class="inim">' +
-          '<span class="ml tipped" data-tip="prob">Prob</span>' + dots(d.prob) +
-          '<span class="ml">Esfuerzo</span><span class="tipped" data-tip="esf"><span class="esf e' + d.esf + '">' + d.esf + '</span></span>' +
-          '<span class="mut">' + d.tiempo + ' · ' + d.costo + ' pts</span>' +
-        '</div>' +
-        '<div class="inie">' +
-          '<span class="ml tipped" data-tip="vec">Esperado</span>' +
-          chipsEsperado(d.vec, d.subs, ejesAqui) +
-          '<span class="sello' + (aporte > 0 ? ' on' : '') + '">' +
-            (aporte > 0 ? '↑ mandato' : 'no mueve el mandato') + '</span>' +
-        '</div>' +
-        /* Integración intrínseca, clase `postura`: qué decisión estratégica es
-           elegir ESTA iniciativa, con el nombre del concepto, mientras la
-           estás mirando. No es un adorno al pie: es la única línea de la
-           tarjeta que dice por qué esta apuesta y no otra — el resto son
-           números. La ficha se abre tocándola. */
-        (function () {
-          var po = Motor.posturaDe(J, id);
-          if (!po) return '';
-          return '<div class="inipos">' + svgIc('book') +
-            '<span class="ipt">' + esc(po.txt) + '</span>' +
-            (po.libro ? chip(po.libro) : '') + '</div>';
-        })() +
-        '</div>';
+      var nid = Motor.apuesta(id).nec;
+      if (!porNec[nid]) { porNec[nid] = []; grupos.push(nid); }
+      porNec[nid].push(id);
+    }
+    var gi, gk, lista;
+    for (gi = 0; gi < grupos.length; gi++) {
+      gk = grupos[gi]; lista = porNec[gk];
+      var necG = null;
+      for (i = 0; i < NECESIDADES.length; i++) if (NECESIDADES[i].id === gk) necG = NECESIDADES[i];
+      var marcoG = marcoTema(gk);
+      h += cabeceraTema(marcoG, necG, gk, lista.length, gi === 0);
+      for (i = 0; i < lista.length; i++) {
+        id = lista[i]; a = Motor.apuesta(id);
+        d = Motor.estimacionDetalle(J, id);
+        var cabe = slotsUsados() < J.slots && sinUsar() > 0;
+        var nec = null, k2;
+        for (k2 = 0; k2 < NECESIDADES.length; k2++) if (NECESIDADES[k2].id === a.nec) nec = NECESIDADES[k2];
+        var alineada = J.prima.indexOf(a.nec) >= 0;
+        var aporte = aporteMandato(d.vec, alineada);
+        var esNueva = J.backlogNuevo && J.backlogNuevo[id] === J.mesPuesto;
+        /* La iniciativa es la protagonista de la pantalla, así que se le da
+           tamaño: título grande, la descripción entera, y una fila de decisión
+           separada por una regla donde los chips que alimentan el mandato van
+           encendidos. El sello final dice, sin rodeos, si mueve la aguja. */
+        h += '<div class="ini' + (cabe ? '' : ' nocabe') + (aporte > 0 ? ' aporta' : '') + '" data-ap="' + id + '">' +
+          '<div class="inih"><span class="inin">' + esc(a.n) + '</span>' +
+            (esNueva ? '<span class="pill nueva">nuevo</span>' : '') +
+            /* la necesidad ya la dice la cabecera del grupo; acá solo queda el
+               triángulo de "esta necesidad paga doble en tu etapa" */
+            (nec && alineada ? '<span class="pill">' + esc(nec.corto) + ' ▲</span>' : '') + '</div>' +
+          '<div class="inid">' + esc(a.d) +
+            (a.d2 ? '<span class="inid2">' + esc(a.d2) + '</span>' : '') + '</div>' +
+          /* Lo que va antes. No bloquea la tarjeta — bloquear sería quitarte la
+             decisión. Avisa, y los números de acá abajo ya vienen partidos a la
+             mitad, así que el costo de saltearlo se lee donde el jugador ya está
+             mirando. */
+          (d.dep ? '<div class="inidep">Va después de <b>' + esc(d.dep.n) + '</b>' +
+                   '<span>sin esa base rinde el ' + Math.round(Motor.factorSinBase() * 100) +
+                   '% y deja 8 de deuda — los números de abajo ya lo cuentan</span></div>' : '') +
+          '<div class="inim">' +
+            '<span class="ml tipped" data-tip="prob">Prob</span>' + dots(d.prob) +
+            '<span class="ml">Esfuerzo</span><span class="tipped" data-tip="esf"><span class="esf e' + d.esf + '">' + d.esf + '</span></span>' +
+            '<span class="mut">' + d.tiempo + ' · ' + d.costo + ' pts</span>' +
+          '</div>' +
+          lineaHipotesis(a, d.subs, marcoG, aporte) +
+          '<div class="inie">' +
+            '<span class="ml tipped" data-tip="vec">Esperado</span>' +
+            chipsEsperado(d.vec, d.subs, ejesAqui) +
+            '<span class="sello' + (aporte > 0 ? ' on' : '') + '">' +
+              (aporte > 0 ? '↑ mandato' : 'no mueve el mandato') + '</span>' +
+          '</div>' +
+          /* Integración intrínseca, clase `postura`: qué decisión estratégica es
+             elegir ESTA iniciativa, con el nombre del concepto, mientras la
+             estás mirando. No es un adorno al pie: es la única línea de la
+             tarjeta que dice por qué esta apuesta y no otra — el resto son
+             números. La ficha se abre tocándola. */
+          (function () {
+            var po = Motor.posturaDe(J, id);
+            if (!po) return '';
+            /* si la ficha de la postura es la misma que ya nombró el
+               encabezado del tema, va sin chapa: el mismo título dos veces a
+               diez píxeles de distancia deja de leerse como una referencia y
+               pasa a ser ruido. El texto de la postura sí queda, que es lo
+               que dice por qué ESTA y no otra. */
+            var yaEsta = po.libro && marcoG && marcoG.libros &&
+              (po.libro === marcoG.libros.obs || po.libro === marcoG.libros.prob ||
+               po.libro === marcoG.libros.hip);
+            return '<div class="inipos">' + svgIc('book') +
+              '<span class="ipt">' + esc(po.txt) + '</span>' +
+              (po.libro && !yaEsta ? chip(po.libro) : '') + '</div>';
+          })() +
+          '</div>';
+      }
     }
     $('backlog').innerHTML = h;
   }

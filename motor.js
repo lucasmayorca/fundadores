@@ -437,6 +437,17 @@ var Motor = (function () {
       e.historialImpacto = e.historialImpacto.slice(0, 6);
       var frase = 'Cerraron los datos de "' + pn.n + '": impacto real ' + pn.real +
                   ' (esperabas ' + pn.esperado + ' cuando lo elegiste).';
+      /* Acá se cierra el ciclo que abre el backlog. La tarjeta decía "si <h>,
+         esta métrica llega a tanto"; esto es el veredicto sobre ESE supuesto,
+         no sobre el mes en general. Sin esta línea, la hipótesis se escribía
+         y no se contestaba nunca — que es exactamente el vicio que el método
+         viene a corregir. */
+      if (pn.h) {
+        frase += ' Apostaste a que ' + pn.h + ': ' +
+          (pn.real >= pn.esperado * 0.8 ? 'la evidencia lo sostiene.' :
+           pn.real < pn.esperado * 0.55 ? 'la evidencia no lo sostiene.' :
+           'la evidencia lo sostiene a medias.');
+      }
       /* La llamada del jugador se resuelve acá, y es lo único del juego que
          califica su CRITERIO en vez de su resultado: una buena decisión puede
          salir mal. Por eso la calibración se lleva aparte del mandato. */
@@ -693,7 +704,7 @@ var Motor = (function () {
     var escrita = (typeof APUESTAS_SIGUE !== 'undefined') ? APUESTAS_SIGUE[raiz] : null;
     if (gen === 1 && escrita) {
       hija = { id:escrita.id, nec:escrita.nec, costo:escrita.costo, imp:escrita.imp,
-               n:escrita.n, d:escrita.d, d2:escrita.d2,
+               n:escrita.n, d:escrita.d, d2:escrita.d2, h:escrita.h,
                impactoSubmetricas:escrita.impactoSubmetricas };
     } else {
       /* iteración: la misma necesidad, menos por ganar. El nombre lo dice para
@@ -719,6 +730,10 @@ var Motor = (function () {
                d:'Otra pasada sobre lo que ya salió.',
                d2:'Los bordes que quedaron, los casos raros, lo que nadie priorizó la primera vez. ' +
                   'Rinde menos que la vuelta anterior — y aun así hay meses en que es lo mejor que tenés.',
+               /* la hipótesis de una iteración es la misma de la madre, ya con
+                  una vuelta de evidencia encima: por eso paga menos y por eso
+                  sigue siendo una decisión honesta y no una cinta de correr. */
+               h:'lo que quedó afuera de la vuelta anterior todavía explica parte del problema',
                impactoSubmetricas:subs };
     }
     hija.raiz = raiz;
@@ -1860,7 +1875,7 @@ var Motor = (function () {
         if (a.nec === 'datos') { e.evidencia = clamp(e.evidencia + 4, 0, 100); partes.push('+4 de evidencia'); }
         if (a.nec === 'soporte' || a.nec === 'segur' || a.nec === 'integra') partes.push('tick de compuerta');
         e.pendientes.push({ id:id, n:a.n, real:real, esperado:esperado, vec:vec3,
-                            tramo:1, evidencia:e.evidencia,
+                            tramo:1, evidencia:e.evidencia, h:a.h || null,
                             llamada:(e.llamadas && e.llamadas[id]) || null });
         log.push({ tipo:sinBase ? 'malo' : 'neutro', libro:sinBase ? 'fowler' : 'analytics', dato:'sale',
           sinBase:!!sinBase,
@@ -2331,6 +2346,11 @@ var Motor = (function () {
     }
   }
 
+  /* Los topes de una submétrica. La interfaz predice contra ellos: prometer
+     "onboarding 112%" porque la suma dio eso sería mentir con la misma cuenta
+     que el motor después recorta. */
+  function limiteSub(key) { return SUBMETRICAS_LIMITES[key] || null; }
+
   function submetricasDelEje(e, ejeId) {
     if (!e.submetricas) return {};
     var result = {};
@@ -2369,6 +2389,7 @@ var Motor = (function () {
     asegurarBacklog:function (e) { if (e) rellenarBacklog(e); },
     llamarApuesta:llamarApuesta, calibracion:calibracion, juzgarLlamada:juzgarLlamada,
     libroDeLlamada:libroDeLlamada,
-    setearSubmetricasBase:setearSubmetricasBase, updateSubmetricasMonth:updateSubmetricasMonth, submetricasDelEje:submetricasDelEje
+    setearSubmetricasBase:setearSubmetricasBase, updateSubmetricasMonth:updateSubmetricasMonth, submetricasDelEje:submetricasDelEje,
+    limiteSub:limiteSub
   };
 })();

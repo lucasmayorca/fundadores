@@ -1028,10 +1028,22 @@ var LIBROS = [
        'pregunta no es qué feature falta, es en qué capa se rompió la cadena. Puede ser que el '+
        'segmento esté mal elegido, que la necesidad ya estuviera bien atendida por otro, o que la '+
        'propuesta prometa algo que las features no entregan. Arreglar la capa equivocada es lo que '+
-       'hace que los equipos trabajen un año sin mover nada.',
+       'hace que los equipos trabajen un año sin mover nada. La otra mitad del libro es el corte '+
+       'que atraviesa esa pirámide: las dos capas de abajo son PROBLEM SPACE — quién sufre y qué '+
+       'necesita, dicho sin nombrar nada de lo que vas a construir — y las de arriba son SOLUTION '+
+       'SPACE. Olsen insiste en que la mayoría de las discusiones de producto empiezan ya del lado '+
+       'de la solución, con alguien defendiendo una feature, y que ahí el problema nunca se llega a '+
+       'escribir: se deduce de la solución que alguien ya quería. La disciplina concreta es poder '+
+       'enunciar el problema completo — observación, a quién le pasa, qué hace hoy en su lugar — '+
+       'sin que aparezca una sola palabra de lo que se va a construir. Si no podés, todavía no '+
+       'tenés un problema: tenés una solución buscando justificación.',
   juego:'El fit se calcula por segmento: la misma cobertura da fit alto con los innovadores y bajo '+
         'con los pragmáticos, porque cada segmento pesa las necesidades distinto. Perseguir "el '+
-        'fit" en general no significa nada — el motor solo conoce fit con alguien.',
+        'fit" en general no significa nada — el motor solo conoce fit con alguien. El corte entre '+
+        'los dos espacios es literal en la pantalla del mes: arriba de la línea van la observación, '+
+        'el problema y la historia del que lo sufre, y ninguno de esos textos puede nombrar una '+
+        'iniciativa; abajo van las que compiten por resolverlo. El arnés del repo falla si un texto '+
+        'de arriba nombra una de abajo.',
   cuando:function(e,c){ return Motor.fit(e, 'visio') > 0.6; } },
 
 { id:'thinkingbets', pilar:'producto', titulo:'Thinking in Bets', autor:'Annie Duke',
@@ -3750,3 +3762,93 @@ var INTEGRA = {
 };
 
 function integraDe(id) { return INTEGRA[id] || null; }
+
+/* ================================================================
+   EL MÉTODO: qué paso del ciclo enseña cada ficha
+
+   El backlog del mes ya no es una lista plana: cada necesidad del cliente se
+   presenta como observación → problema → hipótesis → iniciativa (ver TEMAS en
+   contenido.js). Esta tabla es la revisión de la biblioteca contra ese ciclo:
+   para cada ficha que enseña uno de los cuatro pasos, cuál es.
+
+   Sirve para dos cosas. Una: el encabezado de cada tema en la pantalla del mes
+   nombra la ficha del paso que está mostrando, así el concepto llega en el
+   momento en que se está usando y no en un panel aparte. Dos: deja ver los
+   huecos — un paso con pocas fichas es un paso que el juego pide y la
+   biblioteca no respalda.
+
+     observacion  cómo se consigue un dato que no miente, y cómo se distingue
+                  del que solo tranquiliza.
+     problema     cómo se convierte ese dato en un problema bien planteado.
+                  Un problema mal planteado se resuelve rápido y no sirve.
+     hipotesis    cómo se escribe una apuesta falsable antes de gastar el mes,
+                  y qué se hace cuando la evidencia dice que estaba mal.
+     iniciativa   cómo se ejecuta sin perder de vista que lo entregado no es
+                  el resultado, y cómo se lee lo que volvió.
+
+   La mayoría de las 108 fichas NO está acá, y es correcto: hablan de
+   capacidad, de postura o de contexto, y eso ya lo declara INTEGRA arriba.
+   Forzarlas al ciclo sería inventar una alineación que no existe. Lo que sí
+   se revisó es que cada paso tenga fichas de verdad: la observación y la
+   hipótesis eran las mejor cubiertas de la biblioteca (era de esperar, es una
+   biblioteca de producto); el paso de PROBLEMA era el más flaco y por eso
+   entran acá Rumelt y Olsen, que estaban clasificados solo por su palanca.
+   El otro hueco era de pilar: los cuatro pasos salían todos de producto y
+   startup, y el tema de escala es de ingeniería. Por eso entran también SRE
+   (el presupuesto de error ES una observación con número) y DDIA (nombra el
+   problema: a la escala nueva se rompió un supuesto viejo). Un libro puede
+   estar acá y en INTEGRA a la vez: son dos ejes distintos — INTEGRA dice
+   dónde vive el concepto en el motor, METODO dice qué paso del ciclo enseña. */
+var METODO = {
+  /* --- observación: el dato antes de la opinión --- */
+  analytics:   'observacion',   /* métrica accionable vs. de vanidad */
+  momtest:     'observacion',   /* preguntá por el pasado, no por el futuro */
+  torres:      'observacion',   /* cadencia: observar es un hábito, no un proyecto */
+  blank:       'observacion',   /* el dato está afuera del edificio */
+  justenough:  'observacion',   /* cuánta investigación alcanza */
+  seibel:      'observacion',   /* distinguir la señal real del entusiasmo */
+  sre:         'observacion',   /* el presupuesto de error es el dato que decide si podés seguir entregando */
+
+  /* --- problema: plantearlo bien es la mitad del trabajo --- */
+  jtbd:        'problema',      /* para qué te contratan de verdad */
+  rumelt:      'problema',      /* diagnóstico antes que política y acción */
+  storymap:    'problema',      /* el mapa del recorrido, no la lista de features */
+  olsen:       'problema',      /* la pirámide: dónde está el hueco */
+  krug:        'problema',      /* la fricción es el problema, no el usuario */
+  chasm:       'problema',      /* el problema lo escribe el comprador, no vos */
+  ddia:        'problema',      /* la escala rompe supuestos: el problema es cuál se rompió */
+
+  /* --- hipótesis: escrita antes de gastar el mes --- */
+  lean:        'hipotesis',     /* aprendizaje validado: qué te haría cambiar de opinión */
+  leanux:      'hipotesis',     /* el diseño como hipótesis, explícitamente */
+  runninglean: 'hipotesis',     /* del plan A al plan que funciona */
+  sprintk:     'hipotesis',     /* cinco días para saber, en vez de un trimestre */
+  thinkingbets:'hipotesis',     /* decisión ≠ resultado: la apuesta se juzga por cómo se tomó */
+  inspired:    'hipotesis',     /* los cuatro riesgos son cuatro hipótesis distintas */
+  coldstart:   'hipotesis',     /* la red atómica es una hipótesis con umbral */
+
+  /* --- iniciativa: ejecutar y leer lo que volvió --- */
+  outcomes:    'iniciativa',    /* resultado ≠ entregable */
+  trap:        'iniciativa',    /* la trampa de medir por entregas */
+  shapeup:     'iniciativa',    /* apetito fijo: cuánto vale la pena apostar */
+  okrdoerr:    'iniciativa',    /* comprometer el resultado, no la tarea */
+  workingback: 'iniciativa',    /* escribí el final antes de empezar */
+  yclaunch:    'iniciativa',    /* entregar es parte de medir */
+  accelerate:  'iniciativa'     /* entregar seguido es lo que hace posible el ciclo */
+};
+
+/* Los cuatro pasos, en orden, con el nombre que usa la pantalla del mes. */
+var METODO_PASOS = [
+  { id:'observacion', n:'Observación', d:'Lo que dicen tus números hoy.' },
+  { id:'problema',    n:'Problema',    d:'Lo que ese número te está planteando.' },
+  { id:'hipotesis',   n:'Hipótesis',   d:'Lo que tendría que ser cierto para que esto pague.' },
+  { id:'iniciativa',  n:'Iniciativa',  d:'La apuesta que lo pone a prueba este mes.' }
+];
+
+function metodoDe(id) { return METODO[id] || null; }
+function librosDelPaso(paso) {
+  var r = [], k;
+  for (k in METODO) if (METODO.hasOwnProperty(k) && METODO[k] === paso) r.push(k);
+  return r;
+}
+
