@@ -275,9 +275,9 @@ var LIBROS = [
        'más seguros" está pidiendo con las mejores intenciones exactamente lo que va a romperlos '+
        'más. Para quien prioriza, invertir en el camino a producción no es un impuesto técnico: es '+
        'la única inversión que paga en velocidad y en estabilidad al mismo tiempo.',
-  juego:'Invertir en plataforma baja la probabilidad de incidentes Y sube tu capacidad mensual: es '+
-        'la palanca compuesta del motor. El despliegue continuo, una vez encendido, mantiene ese '+
-        'bono todos los meses sin volver a pagarlo.' },
+  juego:'Tu empresa despliega en lotes chicos desde el día uno — es cómo se trabaja, no algo que se '+
+        'compra — y por eso arrancás con un 12% de capacidad extra y una probabilidad de incidente '+
+        'un quinto más baja, todos los meses. Aparece con nombre en el desglose de tus puntos.' },
 
 { id:'brooks', pilar:'tech',
   titulo:'The Mythical Man-Month', autor:'Fred Brooks',
@@ -897,7 +897,11 @@ var LIBROS = [
   juego:'El motor califica el mandato — una métrica en movimiento — y no la cantidad de entregas: '+
         'un mes sin lanzamientos que mueve la métrica vale más que cuatro entregas que no la tocan. '+
         'La jugada del mes se elige por impacto real, no por volumen.',
-  cuando:function(e,c){ return e.fabrica === false && e.mesPuesto > 6; } },
+  /* El corte era `fabrica === false`, un modo que ya no existe. El que dice lo
+     mismo con lo que el motor mide de verdad: entregaste varias cosas y el
+     mandato no se movió — que es exactamente el error que el libro nombra. */
+  cuando:function(e,c){ return e.mesPuesto > 6 && e.apuestasCompletadas >= 4 &&
+    Motor.progresoMandato(e) < 0.55; } },
 
 { id:'rumelt', pilar:'producto', titulo:'Good Strategy Bad Strategy', autor:'Richard Rumelt',
   concepto:'El núcleo de la estrategia',
@@ -1532,10 +1536,10 @@ var LIBROS = [
        'objeción habitual — no tenemos tiempo para automatizar — se responde sola, porque el tiempo '+
        'ya se está gastando, repartido en cada jueves a la noche que nadie contabiliza como '+
        'proyecto.',
-  juego:'El despliegue continuo, una vez encendido, baja la probabilidad de incidentes y suma '+
-        'capacidad todos los meses sin volver a pagarlo. Es la única mejora permanente del lado '+
-        'técnico: se compra una vez y rinde hasta el final del puesto.',
-  cuando:function(e,c){ return !!e.cd; } },
+  juego:'El camino a producción no es una decisión del mes: la empresa entrega en lotes chicos y eso '+
+        'ya está descontado en tu capacidad y en tu riesgo de incidente. Lo que sí decidís es cuánta '+
+        'deuda le dejás encima, que es lo que se lo come.',
+  cuando:function(e,c){ return (e.incidentesPuesto || 0) >= 1 || e.deuda > 45; } },
 
 { id:'releaseit', pilar:'tech', titulo:'Release It!', autor:'Michael Nygard',
   concepto:'Diseña para el viernes a las 5',
@@ -2124,15 +2128,13 @@ var APLICAR = {
   /* ---------------- TECNOLOGÍA ---------------- */
 
   accelerate: function (e) {
-    return e.cd ? 'Tenés despliegue continuo encendido en ' + e.empresa + ': lotes chicos, menos ' +
-      'probabilidad de incidente y capacidad extra todos los meses, sin volver a pagarlo. La paradoja del ' +
-      'libro, confirmada en tus números — sos más rápido Y más estable, porque son la misma cosa.' :
-      'Todavía desplegás por evento, con arquitectura en ' + _n(e.arquitectura) + ' y ' +
-      (e.incidentesPuesto || 0) + ' incidente(s) en el puesto. Los datos del libro son incómodos acá: tu lote ' +
-      'grande no te está protegiendo, es la causa del riesgo. ' + (_tiene(e, 'plat') ?
-      'Tenés la palanca de plataforma: es la única inversión que te paga en velocidad y en estabilidad al ' +
-      'mismo tiempo.' : 'En tu nivel todavía no podés mover plataforma — es lo primero que se abre al subir, y ' +
-      'vale gastar capital político para pedirlo.');
+    return 'En ' + e.empresa + ' se despliega en lotes chicos: eso te está dando capacidad extra y una '
+      + 'probabilidad de incidente más baja todos los meses, y aparece con nombre en el desglose de tus '
+      + 'puntos. La paradoja del libro, confirmada en tus números — sos más rápido Y más estable, porque '
+      + 'son la misma cosa. Lo que el lote chico no te perdona es lo de abajo: con deuda en '
+      + _n(e.deuda) + ' y arquitectura en ' + _n(e.arquitectura) + ', ' + ((e.incidentesPuesto || 0) > 0 ?
+        'los ' + e.incidentesPuesto + ' incidente(s) del puesto no salieron del tamaño del lote — salieron de ahí.' :
+        'el margen que te queda antes del primer incidente sale de ahí, no del camino a producción.');
   },
 
   brooks: function (e) {
@@ -3134,19 +3136,13 @@ var APLICAR = {
   },
 
   contdel: function (e) {
-    if (!e.cd) return 'Todavía desplegás por evento, con ' + (e.incidentesPuesto || 0) + ' incidente(s) en ' +
-      'el puesto y el presupuesto de error en ' + _n(e.presupuestoError) + '. Un deploy doloroso no se ' +
-      'arregla haciéndolo menos: se arregla haciéndolo tan seguido que deja de doler, porque cada ' +
-      'repetición fuerza a automatizar el paso que fallaba. Lo que se gana además de velocidad es ' +
-      'reversibilidad, y eso cambia qué se anima a probar el equipo. La objeción de que no hay tiempo para ' +
-      'automatizar se responde sola: el tiempo ya se está gastando, repartido en incidentes que nadie ' +
-      'contabiliza como proyecto.';
-    return 'Encendiste el despliegue continuo: baja la probabilidad de incidentes y suma capacidad todos los ' +
-      'meses sin volver a pagarlo — la única mejora permanente del lado técnico del juego. Los jueves a la ' +
-      'noche vuelven a ser tuyos. Lo que ganaste además de velocidad es reversibilidad: cuando volver atrás ' +
-      'cuesta dos minutos, lanzar deja de ser una apuesta y empieza a ser un experimento, y eso cambia qué se ' +
-      'anima a probar el equipo. La objeción habitual — no tenemos tiempo para automatizar — se responde ' +
-      'sola: el tiempo ya se estaba gastando, repartido en incidentes que nadie contabilizaba como proyecto.';
+    return 'Tu camino a producción está automatizado y cualquier commit es candidato a publicar: por eso ' +
+      'la capacidad y el riesgo de incidente con los que arrancás el mes ya vienen con ese bono adentro. ' +
+      'Lo que ganás además de velocidad es reversibilidad — cuando volver atrás cuesta dos minutos, lanzar ' +
+      'deja de ser una apuesta y empieza a ser un experimento, y eso cambia qué se anima a probar el ' +
+      'equipo. Lo que puede arruinarlo sí es tuyo: con deuda en ' + _n(e.deuda) + ', presupuesto de error ' +
+      'en ' + _n(e.presupuestoError) + ' y ' + (e.incidentesPuesto || 0) + ' incidente(s) en el puesto, el ' +
+      'lote chico te está tapando un agujero que se agranda solo.';
   },
 
   releaseit: function (e) {
@@ -3677,8 +3673,11 @@ var INTEGRA = {
   sre:         { clase:'capacidad', v:'presupuestoError', palanca:'fiab' },
   phoenix:     { clase:'capacidad', v:'congelado',        palanca:'fiab' },
   releaseit:   { clase:'capacidad', v:'incidentesPuesto', palanca:'fiab' },
-  accelerate:  { clase:'capacidad', v:'cd',               palanca:'plat' },
-  contdel:     { clase:'capacidad', v:'cd',               palanca:'plat' },
+  /* Entrega continua es línea de base del motor, no un campo que se prende:
+     el concepto se lee en los puntos que te da (desglose de capacidad) y en la
+     probabilidad de incidente, y no se mueve repartiendo puntos. */
+  accelerate:  { clase:'capacidad', v:'capacidad',        palanca:null   },
+  contdel:     { clase:'capacidad', v:'capacidad',        palanca:null   },
   ddia:        { clase:'capacidad', v:'carga',            palanca:'plat' },
   ousterhout:  { clase:'capacidad', v:'arquitectura',     palanca:'plat' },
   krug:        { clase:'capacidad', v:'usabilidad',       palanca:'cons' },

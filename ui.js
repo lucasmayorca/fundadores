@@ -212,7 +212,7 @@
     usab:'Qué tan poco necesitan pensar los usuarios. Multiplica la conversión de TODO el tráfico que traes.',
     esf:'El tamaño es tiempo, para tu equipo, este mes: XS ~un día, S ~3 días, M ~una semana, L ~2 semanas, XL ~el mes entero.',
     vec:'Cuánto mueve cada eje si sale. Son los MISMOS ocho ejes del panel de la derecha, con los mismos nombres: lo que dice el chip es lo que sube o baja en el panel de la derecha. El chip con borde es el eje por el que te miden, y sale siempre — si dice “—”, este proyecto no lo mueve. Los chips rojos son efectos secundarios reales: construir agrega Deuda, y la superficie nueva cuesta Fiabilidad o Usabilidad. Las estimaciones se afinan con evidencia.',
-    eje:'El eje en el que vive tu mandato. Busca ese mismo nombre en los chips de los proyectos del backlog y en la estación marcada arriba: esas son todas las formas de moverlo.',
+    eje:'El eje en el que vive tu mandato. Busca ese mismo nombre en los chips de los proyectos del backlog: esas son las iniciativas que lo mueven. Lo que no repartas también lo empuja, porque la operación se enfoca en lo que te van a medir.',
     funnel:'Los ocho ejes medibles de la empresa, con los mismos nombres que llevan los chips de cada proyecto. Los marcados son los que te están midiendo este puesto. Ganancia = ingresos menos gasto.',
     capfondeo:'Las capacidades de la empresa se componen desde iniciativas fondeadas: necesitan capital levantado detrás para crecer, y sin él se erosionan en silencio. Cada una tiene una habilidad gemela en tu perfil que acelera su crecimiento.',
     cap_prod:'El músculo propio de producto/discovery de la empresa. Compone las ganancias de descubrimiento más allá de lo que hagas este mes. Tu habilidad de Producto lo acelera.',
@@ -220,7 +220,7 @@
     cap_gtm:'Qué tan eficiente es la organización convirtiendo gasto de crecimiento en alcance, más allá del empuje de este mes. Tu habilidad de Negocio la acelera.',
     cap_gente:'Cuánto equipo puede cargar la organización antes de que muerdan la carga cognitiva y la política. Tu habilidad de Liderazgo la acelera.',
     cap_cap:'Oficio para levantar capital: solo crece cuando cierras una ronda, y los mejores términos llegan en la siguiente.',
-    st_build:'Lo que no estacionas va aquí, a tus apuestas del backlog — esto es lo que de verdad sale este mes.',
+    st_build:'Los puntos que repartís acá son los que de verdad salen este mes. Lo que no repartas lo corre la operación.',
     /* textos del handoff de diseño, copiados tal cual */
     mandato:'El objetivo real de tu puesto — recién lo conoces el día uno. Alinear tus apuestas paga ×1.3; ir en contra paga ×0.5.',
     capital:'Se gasta cuando actúas fuera del mandato, incluso con razón. En cero, estás despedido.',
@@ -231,12 +231,12 @@
     usabilidad:'Usabilidad no es una métrica suelta: es 50% Activación + 30% Retención + 20% Confiabilidad. Cada iniciativa mueve esas tres, y de ahí sale cuánto aporta al mandato. Las iniciativas alineadas a la etapa rinden un 30% más.',
     /* un tip por eje, para el chip suelto de cada iniciativa — ret, gate y
        evid ya tenian el suyo mas arriba; estos son los que faltaban. */
-    adq:'Adquisición. Cuánta gente nueva te encuentra este mes. La mueven la estación Crecimiento y las iniciativas con ADQ+. Sin esto no hay a quién retener ni a quién cobrarle después.',
-    act:'Activación. Cuántos de los que llegan encuentran el valor central rápido. Es el 50% de Usabilidad — el eje que más pesa de los tres. La mueven las iniciativas con ACT+ y la estación Descubrir.',
-    rel:'Confiabilidad. Que el producto no se caiga. Es el 20% de Usabilidad, protege Retención (nadie vuelve a lo que se cae) y es uno de los requisitos de la Compuerta al mercado grande. La sube la estación Fiabilidad.',
-    rev:'Ingresos. Lo que los clientes pagan de verdad, cada mes. Lo mueven la estación Crecimiento y las iniciativas con REV+. Compone el MRR y, en escala logarítmica, tu patrimonio final.',
+    adq:'Adquisición. Cuánta gente nueva te encuentra este mes. La mueven las iniciativas con ADQ+ y el crecimiento que corre la operación. Sin esto no hay a quién retener ni a quién cobrarle después.',
+    act:'Activación. Cuántos de los que llegan encuentran el valor central rápido. Es el 50% de Usabilidad — el eje que más pesa de los tres. La mueven las iniciativas con ACT+ y el descubrimiento que corre la operación.',
+    rel:'Confiabilidad. Que el producto no se caiga. Es el 20% de Usabilidad, protege Retención (nadie vuelve a lo que se cae) y es uno de los requisitos de la Compuerta al mercado grande. La suben las iniciativas con CONF+ y la fiabilidad que corre la operación.',
+    rev:'Ingresos. Lo que los clientes pagan de verdad, cada mes. Lo mueven las iniciativas con REV+ y el crecimiento que corre la operación. Compone el MRR y, en escala logarítmica, tu patrimonio final.',
     ref:'Referidos. Usuarios que traen otros usuarios sin que se lo pidas. Depende de tu fit con el segmento: cuanto mejor resolvés lo que necesitan, más referidos salen gratis.',
-    deuda:'Deuda técnica. Cada iniciativa que construís la sube un poco — es el precio de la velocidad. Cobra interés: con deuda alta, la misma iniciativa rinde menos puntos de esfuerzo. La baja la estación Plataforma.',
+    deuda:'Deuda técnica. Cada iniciativa que construís la sube un poco — es el precio de la velocidad. Cobra interés: con deuda alta, la misma iniciativa rinde menos puntos de esfuerzo. La baja la plataforma que corre la operación, mes a mes, con lo que no repartas.',
     calor:'Sector caliente: +35% de alcance, pero la competencia también se amontona (+60% de atención). Sector frío: -30% de alcance, pero -40% de atención — más chico, más tranquilo. Lo decide la era del mundo, no vos.'
   };
   var tipTimer = null;
@@ -791,8 +791,8 @@
     h += '<div class="h2">Cómo funciona</div>' +
       '<div class="pq mut" style="margin-bottom:6px">Cinco cosas pasando a la vez, cada mes.</div>';
     h += pasoHtml(1, '#5aa9f0', 'El mes, tu turno',
-      'Coloca los puntos del equipo en estaciones — Descubrir, Plataforma, Fiabilidad, Crecimiento — o en ' +
-      'apuestas del backlog: probabilidad × impacto ÷ esfuerzo.');
+      'Reparte los puntos del equipo entre las iniciativas del backlog: probabilidad × impacto ÷ esfuerzo. ' +
+      'Lo que no reparts lo corre la operación — descubrimiento, plataforma, fiabilidad y crecimiento.');
     h += pasoHtml(2, '#35c46a', 'El puesto, un mandato',
       'Mueve un número antes de una fecha límite. La etapa — pre-PMF, validando, escalando — decide qué paga; ' +
       'el capital político, qué tanto puedes salirte del guion.');
@@ -1242,7 +1242,8 @@
                     evid:'var(--color-neutral-400)' };
 
   /* Cuanto avanzaria el mandato si el mes cerrara con el plan de ahora: las
-     iniciativas que van a salir este mes, mas lo que rinden las estaciones.
+     iniciativas que van a salir este mes, mas lo que rinden los bucles que
+     corre la operacion con lo que quedo sin repartir.
      Es una proyeccion sobre los MISMOS numeros esperados que ve el jugador en
      las tarjetas — no espia el resultado real. */
   function proyeccionMandato() {
@@ -1398,9 +1399,9 @@
     return null;
   }
 
-  /* El mes como recurso, estilo Age of Empires: tu equipo produce puntos;
-     tú los estacionas. Lo que no estaciones va a CONSTRUIR y empuja tus
-     proyectos elegidos. Cada punto es visible y está contado. */
+  /* El mes como recurso, estilo Age of Empires: tu equipo produce puntos y vos
+     los repartís entre iniciativas. Lo que dejes sin repartir lo corre la
+     operación. Cada punto es visible y está contado. */
   function svgIc(id, cls) {
     return '<svg class="ic' + (cls ? ' ' + cls : '') + '"><use xlink:href="#ic-' + id + '"></use></svg>';
   }
@@ -1440,11 +1441,13 @@
      tres nombres distintos según dónde la miraras. El mandato decía
      "usabilidad", el panel decía "Activación" y el chip de la apuesta decía
      "ACT" — y nadie podía atar los tres. Ahora hay UN eje por cosa medible, con
-     UN nombre, y ese nombre aparece igual en el mandato, en el chip
-     de cada proyecto y en la estación que lo mueve.
+     UN nombre, y ese nombre aparece igual en el mandato, en el chip de cada
+     proyecto y en la fila del panel.
 
-     `est` es la estación del mes que empuja ese eje sin construir nada: es la
-     respuesta a "¿y si ninguna apuesta lo mueve?". */
+     Cada eje tenía además un campo `est`: la estación del mes que lo empujaba
+     sin construir nada. Las estaciones salieron del tablero y nadie volvió a
+     leer ese campo, así que se fue con ellas — la respuesta a "¿y si ninguna
+     iniciativa lo mueve?" hoy la da COMO_MOVER, más abajo. */
   /* ---------- vocabulario de ejes ----------
      Seis ejes de estado (los AARRR + confiabilidad) con su abreviatura, mas
      tres cosas que tambien mueven mandatos pero no son del embudo. La
@@ -1453,7 +1456,7 @@
      el mismo eje se ve igual en los tres lugares. */
   var EJES = {
     adq: {
-      n:'Adquisición', ab:'ADQ', ic:'acquisition', est:'crec',
+      n:'Adquisición', ab:'ADQ', ic:'acquisition',
       submetricas: [
         { id:'cac', n:'CAC (costo/cliente)', fmt:'num', inv:true },
         { id:'mix_canal', n:'Mix de canales', fmt:'pct' },
@@ -1462,7 +1465,7 @@
       ]
     },
     act: {
-      n:'Activación', ab:'ACT', ic:'activation', est:'desc',
+      n:'Activación', ab:'ACT', ic:'activation',
       submetricas: [
         { id:'time_value', n:'Time-to-value (d1)', fmt:'num', u:' días' },
         { id:'feature_adopt', n:'Core feature adoption', fmt:'pct' },
@@ -1471,7 +1474,7 @@
       ]
     },
     ret: {
-      n:'Retención', ab:'RET', ic:'retention', est:null,
+      n:'Retención', ab:'RET', ic:'retention',
       submetricas: [
         { id:'churn', n:'Churn rate mensual', fmt:'pct', inv:true },
         { id:'dau_mau', n:'DAU/MAU ratio', fmt:'pct' },
@@ -1480,7 +1483,7 @@
       ]
     },
     rel: {
-      n:'Fiabilidad', ab:'CONF', ic:'reliability', est:'fiab',
+      n:'Fiabilidad', ab:'CONF', ic:'reliability',
       submetricas: [
         { id:'uptime', n:'Uptime %', fmt:'pct' },
         { id:'error_rate', n:'Error rate por request', fmt:'pct', inv:true },
@@ -1489,7 +1492,7 @@
       ]
     },
     rev: {
-      n:'Ingresos', ab:'REV', ic:'revenue', est:'crec',
+      n:'Ingresos', ab:'REV', ic:'revenue',
       submetricas: [
         { id:'arpu', n:'ARPU ($/usuario)', fmt:'num' },
         { id:'ltv_cac', n:'LTV/CAC ratio', fmt:'ratio' },
@@ -1498,7 +1501,7 @@
       ]
     },
     ref: {
-      n:'Referidos', ab:'REF', ic:'referral', est:'crec',
+      n:'Referidos', ab:'REF', ic:'referral',
       submetricas: [
         { id:'viral_k', n:'Viral coefficient (k)', fmt:'ratio' },
         { id:'nps', n:'Net Promoter Score', fmt:'pts' },
@@ -1507,7 +1510,7 @@
       ]
     },
     gate: {
-      n:'Compuerta', ab:'Compuerta', ic:'pmf', est:null,
+      n:'Compuerta', ab:'Compuerta', ic:'pmf',
       submetricas: [
         { id:'gate_fit', n:'Product-Market Fit', fmt:'pct' },
         { id:'gate_escala', n:'Escalabilidad', fmt:'pct' },
@@ -1516,7 +1519,7 @@
       ]
     },
     evid: {
-      n:'Evidencia', ab:'Evidencia', ic:'evidence', est:'desc',
+      n:'Evidencia', ab:'Evidencia', ic:'evidence',
       submetricas: [
         { id:'reviews', n:'Reviews y rating', fmt:'num' },
         { id:'cases', n:'Casos de éxito', fmt:'num' },
@@ -1525,7 +1528,7 @@
       ]
     },
     deuda: {
-      n:'Deuda', ab:'Deuda', ic:'debt', est:'plat', invertido:true,
+      n:'Deuda', ab:'Deuda', ic:'debt', invertido:true,
       submetricas: [
         { id:'deprecations', n:'Warnings de deprecación', fmt:'num', inv:true },
         { id:'test_cov', n:'Test coverage %', fmt:'pct' },
@@ -1539,15 +1542,20 @@
   var ORDEN_EJES = ['adq','act','ret','rel','rev','gate','evid','deuda'];
   var MET_MANDATO = { retencion:'ret', crecer:'adq', ingresos:'rev', activacion:'act',
                       estabilidad:'rel', deuda:'deuda', abismo:'gate', descubrir:'evid' };
+  /* Cuando nada del backlog mueve tu mandato, esto dice quién sí. Nombraba
+     las cuatro estaciones, que salieron del tablero hace tiempo: mandaba al
+     jugador a buscar un control inexistente. La respuesta verdadera es que la
+     operación empuja tu mandato con lo que no repartas — porque se enfoca en
+     el eje por el que te miden — y que el backlog se renueva todos los meses. */
   var COMO_MOVER = {
-    retencion:'iniciativas con <b>RET +</b>',
-    crecer:'iniciativas con <b>ADQ +</b> · estación <b>Crecimiento</b>',
-    ingresos:'iniciativas con <b>REV +</b> · estación <b>Crecimiento</b>',
-    activacion:'iniciativas con <b>ACT</b>, <b>RET</b> o <b>CONF</b> · estaciones <b>Descubrir</b> y <b>Fiabilidad</b>',
-    estabilidad:'iniciativas con <b>CONF +</b> · estación <b>Fiabilidad</b>',
-    deuda:'estación <b>Plataforma</b> — y ojo: <b>cada iniciativa que construyes la sube</b>',
+    retencion:'iniciativas con <b>RET +</b> — esperá el backlog del mes que viene',
+    crecer:'iniciativas con <b>ADQ +</b> · el <b>crecimiento</b> de la operación',
+    ingresos:'iniciativas con <b>REV +</b> · el <b>crecimiento</b> de la operación',
+    activacion:'iniciativas con <b>ACT</b>, <b>RET</b> o <b>CONF</b> · el <b>descubrimiento</b> y la <b>fiabilidad</b> de la operación',
+    estabilidad:'iniciativas con <b>CONF +</b> · la <b>fiabilidad</b> de la operación',
+    deuda:'la <b>plataforma</b> de la operación, con lo que no repartas — y ojo: <b>cada iniciativa que construyes la sube</b>',
     abismo:'iniciativas con <b>Compuerta +</b> (los requisitos, abajo a la derecha)',
-    descubrir:'estación <b>Descubrir</b> · iniciativas de datos'
+    descubrir:'el <b>descubrimiento</b> de la operación · iniciativas de datos'
   };
   function ejeDe(mandatoId) { return MET_MANDATO[mandatoId] || null; }
   function nombreEje(k) { return (EJES[k] && EJES[k].n) || k; }
@@ -1975,7 +1983,7 @@
       '</span></div>';
     if (ejesAqui.deuda) {
       h += '<div class="avisoeje">Ninguna iniciativa <b>baja</b> la deuda — todas la suben, y el chip lo dice. ' +
-        'Se baja con la estación <b>Plataforma</b>.</div>';
+        'La baja la <b>plataforma</b> que corre la operación, con lo que no repartas.</div>';
     } else if (!mueven.length && COMO_MOVER[J.mandatoId]) {
       h += '<div class="avisoeje">Nada de acá mueve tu mandato. Lo mueve: ' + COMO_MOVER[J.mandatoId] + '.</div>';
     }
@@ -2484,8 +2492,8 @@
       /* solo es "sin entregar nada" si de verdad no salio nada este mes; si
          salio algo pero rindio por debajo, el titular es que el mandato se
          movio a pesar de las entregas cortas */
-      if (!mejor) return mov + 'sin entregar nada — el equipo estacionado hizo el trabajo.';
-      return mov + 'aunque las entregas rindieron por debajo de lo estimado — el equipo estacionado compensó.';
+      if (!mejor) return mov + 'sin entregar nada — lo movió la operación con los puntos que no repartiste.';
+      return mov + 'aunque las entregas rindieron por debajo de lo estimado — la operación compensó.';
     }
     for (i = 0; i < eventos.length; i++) {
       if (eventos[i].tipo === 'bueno') return 'Jugada del mes: ' + esc(primeraOracion(eventos[i].texto));
@@ -2863,7 +2871,7 @@
       '<h2>Cuatro cosas. Nada más.</h2>' +
       '<div class="cuerpo2" style="margin-top:6px">' +
       '<div class="linea"><div class="ic azul">1</div><div class="tx"><b>Elige un puesto.</b> Te contratan para UNA cosa: el mandato. La barra de arriba es tu trabajo. Cúmplelo y subes.</div></div>' +
-      '<div class="linea"><div class="ic azul">2</div><div class="tx"><b>Cada mes, estaciona los puntos de tu equipo.</b> Lo que no estaciones va a Construir y empuja tus proyectos — que caben en slots limitados, y cada uno entregado le da a la empresa una capacidad nueva.</div></div>' +
+      '<div class="linea"><div class="ic azul">2</div><div class="tx"><b>Cada mes, repartís los puntos de tu equipo entre iniciativas.</b> Caben en slots limitados, y cada una entregada le da a la empresa una capacidad nueva. Lo que no repartas lo corre la operación: descubrimiento, plataforma, fiabilidad y crecimiento.</div></div>' +
       '<div class="linea"><div class="ic azul">3</div><div class="tx"><b>Prioriza por probabilidad × impacto ÷ esfuerzo.</b> Los puntos y bloques son estimaciones: mientras más hables con usuarios, menos te mienten.</div></div>' +
       '<div class="linea"><div class="ic azul">4</div><div class="tx"><b>Todo lo demás lo aprendes perdiendo.</b> Cuando el juego te cobra algo, te dice qué libro lo tenía escrito.</div></div>' +
       '</div>' +

@@ -8,6 +8,29 @@ var Motor = (function () {
   var COBERTURA_PLENA = 80;
   var SAL_ING = 11000, SAL_PROD = 11000, SAL_GTM = 8500;
 
+  /* ---------------- cómo trabaja una empresa de producto ----------------
+     Esto no es una decisión del jugador y dejó de ser un estado del puesto.
+     La metodología de producto hoy está resuelta: se construye por proyectos,
+     se hace discovery por proyecto, se despliega continuo y la deuda se paga
+     en cuotas todos los meses. Eran cuatro booleanos — `cd`, `cadenciaDesc`,
+     `refactorFijo`, `fabrica` — que un evento al azar te regalaba o te sacaba,
+     y por lo tanto la mitad de las partidas corrían una empresa que en 2026 no
+     existe: desplegando por evento cada tres semanas y sin hablar con un
+     usuario. Cuatro diales que casi nadie querría en el otro lado cuestan
+     atención, ramas de código y texto, y no cambian una partida.
+     Ahora son la línea de base, con nombre. Los dos de entrega conservan el
+     valor que tenían encendidos; el de discovery se recalibró, y el riesgo de
+     fondo de los incidentes subió para compensar el escudo que ahora está
+     siempre puesto. Todo medido contra sim.js, banda 45-65%. */
+  var ENTREGA_CONTINUA = 1.12;   /* lotes chicos: capacidad, todos los meses */
+  var ESCUDO_ENTREGA = 0.8;      /* lotes chicos: probabilidad de incidente */
+  /* Discovery por proyecto no es una cadencia semanal: se aprende mucho al
+     arrancar cada proyecto y entre proyecto y proyecto la evidencia se vuelve
+     vieja igual. Estaba en 3.5 sin el ritual y 1.5 con él; el punto medio
+     (2.2) dejaba el mandato de discovery en 86% — trivial. Calibrado contra
+     sim.js: con 3.4 vuelve al 55-60% que tenía. */
+  var EVID_DECAE = 3.4;
+
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
   function rnd(a, b) { return a + Math.random() * (b - a); }
   /* Rendimientos decrecientes, iguales para las cuatro estaciones. Crecimiento
@@ -190,8 +213,8 @@ var Motor = (function () {
       fase:et.fase || '', faseCorta:et.faseCorta || '', objetivo:et.objetivo || '',
       slots:oferta.slots || et.slots || 3,
       prima:et.prima || [], castiga:et.castiga || [], briefVisto:false,
-      teamTopo:false, cd:false, cadenciaDesc:false, empoderado:false, fabrica:false,
-      refactorFijo:false, reescritura:0, congelado:false, capacidadReservada:0,
+      teamTopo:false, empoderado:false,
+      reescritura:0, congelado:false, capacidadReservada:0,
       gateRevelado:false, levantando:false,
       riesgoExtra:0, retBonus:0, gtmBonus:0, infraExtra:0, penalCap:0,
       incidentesPuesto:0, apuestasCompletadas:0, gastoPropio:{},
@@ -1026,8 +1049,7 @@ var Motor = (function () {
     var tam = e.ing + e.prod;
     var umbral = (e.teamTopo ? 12 : 8) + Math.round(e.hab.liderazgo / 12) + Math.round(e.capacidades.gente / 20);
     var fCarga = tam <= umbral ? 1 : Math.max(0.55, 1 - 0.05 * (tam - umbral));
-    var fCd = e.cd ? 1.12 : 1;
-    var p = base * fDeuda * fMoral * fFoco * fCarga * fCd;
+    var p = base * fDeuda * fMoral * fFoco * fCarga * ENTREGA_CONTINUA;
     p -= e.rampa.length * 6;
     p -= (e.capacidadReservada > 0 ? 8 : 0);
     p -= (e.penalCap || 0);
@@ -1049,6 +1071,13 @@ var Motor = (function () {
   function costoMult(e, f) {
     if (!f || f >= 1) return 0;
     return Math.round(capacidadPropia(e) * (1 / f - 1));
+  }
+  /* Y al revés: cuántos de tus puntos existen sólo porque ese factor es mayor
+     que 1. Los factores de la línea de base no tienen un campo que apagar para
+     medirlos con costoFactor, así que se miden marginalmente igual que arriba. */
+  function beneficioMult(e, f) {
+    if (!f || f <= 1) return 0;
+    return Math.round(capacidadPropia(e) * (1 - 1 / f));
   }
   function costoFactor(e, campo, ideal) {
     var antes = e[campo], real = capacidadPropia(e);
@@ -1115,9 +1144,12 @@ var Motor = (function () {
     else if (e.teamTopo) d.push({ k:'Equipos con fronteras claras', v:'umbral ' + umbral, libro:'topologies',
       nota:'reorganizar subió el techo desde el que se decae' });
 
-    if (e.cd) d.push({ k:'Despliegue continuo', v:'+' + (-costoFactor(e, 'cd', false)),
-      /* con incidentes encima, la ficha que habla es la del dato contraintuitivo
-         (sos más rápido Y más estable); sin incidentes, la del mecanismo */
+    /* Cómo se entrega es línea de base, así que este renglón va siempre: es lo
+       que la empresa gana por desplegar en lotes chicos, y el jugador tiene que
+       poder leer de dónde salen esos puntos aunque no los haya elegido.
+       Con incidentes encima, la ficha que habla es la del dato contraintuitivo
+       (sos más rápido Y más estable); sin incidentes, la del mecanismo. */
+    d.push({ k:'Despliegue continuo', v:'+' + beneficioMult(e, ENTREGA_CONTINUA),
       libro:(e.incidentesPuesto || 0) > 0 ? 'accelerate' : 'contdel',
       nota:'lotes chicos: más rápido Y más estable' });
 
@@ -1210,8 +1242,6 @@ var Motor = (function () {
       var umb = (e.teamTopo ? 12 : 8) + Math.round(e.hab.liderazgo/12) + Math.round(e.capacidades.gente/20);
       if (!e.teamTopo && (e.ing + e.prod) > umb + 4) return { txt:'Fronteras que un equipo pueda ser dueño de punta a punta',
         libro:'topologies' };
-      if (!e.cd) return { txt:'Lotes chicos: más rápido Y más estable, no una cosa a cambio de la otra',
-        libro:e.incidentesPuesto > 0 ? 'accelerate' : 'contdel' };
       if (e.deuda > 55) return { txt:'Deuda ' + Math.round(e.deuda) + ': el interés se come el mandato antes que el roadmap',
         libro:'fowler' };
       if (e.arquitectura < 55) return { txt:'Interfaz chica, implementación poderosa: diseñalo dos veces, escribilo una',
@@ -1238,8 +1268,6 @@ var Motor = (function () {
       if (e.presupuestoError >= 80 && e.fiabPercibida >= 82) return {
         txt:'Uptime ' + Math.round(e.fiabPercibida) + ' y presupuesto casi intacto: esto ya no mueve tu mandato',
         libro:'trap' };
-      if (e.cd) return { txt:'Con despliegue continuo esto ya rinde doble: más rápido Y más estable',
-        libro:'accelerate' };
       return { txt:'Presupuesto de error en ' + Math.round(e.presupuestoError) + ': guardarlo sin usar es dejar plata en la mesa',
         libro:'sre' };
     }
@@ -1698,7 +1726,6 @@ var Motor = (function () {
     p.cons = Math.round(consOrg * e.mando);
     var consInercia = consOrg - p.cons;
 
-    if (e.refactorFijo) { var mv = Math.round(capTotal * 0.2); p.cons = Math.max(0, p.cons - mv); p.plat += mv; }
     if (e.reescritura > 0) {
       p.plat += p.cons; p.cons = 0; e.reescritura--;
       e.deuda -= 14;
@@ -1895,7 +1922,6 @@ var Motor = (function () {
       }
     }
     e.deuda += p.cons * 0.15 * (1 - e.hab.tecnologia / 180 - e.capacidades.tecnologia / 260);
-    if (e.fabrica) e.deuda += 2;
 
     /* 5. plataforma */
     if (p.plat > 0) {
@@ -1926,10 +1952,16 @@ var Motor = (function () {
       e.presupuestoError = clamp(e.presupuestoError + rinde(p.fiab, 2.6), -50, 100);
     }
 
-    /* 7. incidentes: cada sector se rompe a su manera */
+    /* 7. incidentes: cada sector se rompe a su manera.
+       El riesgo de fondo era 0.105 cuando el escudo de los lotes chicos estaba
+       apagado en la mayoría de las partidas. Ahora está siempre puesto, y con
+       0.105 × 0.8 el mandato de "cero caídas" se cumplía sin hacer nada el 74%
+       de las veces (era el 32%). El riesgo de fondo sube a 0.13 para que el
+       mes de un jugador activo pese lo mismo que antes — lo que cambia es que
+       ahora hay una razón nombrada por la que pesa menos. */
     var c = carga(e);
-    var pInc = (0.105 + Math.max(0, c - 0.8) * 0.5 + e.deuda / 400 + (e.riesgoExtra || 0)) *
-               (1 - escudo) * (e.cd ? 0.8 : 1);
+    var pInc = (0.13 + Math.max(0, c - 0.8) * 0.5 + e.deuda / 400 + (e.riesgoExtra || 0)) *
+               (1 - escudo) * ESCUDO_ENTREGA;
     if (Math.random() < clamp(pInc, 0, 0.9)) resolverIncidente(e, log, c);
     e.riesgoExtra = (e.riesgoExtra || 0) * 0.5;
 
@@ -2071,7 +2103,7 @@ var Motor = (function () {
     e.foco = clamp(e.foco - 1.5, 0, 100);
     e.usabilidad = clamp(e.usabilidad + (e.cobertura.flujo || 0) * 0.02 - 0.6, 0, 100);
     e.marca = clamp(e.marca + (retencionMedia(e) > 0.9 ? 1.5 : -0.5), 0, 100);
-    e.evidencia = clamp(e.evidencia - (e.cadenciaDesc ? 1.5 : 3.5), 0, 100);
+    e.evidencia = clamp(e.evidencia - EVID_DECAE, 0, 100);
     e.fiabPercibida = clamp(e.fiabPercibida + (e.arquitectura > carga(e) * 40 ? 1.5 : -1), 0, 100);
     if (e.competidor.atencion < 0.9) {
       var dAt = (e.usuarios.pragm > e.tam.pragm * 0.06 ? 0.05 : 0.012);
